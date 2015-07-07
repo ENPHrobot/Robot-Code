@@ -21,10 +21,10 @@ public:
 	static uint16_t MenuItemCount;
 	MenuItem(String name)
 	{
-	  	MenuItemCount++;
-	  	EEPROMAddress = (uint16_t*)(MenuItemCount);
-	  	Name = name;
-	  	Value = eeprom_read_word(EEPROMAddress);
+		MenuItemCount++;
+		EEPROMAddress = (uint16_t*)(MenuItemCount);
+		Name = name;
+		Value = eeprom_read_word(EEPROMAddress);
 	}
 	void Save()
 	{
@@ -42,10 +42,10 @@ public:
 	static uint16_t MenuItemCount;
 	IRMenuItem(String name)
 	{
-	  	MenuItemCount++;
-	  	EEPROMAddress = (uint16_t*)(MenuItemCount) + 5; // offset the EEPROMAddress
-	  	Name = name;
-	  	Value = eeprom_read_word(EEPROMAddress);
+		MenuItemCount++;
+		EEPROMAddress = (uint16_t*)(MenuItemCount) + 5; // offset the EEPROMAddress
+		Name = name;
+		Value = eeprom_read_word(EEPROMAddress);
 	}
 	void Save()
 	{
@@ -67,12 +67,12 @@ public:
 	static void Open(int index)
 	{
 		switch (index) {
-			case 0:
-				QRDMENU();
-				break;
-			case 1:
-				IRMENU();
-				break;
+		case 0:
+			QRDMENU();
+			break;
+		case 1:
+			IRMENU();
+			break;
 		}
 	}
 };
@@ -127,7 +127,7 @@ unsigned int base_speed;
 
 void setup()
 {
-	#include <phys253setup.txt>
+#include <phys253setup.txt>
 	//Serial.begin(9600);
 	LCD.clear(); LCD.home();
 
@@ -138,80 +138,82 @@ void setup()
 	q_threshold = menuItems[4].Value;
 
 	LCD.print("Press Start.");
-	while(!startbutton()){};
+	while (!startbutton()) {};
 	LCD.clear();
 }
 
 void loop()
 {
-	if (startbutton() && stopbutton()){          
-        // Pause motors
-        motor.speed(LEFT_MOTOR, 0);
-        motor.speed(RIGHT_MOTOR, 0);
-        MainMenu();
-        // Set values after exiting menu
-        base_speed = menuItems[0].Value;
-        q_pro_gain = menuItems[1].Value;
-        q_diff_gain = menuItems[2].Value;
-        q_int_gain = menuItems[3].Value;
-        q_threshold = menuItems[4].Value;
-        // Restart motors
-        motor.speed(LEFT_MOTOR, base_speed);
-        motor.speed(RIGHT_MOTOR, base_speed);
+	if (startbutton() && stopbutton()) {
+		// Pause motors
+		motor.speed(LEFT_MOTOR, 0);
+		motor.speed(RIGHT_MOTOR, 0);
+		MainMenu();
+		// Set values after exiting menu
+		base_speed = menuItems[0].Value;
+		q_pro_gain = menuItems[1].Value;
+		q_diff_gain = menuItems[2].Value;
+		q_int_gain = menuItems[3].Value;
+		q_threshold = menuItems[4].Value;
+		// Restart motors
+		motor.speed(LEFT_MOTOR, base_speed);
+		motor.speed(RIGHT_MOTOR, base_speed);
 	}
 
-    // PID control
-    left_sensor = analogRead(QRD_L);
-    right_sensor = analogRead(QRD_R);
-  
-    if(left_sensor > q_threshold && right_sensor > q_threshold)
-  		error = 0;
-    else if(left_sensor > q_threshold && right_sensor < q_threshold)
-  		error = -1;
-    else if(left_sensor < q_threshold && right_sensor > q_threshold)
-		error = 1;
-    else if(left_sensor < q_threshold && right_sensor < q_threshold)
-    {
-      // History - tape follower crossed line too fast?
-       if( last_error > 0)
-  			error = 5;
-       else if( last_error < 0)
-      		error = -5;
-    }
-    if( !(error == last_error)){
+	// PID control
+	left_sensor = analogRead(QRD_L);
+	right_sensor = analogRead(QRD_R);
+
+	if (left_sensor > q_threshold && right_sensor > q_threshold)
+		error = 0; // both sensors on black
+	else if (left_sensor > q_threshold && right_sensor < q_threshold)
+		error = -1;	// left sensor on black
+	else if (left_sensor < q_threshold && right_sensor > q_threshold)
+		error = 1; // right sensor on black
+	else if (left_sensor < q_threshold && right_sensor < q_threshold)
+	{
+		// neither sensor on black. check last error to see which side we are on.
+		if ( last_error > 0)
+			error = 5;
+		else if ( last_error < 0)
+			error = -5;
+	}
+
+	if ( !(error == last_error))
+	{
 		recent_error = last_error;
 		to = t;
 		t = 1;
-    }
-    
-    P_error = q_pro_gain * error;
-    D_error = q_diff_gain * ((float)(error - recent_error)/(float)(t+to)); // time is present within the differential gain
-    I_error += q_int_gain * error;
-    net_error = P_error + D_error + I_error;
-    
-    // Prevent adjusting errors from going over actual speed.
-    if(net_error > base_speed)
-  		net_error = base_speed;
-    if(net_error < -1*base_speed)
-  		net_error = -1*base_speed;
-    
-    //if net error is positive, right_motor will be stronger, will turn to the left
-    motor.speed(LEFT_MOTOR, base_speed + net_error);
-    motor.speed(RIGHT_MOTOR, base_speed - net_error);
-    
-    if( count == 100 ){
+	}
+
+	P_error = q_pro_gain * error;
+	D_error = q_diff_gain * ((float)(error - recent_error) / (float)(t + to)); // time is present within the differential gain
+	I_error += q_int_gain * error;
+	net_error = P_error + D_error + I_error;
+
+	// prevent adjusting errors from going over actual speed.
+	if (net_error > base_speed)
+		net_error = base_speed;
+	if (net_error < -base_speed)
+		net_error = -base_speed;
+
+	//if net error is positive, right_motor will be stronger, will turn to the left
+	motor.speed(LEFT_MOTOR, base_speed + net_error);
+	motor.speed(RIGHT_MOTOR, base_speed - net_error);
+
+	if ( count == 100 ) {
 		count = 0;
 		LCD.clear(); LCD.home();
-	  	LCD.print("LQ:"); LCD.print(left_sensor);
+		LCD.print("LQ:"); LCD.print(left_sensor);
 		LCD.print(" LM:"); LCD.print(base_speed + net_error);
 		LCD.setCursor(0, 1);
-	  	LCD.print("RQ:"); LCD.print(right_sensor);
+		LCD.print("RQ:"); LCD.print(right_sensor);
 		LCD.print(" RM:"); LCD.print(base_speed - net_error);
-    }
-    
-    last_error = error;
-    count++;
-    t++;
+	}
+
+	last_error = error;
+	count++;
+	t++;
 }
 
 /* Functions */
@@ -222,7 +224,7 @@ void QRDMENU()
 	LCD.clear(); LCD.home();
 	LCD.print("Entering submenu");
 	delay(500);
- 
+
 	while (true)
 	{
 		/* Show MenuItem value and knob value */
@@ -232,7 +234,7 @@ void QRDMENU()
 		LCD.setCursor(0, 1);
 		LCD.print("Set to "); LCD.print(menuIndex != 0 ? knob(7) : knob(7) >> 2); LCD.print("?");
 		delay(100);
- 
+
 		/* Press start button to save the new value */
 		if (startbutton())
 		{
@@ -249,7 +251,7 @@ void QRDMENU()
 			menuItems[menuIndex].Save();
 			delay(250);
 		}
-		
+
 
 		/* Press stop button to exit menu */
 		if (stopbutton())
@@ -271,7 +273,7 @@ void IRMENU()
 	LCD.clear(); LCD.home();
 	LCD.print("Entering submenu");
 	delay(500);
- 
+
 	while (true)
 	{
 		/* Show IRMenuItem value and knob value */
@@ -281,7 +283,7 @@ void IRMENU()
 		LCD.setCursor(0, 1);
 		LCD.print("Set to "); LCD.print(knob(7)); LCD.print("?");
 		delay(100);
- 
+
 		/* Press start button to save the new value */
 		if (startbutton())
 		{
@@ -311,7 +313,7 @@ void MainMenu() {
 	LCD.clear(); LCD.home();
 	LCD.print("Entering Main");
 	delay(500);
- 
+
 	while (true)
 	{
 		/* Show MainMenuItem value and knob value */
@@ -321,14 +323,14 @@ void MainMenu() {
 		LCD.setCursor(0, 1);
 		LCD.print("Start to Select.");
 		delay(100);
- 
+
 		/* Press start button to enter submenu */
 		if (startbutton())
 		{
 			LCD.clear(); LCD.home();
 			MainMenuItem::Open(menuIndex);
 		}
-		
+
 		/* Press stop button to exit menu */
 		if (stopbutton())
 		{
