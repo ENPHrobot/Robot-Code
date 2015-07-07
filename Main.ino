@@ -1,5 +1,5 @@
 #include <avr/EEPROM.h>
-#include <avr/interrupt.h>
+#include <Interrupts.h>
 #include <phys253.h>
 #include <LiquidCrystal.h>
 
@@ -27,22 +27,43 @@ public:
 	}
 	void Save()
 	{
-	  eeprom_write_word(EEPROMAddress, Value);
+		eeprom_write_word(EEPROMAddress, Value);
 	}
 };
- 
-uint16_t MenuItem::MenuItemCount = 0;
+
+class MainMenuItem
+{
+public:
+	String Name;
+	static uint16_t MenuItemCount;
+	MainMenuItem(String name)
+	{
+		MenuItemCount++;
+		Name = name;
+	}
+	static void Open(int index)
+	{
+		switch (index) {
+			case 0:
+				QRDMENU();
+				break;
+		}
+	}
+};
+
 /* Add the menu items */
+uint16_t MenuItem::MenuItemCount = 0;
+MenuItem Speed        	  = MenuItem("Speed");
 MenuItem ProportionalGain = MenuItem("P-gain");
 MenuItem DerivativeGain   = MenuItem("D-gain");
 MenuItem IntegralGain     = MenuItem("I-gain");
 MenuItem ThresholdVoltage = MenuItem("T-volt");
-MenuItem menuItems[]      = {ProportionalGain, DerivativeGain, IntegralGain, ThresholdVoltage};
+MenuItem menuItems[]      = {Speed, ProportionalGain, DerivativeGain, IntegralGain, ThresholdVoltage};
 
-MenuItem Speed            = MenuItem("Speed");
-MenuItem TapePID            = MenuItem("Tape PID");
-MenuItem IRPID            = MenuItem("IR PID");
-MenuItem mainMenu[]      = {Speed, TapePID, IRPID};
+uint16_t MainMenuItem::MenuItemCount = 0;
+MainMenuItem TapePID      = MainMenuItem("Tape PID");
+MainMenuItem IRPID        = MainMenuItem("IR PID");
+MainMenuItem mainMenu[]   = {TapePID, IRPID};
 
 /* Instantiate variables */
 int value = 0;
@@ -71,8 +92,8 @@ unsigned int base_speed;
 void setup()
 {
   #include <phys253setup.txt>
+  //Serial.begin(9600);
   LCD.clear(); LCD.home();
-  Serial.begin(9600);
   base_speed = menuItems[0].Value;
   pro_gain = menuItems[1].Value;
   diff_gain = menuItems[2].Value;
@@ -86,13 +107,15 @@ void setup()
 
 void loop()
 {
-
+	if (startbutton() && stopbutton()){
+		MainMenu();
+	}
 }
 
 /* Functions */
 
 /* Menus */
-void Menu()
+void QRDMENU()
 {
 	LCD.clear(); LCD.home();
 	LCD.print("Entering menu");
@@ -113,12 +136,11 @@ void Menu()
 		{
 			delay(100);
 			int val = knob(7); // cache knob value to memory
-			// Limit speed to 700
 			if (menuIndex == 0) {
-			val = val >> 2;
-			LCD.clear(); LCD.home();
-			LCD.print("Speed set to "); LCD.print(val);
-			delay(250);
+				val = val >> 2;
+				LCD.clear(); LCD.home();
+				LCD.print("Speed set to "); LCD.print(val);
+				delay(250);
 			}
 
 			menuItems[menuIndex].Value = val;
@@ -149,30 +171,21 @@ void MainMenu() {
  
 	while (true)
 	{
-		/* Show MenuItem value and knob value */
-		int menuIndex = knob(6) * (MenuItem::MenuItemCount) >> 10;
+		/* Show MainMenuItem value and knob value */
+		int menuIndex = knob(6) * (MainMenuItem::MenuItemCount) >> 10;
 		LCD.clear(); LCD.home();
-		LCD.print(mainMenu[menuIndex].Name); LCD.print(" "); LCD.print(menuItems[menuIndex].Value);
+		LCD.print(mainMenu[menuIndex].Name);
 		LCD.setCursor(0, 1);
-		LCD.print("Set to "); LCD.print(menuIndex != 0 ? knob(7) : knob(7) >> 2); LCD.print("?");
+		LCD.print("Start to Select.");
 		delay(100);
  
-		/* Press start button to save the new value */
+		/* Press start button to enter submenu */
 		if (startbutton())
 		{
-			delay(100);
-			int val = knob(7); // cache knob value to memory
-			// Limit speed to 700
-			if (menuIndex == 0) {
-			val = val >> 2;
 			LCD.clear(); LCD.home();
-			LCD.print("Speed set to "); LCD.print(val);
-			delay(250);
-			}
-
-			menuItems[menuIndex].Value = val;
-			menuItems[menuIndex].Save();
-			delay(250);
+			LCD.print("Entering Menu...");
+			delay(300);
+			MainMenuItem::Open(menuIndex);
 		}
 		
 
