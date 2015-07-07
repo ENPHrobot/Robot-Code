@@ -11,6 +11,7 @@
 #define LEFT_MOTOR 0
 #define RIGHT_MOTOR 1
 
+// QRD Menu Class
 class MenuItem
 {
 public:
@@ -31,6 +32,7 @@ public:
 	}
 };
 
+// IR Menu Class
 class IRMenuItem
 {
 public:
@@ -41,7 +43,7 @@ public:
 	IRMenuItem(String name)
 	{
 	  	MenuItemCount++;
-	  	EEPROMAddress = (uint16_t*)(MenuItemCount) + 5;
+	  	EEPROMAddress = (uint16_t*)(MenuItemCount) + 5; // offset the EEPROMAddress
 	  	Name = name;
 	  	Value = eeprom_read_word(EEPROMAddress);
 	}
@@ -51,6 +53,7 @@ public:
 	}
 };
 
+// Main Menu
 class MainMenuItem
 {
 public:
@@ -88,7 +91,7 @@ IRMenuItem IRProportionalGain = IRMenuItem("P-gain");
 IRMenuItem IRDerivativeGain   = IRMenuItem("D-gain");
 IRMenuItem IRIntegralGain     = IRMenuItem("I-gain");
 IRMenuItem IRThreshold		  = IRMenuItem("Threshold");
-IRMenuItem IRmenuItems[]        = {IRProportionalGain, IRDerivativeGain, IRIntegralGain, IRThreshold};
+IRMenuItem IRmenuItems[]      = {IRProportionalGain, IRDerivativeGain, IRIntegralGain, IRThreshold};
 
 uint16_t MainMenuItem::MenuItemCount = 0;
 MainMenuItem TapePID      = MainMenuItem("Tape PID");
@@ -121,18 +124,18 @@ unsigned int base_speed;
 
 void setup()
 {
-  #include <phys253setup.txt>
-  //Serial.begin(9600);
-  LCD.clear(); LCD.home();
-  base_speed = menuItems[0].Value;
-  pro_gain = menuItems[1].Value;
-  diff_gain = menuItems[2].Value;
-  int_gain = menuItems[3].Value;
-  threshold = menuItems[4].Value;
-  
-  LCD.print("Press Start.");
-  while(!startbutton()){};
-  LCD.clear();
+	#include <phys253setup.txt>
+	//Serial.begin(9600);
+	LCD.clear(); LCD.home();
+	base_speed = menuItems[0].Value;
+	pro_gain = menuItems[1].Value;
+	diff_gain = menuItems[2].Value;
+	int_gain = menuItems[3].Value;
+	threshold = menuItems[4].Value;
+
+	LCD.print("Press Start.");
+	while(!startbutton()){};
+	LCD.clear();
 }
 
 void loop()
@@ -203,12 +206,12 @@ void IRMENU()
  
 	while (true)
 	{
-		/* Show MenuItem value and knob value */
+		/* Show IRMenuItem value and knob value */
 		int menuIndex = knob(6) * (IRMenuItem::MenuItemCount) >> 10;
 		LCD.clear(); LCD.home();
 		LCD.print(IRmenuItems[menuIndex].Name); LCD.print(" "); LCD.print(IRmenuItems[menuIndex].Value);
 		LCD.setCursor(0, 1);
-		LCD.print("Set to "); LCD.print(menuIndex != 0 ? knob(7) : knob(7) >> 2); LCD.print("?");
+		LCD.print("Set to "); LCD.print(knob(7)); LCD.print("?");
 		delay(100);
  
 		/* Press start button to save the new value */
@@ -216,18 +219,10 @@ void IRMENU()
 		{
 			delay(100);
 			int val = knob(7); // cache knob value to memory
-			if (menuIndex == 0) {
-				val = val >> 2;
-				LCD.clear(); LCD.home();
-				LCD.print("Speed set to "); LCD.print(val);
-				delay(250);
-			}
-
 			IRmenuItems[menuIndex].Value = val;
 			IRmenuItems[menuIndex].Save();
 			delay(250);
 		}
-		
 
 		/* Press stop button to exit menu */
 		if (stopbutton())
