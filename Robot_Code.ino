@@ -6,8 +6,8 @@
 // Sensor Ports
 #define IR_L 0
 #define IR_R 1
-#define LEFT_QRD 2
-#define RIGHT_QRD 3
+#define QRD_L 2
+#define QRD_R 3
 #define LEFT_MOTOR 0
 #define RIGHT_MOTOR 1
 
@@ -116,22 +116,26 @@ int32_t net_error;
 int t = 1;
 int to;
 
-int pro_gain;
-int diff_gain;
-int int_gain;
-int threshold;
+// QRD vars
+int q_pro_gain;
+int q_diff_gain;
+int q_int_gain;
+int q_threshold;
 unsigned int base_speed;
+
+// IR vars
 
 void setup()
 {
 	#include <phys253setup.txt>
 	//Serial.begin(9600);
 	LCD.clear(); LCD.home();
+
 	base_speed = menuItems[0].Value;
-	pro_gain = menuItems[1].Value;
-	diff_gain = menuItems[2].Value;
-	int_gain = menuItems[3].Value;
-	threshold = menuItems[4].Value;
+	q_pro_gain = menuItems[1].Value;
+	q_diff_gain = menuItems[2].Value;
+	q_int_gain = menuItems[3].Value;
+	q_threshold = menuItems[4].Value;
 
 	LCD.print("Press Start.");
 	while(!startbutton()){};
@@ -140,10 +144,74 @@ void setup()
 
 void loop()
 {
-	LCD.clear();
-	if (startbutton() && stopbutton()){
-		MainMenu();
+	if (startbutton() && stopbutton()){          
+        // Pause motors
+        motor.speed(LEFT_MOTOR, 0);
+        motor.speed(RIGHT_MOTOR, 0);
+        MainMenu();
+        // Set values after exiting menu
+        base_speed = menuItems[0].Value;
+        q_pro_gain = menuItems[1].Value;
+        q_diff_gain = menuItems[2].Value;
+        q_int_gain = menuItems[3].Value;
+        q_threshold = menuItems[4].Value;
+        // Restart motors
+        motor.speed(LEFT_MOTOR, base_speed);
+        motor.speed(RIGHT_MOTOR, base_speed);
 	}
+
+    // PID control
+    left_sensor = analogRead(QRD_L);
+    right_sensor = analogRead(QRD_R);
+  
+    if(left_sensor > q_threshold && right_sensor > q_threshold)
+  		error = 0;
+    else if(left_sensor > q_threshold && right_sensor < q_threshold)
+  		error = -1;
+    else if(left_sensor < q_threshold && right_sensor > q_threshold)
+		error = 1;
+    else if(left_sensor < q_threshold && right_sensor < q_threshold)
+    {
+      // History - tape follower crossed line too fast?
+       if( last_error > 0)
+  			error = 5;
+       else if( last_error < 0)
+      		error = -5;
+    }
+    if( !(error == last_error)){
+		recent_error = last_error;
+		to = t;
+		t = 1;
+    }
+    
+    P_error = q_pro_gain * error;
+    D_error = q_diff_gain * ((float)(error - recent_error)/(float)(t+to)); // time is present within the differential gain
+    I_error += q_int_gain * error;
+    net_error = P_error + D_error + I_error;
+    
+    // Prevent adjusting errors from going over actual speed.
+    if(net_error > base_speed)
+  		net_error = base_speed;
+    if(net_error < -1*base_speed)
+  		net_error = -1*base_speed;
+    
+    //if net error is positive, right_motor will be stronger, will turn to the left
+    motor.speed(LEFT_MOTOR, base_speed + net_error);
+    motor.speed(RIGHT_MOTOR, base_speed - net_error);
+    
+    if( count == 100 ){
+		count = 0;
+		LCD.clear(); LCD.home();
+	  	LCD.print("LQ:"); LCD.print(left_sensor);
+		LCD.print(" LM:"); LCD.print(base_speed + net_error);
+		LCD.setCursor(0, 1);
+	  	LCD.print("RQ:"); LCD.print(right_sensor);
+		LCD.print(" RM:"); LCD.print(base_speed - net_error);
+    }
+    
+    last_error = error;
+    count++;
+    t++;
 }
 
 /* Functions */
