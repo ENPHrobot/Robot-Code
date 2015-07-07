@@ -31,6 +31,26 @@ public:
 	}
 };
 
+class IRMenuItem
+{
+public:
+	String    Name;
+	uint16_t  Value;
+	uint16_t* EEPROMAddress;
+	static uint16_t MenuItemCount;
+	IRMenuItem(String name)
+	{
+	  	MenuItemCount++;
+	  	EEPROMAddress = (uint16_t*)(MenuItemCount) + 5;
+	  	Name = name;
+	  	Value = eeprom_read_word(EEPROMAddress);
+	}
+	void Save()
+	{
+		eeprom_write_word(EEPROMAddress, Value);
+	}
+};
+
 class MainMenuItem
 {
 public:
@@ -47,6 +67,9 @@ public:
 			case 0:
 				QRDMENU();
 				break;
+			case 1:
+				IRMENU();
+				break;
 		}
 	}
 };
@@ -59,6 +82,13 @@ MenuItem DerivativeGain   = MenuItem("D-gain");
 MenuItem IntegralGain     = MenuItem("I-gain");
 MenuItem ThresholdVoltage = MenuItem("T-volt");
 MenuItem menuItems[]      = {Speed, ProportionalGain, DerivativeGain, IntegralGain, ThresholdVoltage};
+
+uint16_t IRMenuItem::MenuItemCount = 0;
+IRMenuItem IRProportionalGain = IRMenuItem("P-gain");
+IRMenuItem IRDerivativeGain   = IRMenuItem("D-gain");
+IRMenuItem IRIntegralGain     = IRMenuItem("I-gain");
+IRMenuItem IRThreshold		  = IRMenuItem("Threshold");
+IRMenuItem IRmenuItems[]        = {IRProportionalGain, IRDerivativeGain, IRIntegralGain, IRThreshold};
 
 uint16_t MainMenuItem::MenuItemCount = 0;
 MainMenuItem TapePID      = MainMenuItem("Tape PID");
@@ -107,6 +137,7 @@ void setup()
 
 void loop()
 {
+	LCD.clear();
 	if (startbutton() && stopbutton()){
 		MainMenu();
 	}
@@ -118,7 +149,7 @@ void loop()
 void QRDMENU()
 {
 	LCD.clear(); LCD.home();
-	LCD.print("Entering menu");
+	LCD.print("Entering submenu");
 	delay(500);
  
 	while (true)
@@ -164,9 +195,58 @@ void QRDMENU()
 	}
 }
 
+void IRMENU()
+{
+	LCD.clear(); LCD.home();
+	LCD.print("Entering submenu");
+	delay(500);
+ 
+	while (true)
+	{
+		/* Show MenuItem value and knob value */
+		int menuIndex = knob(6) * (IRMenuItem::MenuItemCount) >> 10;
+		LCD.clear(); LCD.home();
+		LCD.print(IRmenuItems[menuIndex].Name); LCD.print(" "); LCD.print(IRmenuItems[menuIndex].Value);
+		LCD.setCursor(0, 1);
+		LCD.print("Set to "); LCD.print(menuIndex != 0 ? knob(7) : knob(7) >> 2); LCD.print("?");
+		delay(100);
+ 
+		/* Press start button to save the new value */
+		if (startbutton())
+		{
+			delay(100);
+			int val = knob(7); // cache knob value to memory
+			if (menuIndex == 0) {
+				val = val >> 2;
+				LCD.clear(); LCD.home();
+				LCD.print("Speed set to "); LCD.print(val);
+				delay(250);
+			}
+
+			IRmenuItems[menuIndex].Value = val;
+			IRmenuItems[menuIndex].Save();
+			delay(250);
+		}
+		
+
+		/* Press stop button to exit menu */
+		if (stopbutton())
+		{
+			delay(100);
+			if (stopbutton())
+			{
+				LCD.clear(); LCD.home();
+				LCD.print("Leaving menu");
+				delay(500);
+				return;
+			}
+		}
+	}
+}
+
 void MainMenu() {
 	LCD.clear(); LCD.home();
-	LCD.print("Entering main menu");
+	LCD.print("Entering Main");
 	delay(500);
  
 	while (true)
@@ -183,12 +263,9 @@ void MainMenu() {
 		if (startbutton())
 		{
 			LCD.clear(); LCD.home();
-			LCD.print("Entering Menu...");
-			delay(300);
 			MainMenuItem::Open(menuIndex);
 		}
 		
-
 		/* Press stop button to exit menu */
 		if (stopbutton())
 		{
