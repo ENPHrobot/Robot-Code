@@ -13,6 +13,8 @@
 
 // Constants
 #define STABLE_SPEED 75
+#define FORWARDS 3
+#define BACKWARDS 4
 #define LEFT 5
 #define RIGHT 6
 
@@ -73,7 +75,7 @@ public:
 	{
 		switch (index) {
 		case 0:
-			// TODO. can add something here for sensors later like a syscheck.
+			// TODO: can add something here for sensors later like a syscheck.
 			break;
 		case 1:
 			QRDMENU();
@@ -120,6 +122,10 @@ int pivotCount = 0;
 int pivotEncountStart_L;
 int pivotEncountStart_R;
 uint32_t lastPivotTime;
+int travelCount = 0;
+int travelEncountStart_L;
+int travelEncountStart_R;
+uint32_t lastTravelTime;
 
 int error;
 int last_error = 0;
@@ -235,7 +241,7 @@ void loop()
 /* Helper Functions */
 
 // Stop driving
-void pauseDrive(){
+void pauseDrive() {
 	motor.speed(LEFT_MOTOR, 0);
 	motor.speed(RIGHT_MOTOR, 0);
 }
@@ -259,19 +265,40 @@ void pivot(int counts)
 	}
 }
 
-void returnPivot(uint32_t t, int d) {
+// Pivot in a direction d for a time t.
+void timedPivot(uint32_t t, int d) {
 	if ( d == LEFT) {
 		motor.speed(RIGHT_MOTOR, STABLE_SPEED);
 		motor.speed(LEFT_MOTOR, -STABLE_SPEED);
-	} else if (d == RIGHT){
+	} else if (d == RIGHT) {
 		motor.speed(RIGHT_MOTOR, -STABLE_SPEED);
 		motor.speed(LEFT_MOTOR, STABLE_SPEED);
 	}
 	delay(t);
-	pauseDrive();
+	pauseDrive(); //TODO: change to use a timer interrupt
+}
+
+// Travel in a direction d for a number of counts
+void travel(int counts, int d) {
+	travelCount = counts;
+	travelEncountStart_L = encount_L;
+	travelEncountStart_R = encount_R;
+	lastTravelTime = millis();
+	// TODO: one motor may need a power offset to travel straight
+	motor.speed(RIGHT_MOTOR, d == FORWARDS ? STABLE_SPEED : -STABLE_SPEED);
+	motor.speed(LEFT_MOTOR, d == FORWARDS ? STABLE_SPEED : -STABLE_SPEED);
+	attachTimerInterrupt(2000, travelCheck);
+}
+
+void timedTravel( uint32_t t, int d){
+	motor.speed(RIGHT_MOTOR, d == FORWARDS ? STABLE_SPEED : -STABLE_SPEED);
+	motor.speed(LEFT_MOTOR, d == FORWARDS ? STABLE_SPEED : -STABLE_SPEED);
+	delay(t);
+	pauseDrive(); //TODO: change to use a timer interrupt
 }
 
 /* Timer ISRs */
+
 void pivotCheck()
 {
 	if (encount_L - pivotEncountStart_L >= pivotCount) {
@@ -284,6 +311,21 @@ void pivotCheck()
 	        && encount_R - pivotEncountStart_R >= pivotCount) {
 		detachTimerInterrupt();
 		lastPivotTime -= millis();
+	}
+}
+
+void travelCheck()
+{
+	if (encount_L - travelEncountStart_L >= travelCount) {
+		motor.speed(LEFT_MOTOR, 0);
+	}
+	if (encount_R - travelEncountStart_R >= travelCount) {
+		motor.speed(RIGHT_MOTOR, 0);
+	}
+	if (encount_L - travelEncountStart_L >= travelCount
+	        && encount_R - travelEncountStart_R >= travelCount) {
+		detachTimerInterrupt();
+		lastTravelTime -= millis();
 	}
 }
 
