@@ -7,7 +7,7 @@
 #define IR_L 0
 #define IR_R 1
 #define QRD_L 2
-#define QRD_R 3
+#define QRD_R 5
 #define LEFT_MOTOR 0
 #define RIGHT_MOTOR 1
 
@@ -22,7 +22,7 @@ public:
 	MenuItem(String name)
 	{
 		MenuItemCount++;
-		EEPROMAddress = (uint16_t*)(MenuItemCount);
+		EEPROMAddress = (uint16_t*)(MenuItemCount) + 10;
 		Name = name;
 		Value = eeprom_read_word(EEPROMAddress);
 	}
@@ -43,7 +43,7 @@ public:
 	IRMenuItem(String name)
 	{
 		MenuItemCount++;
-		EEPROMAddress = (uint16_t*)(MenuItemCount) + 5; // offset the EEPROMAddress
+		EEPROMAddress = (uint16_t*)(MenuItemCount) + 15; // offset the EEPROMAddress
 		Name = name;
 		Value = eeprom_read_word(EEPROMAddress);
 	}
