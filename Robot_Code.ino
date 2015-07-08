@@ -22,7 +22,7 @@ public:
 	MenuItem(String name)
 	{
 		MenuItemCount++;
-		EEPROMAddress = (uint16_t*)(MenuItemCount) + 10;
+		EEPROMAddress = (uint16_t*)(MenuItemCount) + 42;
 		Name = name;
 		Value = eeprom_read_word(EEPROMAddress);
 	}
@@ -43,7 +43,7 @@ public:
 	IRMenuItem(String name)
 	{
 		MenuItemCount++;
-		EEPROMAddress = (uint16_t*)(MenuItemCount) + 15; // offset the EEPROMAddress
+		EEPROMAddress = (uint16_t*)(MenuItemCount) + 56; // offset the EEPROMAddress
 		Name = name;
 		Value = eeprom_read_word(EEPROMAddress);
 	}
@@ -68,9 +68,12 @@ public:
 	{
 		switch (index) {
 		case 0:
-			QRDMENU();
+			// TODO. can add something here for sensors later like a syscheck.
 			break;
 		case 1:
+			QRDMENU();
+			break;
+		case 2:
 			IRMENU();
 			break;
 		}
@@ -94,9 +97,10 @@ IRMenuItem IRThreshold		  = IRMenuItem("Threshold");
 IRMenuItem IRmenuItems[]      = {IRProportionalGain, IRDerivativeGain, IRIntegralGain, IRThreshold};
 
 uint16_t MainMenuItem::MenuItemCount = 0;
+MainMenuItem Sensors      = MainMenuItem("Sensors");
 MainMenuItem TapePID      = MainMenuItem("Tape PID");
 MainMenuItem IRPID        = MainMenuItem("IR PID");
-MainMenuItem mainMenu[]   = {TapePID, IRPID};
+MainMenuItem mainMenu[]   = {Sensors, TapePID, IRPID};
 
 /* Instantiate variables */
 int value = 0;
@@ -121,7 +125,7 @@ int q_pro_gain;
 int q_diff_gain;
 int q_int_gain;
 int q_threshold;
-unsigned int base_speed;
+int base_speed;
 
 // IR vars
 
@@ -137,6 +141,7 @@ void setup()
 	q_int_gain = menuItems[3].Value;
 	q_threshold = menuItems[4].Value;
 
+	LCD.print("RC1"); LCD.setCursor(0, 1);
 	LCD.print("Press Start.");
 	while (!startbutton()) {};
 	LCD.clear();
@@ -216,7 +221,10 @@ void loop()
 	t++;
 }
 
-/* Functions */
+/* Helper Functions */
+
+
+
 
 /* Menus */
 void QRDMENU()
@@ -319,9 +327,13 @@ void MainMenu() {
 		/* Show MainMenuItem value and knob value */
 		int menuIndex = knob(6) * (MainMenuItem::MenuItemCount) >> 10;
 		LCD.clear(); LCD.home();
-		LCD.print(mainMenu[menuIndex].Name);
-		LCD.setCursor(0, 1);
-		LCD.print("Start to Select.");
+		if (menuIndex == 0) {
+			LCD.print ("LQ:"); LCD.print(analogRead(QRD_L)); LCD.print(" RQ:"); LCD.print(analogRead(QRD_R));
+		} else {
+			LCD.print(mainMenu[menuIndex].Name);
+			LCD.setCursor(0, 1);
+			LCD.print("Start to Select.");
+		}
 		delay(100);
 
 		/* Press start button to enter submenu */
