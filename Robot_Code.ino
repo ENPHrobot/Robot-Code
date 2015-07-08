@@ -13,6 +13,8 @@
 
 // Constants
 #define STABLE_SPEED 75
+#define LEFT 5
+#define RIGHT 6
 
 // QRD Menu Class
 class MenuItem
@@ -255,6 +257,18 @@ void pivot(int counts)
 		motor.speed(LEFT_MOTOR, STABLE_SPEED);
 		attachTimerInterrupt(2000, pivotCheck);
 	}
+}
+
+void returnPivot(uint32_t t, int d) {
+	if ( d == LEFT) {
+		motor.speed(RIGHT_MOTOR, STABLE_SPEED);
+		motor.speed(LEFT_MOTOR, -STABLE_SPEED);
+	} else if (d == RIGHT){
+		motor.speed(RIGHT_MOTOR, -STABLE_SPEED);
+		motor.speed(LEFT_MOTOR, STABLE_SPEED);
+	}
+	delay(t);
+	pauseDrive();
 }
 
 /* Timer ISRs */
