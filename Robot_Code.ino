@@ -11,6 +11,9 @@
 #define LEFT_MOTOR 0
 #define RIGHT_MOTOR 1
 
+// Constants
+#define STABLE_SPEED 75
+
 // QRD Menu Class
 class MenuItem
 {
@@ -109,6 +112,12 @@ int average;
 int difference;
 int left_sensor;
 int right_sensor;
+volatile int encount_L = 0;
+volatile int encount_R = 0;
+int pivotCount = 0;
+int pivotEncountStart_L;
+int pivotEncountStart_R;
+uint32_t lastPivotTime;
 
 int error;
 int last_error = 0;
@@ -223,8 +232,46 @@ void loop()
 
 /* Helper Functions */
 
+// Stop driving
+void pauseDrive(){
+	motor.speed(LEFT_MOTOR, 0);
+	motor.speed(RIGHT_MOTOR, 0);
+}
 
+// Pivot the robot for a certain number of encoder
+// counts on both. UNTESTED.
+void pivot(int counts)
+{
+	pivotCount = counts;
+	pivotEncountStart_L = encount_L;
+	pivotEncountStart_R = encount_R;
+	lastPivotTime = millis();
+	if (counts < 0) {
+		motor.speed(RIGHT_MOTOR, STABLE_SPEED);
+		motor.speed(LEFT_MOTOR, -STABLE_SPEED);
+		attachTimerInterrupt(2000, pivotCheck);
+	} else if (counts > 0) {
+		motor.speed(RIGHT_MOTOR, -STABLE_SPEED);
+		motor.speed(LEFT_MOTOR, STABLE_SPEED);
+		attachTimerInterrupt(2000, pivotCheck);
+	}
+}
 
+/* Timer ISRs */
+void pivotCheck()
+{
+	if (encount_L - pivotEncountStart_L >= pivotCount) {
+		motor.speed(LEFT_MOTOR, 0);
+	}
+	if (encount_R - pivotEncountStart_R >= pivotCount) {
+		motor.speed(RIGHT_MOTOR, 0);
+	}
+	if (encount_L - pivotEncountStart_L >= pivotCount
+	        && encount_R - pivotEncountStart_R >= pivotCount) {
+		detachTimerInterrupt();
+		lastPivotTime -= millis();
+	}
+}
 
 /* Menus */
 void QRDMENU()
