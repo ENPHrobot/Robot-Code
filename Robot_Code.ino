@@ -110,7 +110,6 @@ MainMenuItem IRPID        = MainMenuItem("IR PID");
 MainMenuItem mainMenu[]   = {Sensors, TapePID, IRPID};
 
 /* Instantiate variables */
-int value = 0;
 int count = 0;
 int average;
 int difference;
@@ -153,7 +152,7 @@ int ir_threshold;
 void setup()
 {
 #include <phys253setup.txt>
-	//Serial.begin(9600);
+	Serial.begin(9600);
 	LCD.clear(); LCD.home();
 
 	base_speed = menuItems[0].Value;
@@ -175,6 +174,7 @@ void setup()
 
 void loop()
 {
+	// Check for menu command
 	if (startbutton() && stopbutton()) {
 		// Pause motors
 		motor.speed(LEFT_MOTOR, 0);
@@ -184,8 +184,11 @@ void loop()
 		motor.speed(LEFT_MOTOR, base_speed);
 		motor.speed(RIGHT_MOTOR, base_speed);
 	}
+	irPID();
+}
 
-	// PID control
+/* Control Loops */
+void tapePID() {
 	left_sensor = analogRead(QRD_L);
 	right_sensor = analogRead(QRD_R);
 
@@ -241,8 +244,54 @@ void loop()
 	t++;
 }
 
-/* Helper Functions */
+void irPID() {
+	left_sensor = analogRead(IR_L);
+	right_sensor = analogRead(IR_R);
+	difference = right_sensor - left_sensor;
+	average = (left_sensor + right_sensor) >> 3;
+	error = difference;
 
+	// Differential control
+	if ( !(error - last_error < ir_threshold)) {
+		recent_error = last_error;
+		to = t;
+		t = 1;
+	}
+
+
+	P_error = static_cast<int32_t> (ir_pro_gain) * error;
+	D_error = ir_diff_gain * ((float)(error - recent_error) / (float)(t + to)); // time is present within the differential gain
+	I_error += ir_int_gain * error;
+	net_error = ((static_cast<int32_t>(P_error + D_error + I_error) * average) >> 12);
+	Serial.println(net_error);
+	//Serial.print(D_error); Serial.print(" "); 
+
+	// Limit max error
+	if ( net_error > 235 )
+		net_error = 235;
+	else if (net_error < -235)
+		net_error = -235;
+
+	//if net error is positive, right_motor will be stronger, will turn to the left
+	motor.speed(LEFT_MOTOR, base_speed + net_error);
+	motor.speed(RIGHT_MOTOR, base_speed - net_error);
+
+	if ( count == 100 ) {
+		count = 0;
+		LCD.clear(); LCD.home();
+		LCD.print("L:"); LCD.print(left_sensor);
+		LCD.print(" R:"); LCD.print(right_sensor);
+		LCD.setCursor(0, 1);
+		LCD.print("ERR:"); LCD.print(net_error); 
+		//LCD.print("LM:"); LCD.print(base_speed + net_error); LCD.print(" RM:"); LCD.print(base_speed - net_error);
+	}
+
+	last_error = error;
+	count++;
+	t++;
+}
+
+/* Helper Functions */
 // Stop driving
 void pauseDrive() {
 	motor.speed(LEFT_MOTOR, 0);
@@ -468,6 +517,13 @@ void MainMenu() {
 				LCD.clear(); LCD.home();
 				LCD.print("Leaving menu");
 				delay(500);
+				// reset variables and counters
+				count = 0;
+				t = 1;
+				last_error = 0;
+				recent_error = 0;
+				I_error = 0;
+				LCD.clear();
 				return;
 			}
 		}
