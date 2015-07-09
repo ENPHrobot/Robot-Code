@@ -145,6 +145,10 @@ int q_threshold;
 int base_speed;
 
 // IR vars
+int ir_pro_gain;
+int ir_diff_gain;
+int ir_int_gain;
+int ir_threshold;
 
 void setup()
 {
@@ -157,11 +161,16 @@ void setup()
 	q_diff_gain = menuItems[2].Value;
 	q_int_gain = menuItems[3].Value;
 	q_threshold = menuItems[4].Value;
+	ir_pro_gain = IRmenuItems[0].Value;
+	ir_diff_gain = IRmenuItems[1].Value;
+	ir_int_gain = IRmenuItems[2].Value;
+	ir_threshold = IRmenuItems[3].Value;
 
-	LCD.print("RC1"); LCD.setCursor(0, 1);
+	LCD.print("RC2"); LCD.setCursor(0, 1);
 	LCD.print("Press Start.");
 	while (!startbutton()) {};
 	LCD.clear();
+	MainMenu();
 }
 
 void loop()
@@ -171,12 +180,6 @@ void loop()
 		motor.speed(LEFT_MOTOR, 0);
 		motor.speed(RIGHT_MOTOR, 0);
 		MainMenu();
-		// Set values after exiting menu
-		base_speed = menuItems[0].Value;
-		q_pro_gain = menuItems[1].Value;
-		q_diff_gain = menuItems[2].Value;
-		q_int_gain = menuItems[3].Value;
-		q_threshold = menuItems[4].Value;
 		// Restart motors
 		motor.speed(LEFT_MOTOR, base_speed);
 		motor.speed(RIGHT_MOTOR, base_speed);
@@ -372,6 +375,12 @@ void QRDMENU()
 			{
 				LCD.clear(); LCD.home();
 				LCD.print("Leaving menu");
+				// Set values after exiting menu
+				base_speed = menuItems[0].Value;
+				q_pro_gain = menuItems[1].Value;
+				q_diff_gain = menuItems[2].Value;
+				q_int_gain = menuItems[3].Value;
+				q_threshold = menuItems[4].Value;
 				delay(500);
 				return;
 			}
@@ -413,6 +422,10 @@ void IRMENU()
 			{
 				LCD.clear(); LCD.home();
 				LCD.print("Leaving menu");
+				ir_pro_gain = IRmenuItems[0].Value;
+				ir_diff_gain = IRmenuItems[1].Value;
+				ir_int_gain = IRmenuItems[2].Value;
+				ir_threshold = IRmenuItems[3].Value;
 				delay(500);
 				return;
 			}
