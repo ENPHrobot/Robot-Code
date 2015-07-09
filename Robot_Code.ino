@@ -11,13 +11,6 @@
 #define LEFT_MOTOR 0
 #define RIGHT_MOTOR 1
 
-// Constants
-#define STABLE_SPEED 75
-#define FORWARDS 3
-#define BACKWARDS 4
-#define LEFT 5
-#define RIGHT 6
-
 // QRD Menu Class
 class MenuItem
 {
@@ -29,7 +22,7 @@ public:
 	MenuItem(String name)
 	{
 		MenuItemCount++;
-		EEPROMAddress = (uint16_t*)(MenuItemCount) + 42;
+		EEPROMAddress = (uint16_t*)(2*MenuItemCount) + 73;
 		Name = name;
 		Value = eeprom_read_word(EEPROMAddress);
 	}
@@ -75,7 +68,7 @@ public:
 	{
 		switch (index) {
 		case 0:
-			// TODO: can add something here for sensors later like a syscheck.
+			// TODO. can add something here for sensors later like a syscheck.
 			break;
 		case 1:
 			QRDMENU();
@@ -116,16 +109,6 @@ int average;
 int difference;
 int left_sensor;
 int right_sensor;
-volatile int encount_L = 0;
-volatile int encount_R = 0;
-int pivotCount = 0;
-int pivotEncountStart_L;
-int pivotEncountStart_R;
-uint32_t lastPivotTime;
-int travelCount = 0;
-int travelEncountStart_L;
-int travelEncountStart_R;
-uint32_t lastTravelTime;
 
 int error;
 int last_error = 0;
@@ -240,94 +223,8 @@ void loop()
 
 /* Helper Functions */
 
-// Stop driving
-void pauseDrive() {
-	motor.speed(LEFT_MOTOR, 0);
-	motor.speed(RIGHT_MOTOR, 0);
-}
 
-// Pivot the robot for a certain number of encoder
-// counts on both. UNTESTED.
-void pivot(int counts)
-{
-	pivotCount = counts;
-	pivotEncountStart_L = encount_L;
-	pivotEncountStart_R = encount_R;
-	lastPivotTime = millis();
-	if (counts < 0) {
-		motor.speed(RIGHT_MOTOR, STABLE_SPEED);
-		motor.speed(LEFT_MOTOR, -STABLE_SPEED);
-		attachTimerInterrupt(2000, pivotCheck);
-	} else if (counts > 0) {
-		motor.speed(RIGHT_MOTOR, -STABLE_SPEED);
-		motor.speed(LEFT_MOTOR, STABLE_SPEED);
-		attachTimerInterrupt(2000, pivotCheck);
-	}
-}
 
-// Pivot in a direction d for a time t.
-void timedPivot(uint32_t t, int d) {
-	if ( d == LEFT) {
-		motor.speed(RIGHT_MOTOR, STABLE_SPEED);
-		motor.speed(LEFT_MOTOR, -STABLE_SPEED);
-	} else if (d == RIGHT) {
-		motor.speed(RIGHT_MOTOR, -STABLE_SPEED);
-		motor.speed(LEFT_MOTOR, STABLE_SPEED);
-	}
-	delay(t);
-	pauseDrive(); //TODO: change to use a timer interrupt
-}
-
-// Travel in a direction d for a number of counts
-void travel(int counts, int d) {
-	travelCount = counts;
-	travelEncountStart_L = encount_L;
-	travelEncountStart_R = encount_R;
-	lastTravelTime = millis();
-	// TODO: one motor may need a power offset to travel straight
-	motor.speed(RIGHT_MOTOR, d == FORWARDS ? STABLE_SPEED : -STABLE_SPEED);
-	motor.speed(LEFT_MOTOR, d == FORWARDS ? STABLE_SPEED : -STABLE_SPEED);
-	attachTimerInterrupt(2000, travelCheck);
-}
-
-void timedTravel( uint32_t t, int d){
-	motor.speed(RIGHT_MOTOR, d == FORWARDS ? STABLE_SPEED : -STABLE_SPEED);
-	motor.speed(LEFT_MOTOR, d == FORWARDS ? STABLE_SPEED : -STABLE_SPEED);
-	delay(t);
-	pauseDrive(); //TODO: change to use a timer interrupt
-}
-
-/* Timer ISRs */
-
-void pivotCheck()
-{
-	if (encount_L - pivotEncountStart_L >= pivotCount) {
-		motor.speed(LEFT_MOTOR, 0);
-	}
-	if (encount_R - pivotEncountStart_R >= pivotCount) {
-		motor.speed(RIGHT_MOTOR, 0);
-	}
-	if (encount_L - pivotEncountStart_L >= pivotCount
-	        && encount_R - pivotEncountStart_R >= pivotCount) {
-		detachTimerInterrupt();
-		lastPivotTime -= millis();
-	}
-}
-
-void travelCheck()
-{
-	if (encount_L - travelEncountStart_L >= travelCount) {
-		motor.speed(LEFT_MOTOR, 0);
-	}
-	if (encount_R - travelEncountStart_R >= travelCount) {
-		motor.speed(RIGHT_MOTOR, 0);
-	}
-	if (encount_L - travelEncountStart_L >= travelCount
-	        && encount_R - travelEncountStart_R >= travelCount) {
-		detachTimerInterrupt();
-		lastTravelTime -= millis();
-	}
-}
 
 /* Menus */
 void QRDMENU()
