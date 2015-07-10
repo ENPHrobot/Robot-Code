@@ -189,8 +189,7 @@ void loop()
 	// Check for menu command
 	if (startbutton() && stopbutton()) {
 		// Pause motors
-		motor.speed(LEFT_MOTOR, 0);
-		motor.speed(RIGHT_MOTOR, 0);
+		motor.stop_all();
 		MainMenu();
 		// Restart motors
 		motor.speed(LEFT_MOTOR, base_speed);
@@ -298,8 +297,8 @@ void irPID() {
 /* Helper Functions */
 // Stop driving
 void pauseDrive() {
-	motor.speed(LEFT_MOTOR, 0);
-	motor.speed(RIGHT_MOTOR, 0);
+	motor.stop(LEFT_MOTOR);
+	motor.stop(RIGHT_MOTOR);
 }
 
 // Pivot the robot for a certain number of encoder
@@ -358,10 +357,10 @@ void timedTravel( uint32_t t, int d) {
 void pivotCheck()
 {
 	if (encount_L - pivotEncountStart_L >= pivotCount) {
-		motor.speed(LEFT_MOTOR, 0);
+		motor.stop(LEFT_MOTOR);
 	}
 	if (encount_R - pivotEncountStart_R >= pivotCount) {
-		motor.speed(RIGHT_MOTOR, 0);
+		motor.stop(RIGHT_MOTOR);
 	}
 	if (encount_L - pivotEncountStart_L >= pivotCount
 	        && encount_R - pivotEncountStart_R >= pivotCount) {
@@ -373,10 +372,10 @@ void pivotCheck()
 void travelCheck()
 {
 	if (encount_L - travelEncountStart_L >= travelCount) {
-		motor.speed(LEFT_MOTOR, 0);
+		motor.stop(LEFT_MOTOR);
 	}
 	if (encount_R - travelEncountStart_R >= travelCount) {
-		motor.speed(RIGHT_MOTOR, 0);
+		motor.stop(RIGHT_MOTOR);
 	}
 	if (encount_L - travelEncountStart_L >= travelCount
 	        && encount_R - travelEncountStart_R >= travelCount) {
