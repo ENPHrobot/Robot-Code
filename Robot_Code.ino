@@ -267,8 +267,7 @@ void irPID() {
 	D_error = ir_diff_gain * (error - last_error); // time is present within the differential gain
 	I_error += ir_int_gain * error;
 	net_error = static_cast<int32_t>(P_error + D_error + I_error) >> 4;// * average) >> 12);
-	//Serial.print(ir_pro_gain); Serial.println(error);
-	Serial.print(P_error); Serial.print(" ");
+	Serial.print(average); Serial.print(" ");
 	Serial.println(net_error);
 	//Serial.print(D_error); Serial.print(" ");
 
@@ -476,6 +475,7 @@ void IRMENU()
 			{
 				LCD.clear(); LCD.home();
 				LCD.print("Leaving menu");
+				// set values
 				ir_pro_gain = IRmenuItems[0].Value;
 				ir_diff_gain = IRmenuItems[1].Value;
 				ir_int_gain = IRmenuItems[2].Value;
@@ -494,10 +494,11 @@ void MainMenu() {
 
 	while (true)
 	{
-		/* Show MainMenuItem value and knob value */
+		/* Display submenu or pid mode */
 		int menuIndex = knob(6) * (MainMenuItem::MenuItemCount) >> 10;
 		LCD.clear(); LCD.home();
 		if (menuIndex == 0) {
+			// mode switching handling
 			if (mode == "qrd") {
 				LCD.print("LQ:"); LCD.print(analogRead(QRD_L)); LCD.print(" RQ:"); LCD.print(analogRead(QRD_R));
 			}  else if (mode == "ir") {
@@ -509,13 +510,14 @@ void MainMenu() {
 			LCD.setCursor(0, 1);
 			LCD.print(modes[modeIndex]); LCD.print("?");
 		} else {
+			// generic submenu handling
 			LCD.print(mainMenu[menuIndex].Name);
 			LCD.setCursor(0, 1);
 			LCD.print("Start to Select.");
 		}
 		delay(100);
 
-		/* Press start button to enter submenu */
+		/* Press start button to enter submenu / switch pid modes */
 		if (startbutton())
 		{
 			LCD.clear(); LCD.home();
