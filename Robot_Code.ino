@@ -18,6 +18,50 @@
 #define LEFT 5
 #define RIGHT 6
 
+/* Instantiate variables */
+int count = 0;
+int average;
+int difference;
+int left_sensor;
+int right_sensor;
+volatile int encount_L = 0;
+volatile int encount_R = 0;
+int pivotCount = 0;
+int pivotEncountStart_L;
+int pivotEncountStart_R;
+uint32_t lastPivotTime;
+int travelCount = 0;
+int travelEncountStart_L;
+int travelEncountStart_R;
+uint32_t lastTravelTime;
+int modeIndex = 0;
+String modes[] = {"qrd", "ir"};
+String mode = modes[modeIndex];
+void (*pidfn)() = tapePID; // default PID loop is QRD tape following
+
+int error;
+int last_error = 0;
+int recent_error = 0;
+int D_error;
+int I_error = 0;
+int32_t P_error;
+int32_t net_error;
+int t = 1;
+int to;
+
+// QRD vars
+int q_pro_gain;
+int q_diff_gain;
+int q_int_gain;
+int q_threshold;
+int base_speed;
+
+// IR vars
+int ir_pro_gain;
+int ir_diff_gain;
+int ir_int_gain;
+int ir_threshold;
+
 // QRD Menu Class
 class MenuItem
 {
@@ -75,7 +119,15 @@ public:
 	{
 		switch (index) {
 		case 0:
-			// TODO: can add something here for sensors later like a syscheck.
+			// set pid mode for testing
+			mode = modes[modeIndex];
+			if (mode == modes[0]) {
+				// tape following mode
+				pidfn = tapePID;
+			} else if (mode == modes[1]) {
+				// ir following mode
+				pidfn = irPID;
+			}
 			break;
 		case 1:
 			QRDMENU();
@@ -108,46 +160,6 @@ MainMenuItem Sensors      = MainMenuItem("Sensors");
 MainMenuItem TapePID      = MainMenuItem("Tape PID");
 MainMenuItem IRPID        = MainMenuItem("IR PID");
 MainMenuItem mainMenu[]   = {Sensors, TapePID, IRPID};
-
-/* Instantiate variables */
-int count = 0;
-int average;
-int difference;
-int left_sensor;
-int right_sensor;
-volatile int encount_L = 0;
-volatile int encount_R = 0;
-int pivotCount = 0;
-int pivotEncountStart_L;
-int pivotEncountStart_R;
-uint32_t lastPivotTime;
-int travelCount = 0;
-int travelEncountStart_L;
-int travelEncountStart_R;
-uint32_t lastTravelTime;
-
-int error;
-int last_error = 0;
-int recent_error = 0;
-int D_error;
-int I_error = 0;
-int32_t P_error;
-int32_t net_error;
-int t = 1;
-int to;
-
-// QRD vars
-int q_pro_gain;
-int q_diff_gain;
-int q_int_gain;
-int q_threshold;
-int base_speed;
-
-// IR vars
-int ir_pro_gain;
-int ir_diff_gain;
-int ir_int_gain;
-int ir_threshold;
 
 void setup()
 {
@@ -184,7 +196,7 @@ void loop()
 		motor.speed(LEFT_MOTOR, base_speed);
 		motor.speed(RIGHT_MOTOR, base_speed);
 	}
-	irPID();
+	pidfn();
 }
 
 /* Control Loops */
@@ -276,7 +288,7 @@ void irPID() {
 		LCD.print("L:"); LCD.print(left_sensor);
 		LCD.print(" R:"); LCD.print(right_sensor);
 		LCD.setCursor(0, 1);
-		LCD.print("ERR:"); LCD.print(net_error); 
+		LCD.print("ERR:"); LCD.print(net_error);
 		//LCD.print("LM:"); LCD.print(base_speed + net_error); LCD.print(" RM:"); LCD.print(base_speed - net_error);
 	}
 
@@ -486,7 +498,16 @@ void MainMenu() {
 		int menuIndex = knob(6) * (MainMenuItem::MenuItemCount) >> 10;
 		LCD.clear(); LCD.home();
 		if (menuIndex == 0) {
-			LCD.print ("LQ:"); LCD.print(analogRead(QRD_L)); LCD.print(" RQ:"); LCD.print(analogRead(QRD_R));
+			if (mode == "qrd") {
+				LCD.print("LQ:"); LCD.print(analogRead(QRD_L)); LCD.print(" RQ:"); LCD.print(analogRead(QRD_R));
+			}  else if (mode == "ir") {
+				LCD.print("L:"); LCD.print(analogRead(IR_L)); LCD.print(" R:"); LCD.print(analogRead(IR_R));
+			} else {
+				LCD.print("Error: no mode");
+			}
+			modeIndex = (knob(7) * (sizeof(modes) / sizeof(*modes))) >> 10; // sizeof(a)/sizeof(*a) gives length of array
+			LCD.setCursor(0, 1);
+			LCD.print(modes[modeIndex]); LCD.print("?");
 		} else {
 			LCD.print(mainMenu[menuIndex].Name);
 			LCD.setCursor(0, 1);
