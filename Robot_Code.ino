@@ -251,26 +251,20 @@ void irPID() {
 	average = (left_sensor + right_sensor) >> 3;
 	error = difference;
 
-	// Differential control
-	if ( !(error - last_error < ir_threshold)) {
-		recent_error = last_error;
-		to = t;
-		t = 1;
-	}
-
-
-	P_error = static_cast<int32_t> (ir_pro_gain) * error;
-	D_error = ir_diff_gain * ((float)(error - recent_error) / (float)(t + to)); // time is present within the differential gain
+	P_error = (ir_pro_gain) * error;
+	D_error = ir_diff_gain * (error - last_error); // time is present within the differential gain
 	I_error += ir_int_gain * error;
-	net_error = ((static_cast<int32_t>(P_error + D_error + I_error) * average) >> 12);
+	net_error = static_cast<int32_t>(P_error + D_error + I_error) >> 4;// * average) >> 12);
+	//Serial.print(ir_pro_gain); Serial.println(error);
+	Serial.print(P_error); Serial.print(" ");
 	Serial.println(net_error);
-	//Serial.print(D_error); Serial.print(" "); 
+	//Serial.print(D_error); Serial.print(" ");
 
 	// Limit max error
-	if ( net_error > 235 )
+	/*if ( net_error > 235 )
 		net_error = 235;
 	else if (net_error < -235)
-		net_error = -235;
+		net_error = -235;*/
 
 	//if net error is positive, right_motor will be stronger, will turn to the left
 	motor.speed(LEFT_MOTOR, base_speed + net_error);
@@ -288,7 +282,6 @@ void irPID() {
 
 	last_error = error;
 	count++;
-	t++;
 }
 
 /* Helper Functions */
