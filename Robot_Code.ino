@@ -231,10 +231,7 @@ void tapePID() {
 	net_error = P_error + D_error + I_error;
 
 	// prevent adjusting errors from going over actual speed.
-	if (net_error > base_speed)
-		net_error = base_speed;
-	if (net_error < -base_speed)
-		net_error = -base_speed;
+	net_error = constrain(net_error, -base_speed, base_speed);
 
 	//if net error is positive, right_motor will be stronger, will turn to the left
 	motor.speed(LEFT_MOTOR, base_speed + net_error);
