@@ -3,11 +3,19 @@
 #include <phys253.h>
 #include <LiquidCrystal.h>
 
-// Sensor Ports
+/* Sensor Ports */
+// Analog Ports
 #define IR_L 0
 #define IR_R 1
-#define QRD_L 2
+#define ARM_POT 2
+#define QRD_L 3
 #define QRD_R 5
+
+// Digital Ports
+#define ENC_L 0
+#define ENC_R 1
+
+// Motor Ports
 #define LEFT_MOTOR 0
 #define RIGHT_MOTOR 1
 
@@ -38,6 +46,7 @@ int modeIndex = 0;
 String modes[] = {"qrd", "ir"};
 String mode = modes[modeIndex];
 void (*pidfn)() = tapePID; // default PID loop is QRD tape following
+int armControlV = 0; //TODO this initial value should be tuned after potentiometer is mounted onto arm.
 
 int error;
 int last_error = 0;
@@ -260,19 +269,16 @@ void irPID() {
 	error = difference;
 
 	P_error = (ir_pro_gain) * error;
-	D_error = ir_diff_gain * (error - last_error); // time is present within the differential gain
+	D_error = ir_diff_gain * (error - last_error);
 	I_error += ir_int_gain * error;
-	net_error = static_cast<int32_t>(P_error + D_error + I_error) >> 4;// * average) >> 12);
+	net_error = static_cast<int32_t>(P_error + D_error + I_error) >> 4;
 	Serial.print(average); Serial.print(" ");
 	Serial.println(net_error);
 	//Serial.print(D_error); Serial.print(" ");
 
 	// Limit max error
-	/*if ( net_error > 235 )
-		net_error = 235;
-	else if (net_error < -235)
-		net_error = -235;*/
-
+	//net_error = constrain(net_error, -base_speed, base_speed);
+	// TODO: Divide gain by average.
 	//if net error is positive, right_motor will be stronger, will turn to the left
 	motor.speed(LEFT_MOTOR, base_speed + net_error);
 	motor.speed(RIGHT_MOTOR, base_speed - net_error);
@@ -289,6 +295,19 @@ void irPID() {
 
 	last_error = error;
 	count++;
+}
+
+// Set arm vertical height
+void setArmVert(int V) {
+	armControlV = V;
+}
+
+// Keep arm vertically in place. Should be run along with PID.
+void armVertControl() {
+	int currentV = analogRead(ARM_POT);
+	int diff = currentV - armControlV;
+	diff = constrain(diff, -100, 100);
+	motor.speed(MOTOR, diff);
 }
 
 /* Helper Functions */
@@ -330,7 +349,7 @@ void timedPivot(uint32_t t, int d) {
 	pauseDrive(); //TODO: change to use a timer interrupt
 }
 
-// Travel in a direction d for a number of counts
+// Travel in a direction d for a number of counts.
 void travel(int counts, int d) {
 	travelCount = counts;
 	travelEncountStart_L = encount_L;
@@ -342,12 +361,14 @@ void travel(int counts, int d) {
 	attachTimerInterrupt(2000, travelCheck);
 }
 
+// Travel in a direction d for a time t.
 void timedTravel( uint32_t t, int d) {
 	motor.speed(RIGHT_MOTOR, d == FORWARDS ? STABLE_SPEED : -STABLE_SPEED);
 	motor.speed(LEFT_MOTOR, d == FORWARDS ? STABLE_SPEED : -STABLE_SPEED);
 	delay(t);
 	pauseDrive(); //TODO: change to use a timer interrupt
 }
+
 
 /* Timer ISRs */
 
