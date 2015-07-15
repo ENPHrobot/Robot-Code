@@ -81,7 +81,10 @@ public:
 			pivot(val);
 			break;
 		case 4:
-			travel(val,FORWARDS);
+			travel(val, FORWARDS);
+			break;
+		case 5:
+			launch(val);
 			break;
 		}
 	}
@@ -104,12 +107,13 @@ IRMenuItem IRThreshold		  = IRMenuItem("Threshold");
 IRMenuItem IRmenuItems[]      = {IRProportionalGain, IRDerivativeGain, IRIntegralGain, IRThreshold};
 
 uint16_t MainMenuItem::MenuItemCount = 0;
-MainMenuItem Sensors      = MainMenuItem("Sensors");
-MainMenuItem TapePID      = MainMenuItem("Tape PID");
-MainMenuItem IRPID        = MainMenuItem("IR PID");
-MainMenuItem pivotTest      = MainMenuItem("pivotTest");
-MainMenuItem travelTest        = MainMenuItem("travelTest");
-MainMenuItem mainMenu[]   = {Sensors, TapePID, IRPID, pivotTest, travelTest};
+MainMenuItem Sensors     = MainMenuItem("Sensors");
+MainMenuItem TapePID     = MainMenuItem("Tape PID");
+MainMenuItem IRPID       = MainMenuItem("IR PID");
+MainMenuItem pivotTest   = MainMenuItem("pivotTest");
+MainMenuItem travelTest  = MainMenuItem("travelTest");
+MainMenuItem launchTest  = MainMenuItem("launchTest");
+MainMenuItem mainMenu[]  = {Sensors, TapePID, IRPID, pivotTest, travelTest, launchTest};
 
 void setup()
 {
@@ -127,6 +131,12 @@ void setup()
 	ir_diff_gain = IRmenuItems[1].Value;
 	ir_int_gain = IRmenuItems[2].Value;
 	ir_threshold = IRmenuItems[3].Value;
+
+	// set ports 8 to 15 as OUTPUT
+	portMode(1,OUTPUT);
+	// ensure relays are LOW on start.
+	digitalWrite(LAUNCH_F, LOW);
+	digitalWrite(LAUNCH_B, LOW);
 
 	enableExternalInterrupt(INT1, RISING);
 	enableExternalInterrupt(INT2, RISING);
@@ -267,6 +277,19 @@ void pauseDrive() {
 	motor.stop(RIGHT_MOTOR);
 }
 
+// Power the catapult for a time ms, then return it to starting position.
+void launch(int ms) {
+	// start catapult motion (one relay on)
+	digitalWrite(LAUNCH_F, HIGH);
+	delay(ms);
+	// stop catapult motion (both relays on)
+	digitalWrite(LAUNCH_B, HIGH);
+	// return catapult to start (back relay on)
+	digitalWrite(LAUNCH_F, LOW);
+	delay(20);
+	digitalWrite(LAUNCH_B, LOW);
+}
+
 // Pivot the robot for a certain number of encoder
 // counts on both. UNTESTED.
 void pivot(int counts)
@@ -322,7 +345,7 @@ void timedTravel( uint32_t t, int d) {
 
 /* ISRs */
 
-// Encoder ISRs. S signifies measuring of speed
+// Encoder ISRs. S == speed
 void LE() {
 	encount_L++;
 }
@@ -504,11 +527,19 @@ void MainMenu() {
 			LCD.setCursor(0, 1);
 			val = (knob(7) >> 2) - 128;
 			LCD.print(val); LCD.print("?");
+			delay(200);
 		} else if ( menuIndex == 4) {
 			LCD.print(mainMenu[modeIndex].Name);
 			LCD.setCursor(0, 1);
 			val = map(knob(7), 0, 1023, 0, 3069);
 			LCD.print(val); LCD.print("?");
+			delay(200);
+		} else if (menuIndex == 5) {
+			LCD.print(mainMenu[modeIndex].Name);
+			LCD.setCursor(0, 1);
+			val = knob(7) >> 1;
+			LCD.print(val); LCD.print("?");
+			delay(200);
 		} else {
 			// generic submenu handling
 			LCD.print(mainMenu[menuIndex].Name);

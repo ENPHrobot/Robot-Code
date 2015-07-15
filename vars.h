@@ -1,23 +1,32 @@
 /* Sensor Ports */
 // Analog Ports
-enum { IR_L = 0,
-       IR_R = 1,
-       ARM_POT = 2,
-       QRD_L = 3,
-       QRD_R = 5
-     };
+enum {
+	IR_L = 0,
+	IR_R = 1,
+	ARM_POT = 2,
+	QRD_L = 3,
+	QRD_R = 5
+};
 
-// Digital Ports
-enum {ENC_L = 0,
-      ENC_R = 1
-     };
+// Digital Read Ports
+enum {
+	ENC_L = 0,
+	ENC_R = 1
+};
+
+// Digital Write Ports
+enum {
+	LAUNCH_F = 8,
+	LAUNCH_B = 9
+};
 
 // Motor Ports
-enum {LEFT_MOTOR = 0,
-      RIGHT_MOTOR = 1,
-      CATAPULT = 2,
-      ARM_MOTOR = 3
-     };
+enum {
+	LEFT_MOTOR = 0,
+	RIGHT_MOTOR = 1,
+	CATAPULT = 2,
+	ARM_MOTOR = 3
+};
 
 // Constants
 enum {
