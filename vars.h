@@ -1,27 +1,32 @@
 /* Sensor Ports */
 // Analog Ports
-#define IR_L 0
-#define IR_R 1
-#define ARM_POT 2
-#define QRD_L 3
-#define QRD_R 5
+enum { IR_L = 0,
+       IR_R = 1,
+       ARM_POT = 2,
+       QRD_L = 3,
+       QRD_R = 5
+     };
 
 // Digital Ports
-#define ENC_L 0
-#define ENC_R 1
+enum {ENC_L = 0,
+      ENC_R = 1
+     };
 
 // Motor Ports
-#define LEFT_MOTOR 0
-#define RIGHT_MOTOR 1
-#define CATAPULT 2
-#define ARM_MOTOR 3
+enum {LEFT_MOTOR = 0,
+      RIGHT_MOTOR = 1,
+      CATAPULT = 2,
+      ARM_MOTOR = 3
+     };
 
 // Constants
-#define STABLE_SPEED 75
-#define FORWARDS 3
-#define BACKWARDS 4
-#define LEFT 5
-#define RIGHT 6
+enum {
+	STABLE_SPEED = 75,
+	FORWARDS = 3,
+	BACKWARDS = 4,
+	LEFT = 5,
+	RIGHT = 6
+};
 
 /* Instantiate variables */
 int count = 0;
@@ -44,10 +49,11 @@ int travelEncountStart_L;
 int travelEncountStart_R;
 uint32_t lastTravelTime;
 int modeIndex = 0;
+int val;
 String modes[] = {"qrd", "ir"};
 String mode = modes[modeIndex];
-void (*pidfn)(); // default PID loop is QRD tape following
-int armControlV = 0; //TODO this initial value should be tuned after potentiometer is mounted onto arm.
+void (*pidfn)();
+int armControlV = 550; //TODO this initial value should be tuned after potentiometer is mounted onto arm.
 
 int error;
 int last_error = 0;
