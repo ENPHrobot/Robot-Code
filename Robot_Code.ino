@@ -2,7 +2,7 @@
 #include <Interrupts.h>
 #include <phys253.h>
 #include <LiquidCrystal.h>
-#include "vars.h"
+#include "Robot_Code.h"
 
 // QRD Menu Class
 class MenuItem

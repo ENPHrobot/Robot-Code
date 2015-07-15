@@ -1,3 +1,6 @@
+#ifndef Robot_Code_h
+#define Robot_Code_h
+
 /* Sensor Ports */
 // Analog Ports
 enum {
@@ -86,3 +89,5 @@ int ir_pro_gain;
 int ir_diff_gain;
 int ir_int_gain;
 int ir_threshold;
+
+#endif
