@@ -77,6 +77,12 @@ public:
 		case 2:
 			IRMENU();
 			break;
+		case 3:
+			pivot(val);
+			break;
+		case 4:
+			travel(val,FORWARDS);
+			break;
 		}
 	}
 };
@@ -101,12 +107,14 @@ uint16_t MainMenuItem::MenuItemCount = 0;
 MainMenuItem Sensors      = MainMenuItem("Sensors");
 MainMenuItem TapePID      = MainMenuItem("Tape PID");
 MainMenuItem IRPID        = MainMenuItem("IR PID");
-MainMenuItem mainMenu[]   = {Sensors, TapePID, IRPID};
+MainMenuItem pivotTest      = MainMenuItem("pivotTest");
+MainMenuItem travelTest        = MainMenuItem("travelTest");
+MainMenuItem mainMenu[]   = {Sensors, TapePID, IRPID, pivotTest, travelTest};
 
 void setup()
 {
 #include <phys253setup.txt>
-	Serial.begin(9600);
+	//Serial.begin(9600);
 	LCD.clear(); LCD.home();
 
 	// set gains
@@ -120,6 +128,12 @@ void setup()
 	ir_int_gain = IRmenuItems[2].Value;
 	ir_threshold = IRmenuItems[3].Value;
 
+	enableExternalInterrupt(INT1, RISING);
+	enableExternalInterrupt(INT2, RISING);
+	attachISR(INT1, LE);
+	attachISR(INT2, RE);
+
+	// default PID loop is QRD tape following
 	pidfn = tapePID;
 
 	LCD.print("RC2"); LCD.setCursor(0, 1);
@@ -306,6 +320,29 @@ void timedTravel( uint32_t t, int d) {
 }
 
 
+/* ISRs */
+
+// Encoder ISRs. S signifies measuring of speed
+void LE() {
+	encount_L++;
+}
+
+void RE() {
+	encount_R++;
+}
+
+void LES() {
+	encount_L++;
+	s_L = millis() - time_L;
+	time_L = millis();
+}
+
+void RES() {
+	encount_R++;
+	s_R = millis() - time_R;
+	time_R = millis();
+}
+
 /* Timer ISRs */
 
 void pivotCheck()
@@ -462,6 +499,16 @@ void MainMenu() {
 			modeIndex = (knob(7) * (sizeof(modes) / sizeof(*modes))) >> 10; // sizeof(a)/sizeof(*a) gives length of array
 			LCD.setCursor(0, 1);
 			LCD.print(modes[modeIndex]); LCD.print("?");
+		} else if (menuIndex == 3) {
+			LCD.print(mainMenu[modeIndex].Name);
+			LCD.setCursor(0, 1);
+			val = (knob(7) >> 2) - 128;
+			LCD.print(val); LCD.print("?");
+		} else if ( menuIndex == 4) {
+			LCD.print(mainMenu[modeIndex].Name);
+			LCD.setCursor(0, 1);
+			val = map(knob(7), 0, 1023, 0, 3069);
+			LCD.print(val); LCD.print("?");
 		} else {
 			// generic submenu handling
 			LCD.print(mainMenu[menuIndex].Name);
