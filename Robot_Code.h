@@ -8,7 +8,8 @@ enum {
 	IR_R = 1,
 	ARM_POT = 2,
 	QRD_L = 3,
-	QRD_R = 5
+	QRD_R = 4,
+	QRD_LINE = 5
 };
 
 // Digital Read Ports
@@ -65,7 +66,10 @@ int val;
 String modes[] = {"qrd", "ir"};
 String mode = modes[modeIndex];
 void (*pidfn)();
+void empty(){};
+void (*processfn)() = empty;
 int armControlV = 550; //TODO this initial value should be tuned after potentiometer is mounted onto arm.
+int petCount = 0;
 
 int error;
 int last_error = 0;

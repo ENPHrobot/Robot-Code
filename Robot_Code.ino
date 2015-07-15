@@ -133,7 +133,7 @@ void setup()
 	ir_threshold = IRmenuItems[3].Value;
 
 	// set ports 8 to 15 as OUTPUT
-	portMode(1,OUTPUT);
+	portMode(1, OUTPUT);
 	// ensure relays are LOW on start.
 	digitalWrite(LAUNCH_F, LOW);
 	digitalWrite(LAUNCH_B, LOW);
@@ -169,6 +169,38 @@ void loop()
 
 /* Control Loops */
 void tapePID() {
+
+	if (checkPet()) {
+		// TODO: pet fn here
+		pauseDrive();
+		int a1;
+		int a2;
+		petCount++;
+		while (stopbutton()) {
+			a1 = map(knob(6), 0, 1023, 0, 180);
+			a2 = map(knob(7), 0, 1023, 0, 180);
+			RCServo0.write(a1);
+			RCServo1.write(a2);
+			LCD.print("lo:"); LCD.print(a1); LCD.print(" hi:"); LCD.print(a2);
+			LCD.setCursor(0, 1); LCD.print(analogRead(ARM_POT));
+			delay(150);
+		}
+
+		// change ISR of encoders and processfn after 2nd pet
+		if (petCount == 2) {
+			time_L = millis();
+			time_R = millis();
+			attachISR(INT1, LES);
+			attachISR(INT2, RES);
+			// start checking for slower speed on ramp
+			processfn = speedControl;
+		}
+
+		LCD.clear(); LCD.home();
+	}
+
+	processfn();
+
 	left_sensor = analogRead(QRD_L);
 	right_sensor = analogRead(QRD_R);
 
@@ -257,6 +289,8 @@ void irPID() {
 	count++;
 }
 
+/* Helper Functions */
+
 // Set arm vertical height
 void setArmVert(int V) {
 	armControlV = V;
@@ -270,7 +304,6 @@ void armVertControl() {
 	motor.speed(ARM_MOTOR, diff);
 }
 
-/* Helper Functions */
 // Stop driving
 void pauseDrive() {
 	motor.stop(LEFT_MOTOR);
@@ -288,6 +321,14 @@ void launch(int ms) {
 	digitalWrite(LAUNCH_F, LOW);
 	delay(20);
 	digitalWrite(LAUNCH_B, LOW);
+}
+
+// Checks for the horizontal line that signals a pet to pick up.
+boolean checkPet() {
+	if ( analogRead(QRD_LINE) > q_threshold ) {
+		return true;
+	}
+	return false;
 }
 
 // Pivot the robot for a certain number of encoder
@@ -342,6 +383,16 @@ void timedTravel( uint32_t t, int d) {
 	pauseDrive(); //TODO: change to use a timer interrupt
 }
 
+// Changes base speed depending on how fast encoder counts are triggered.
+void speedControl() {
+	if (s_L > 250 && s_R > 250) {
+		base_speed = base_speed + 10;
+	} else if (s_L < 50 && s_R < 50) {
+		base_speed = menuItems[0].Value;
+		processfn = [](){}; // TODO: might need to just use empty();
+	}
+}
+
 
 /* ISRs */
 
@@ -356,13 +407,16 @@ void RE() {
 
 void LES() {
 	encount_L++;
-	s_L = millis() - time_L;
+	int ct = millis() - time_L;
+	// filter out speeds less than 10 ms
+	s_L = ct > 10 ? ct : s_L;
 	time_L = millis();
 }
 
 void RES() {
 	encount_R++;
-	s_R = millis() - time_R;
+	int ct = millis() - time_R;
+	s_R = ct > 10 ? ct : s_R;
 	time_R = millis();
 }
 
@@ -565,6 +619,7 @@ void MainMenu() {
 				LCD.print("Leaving menu");
 				delay(500);
 				// reset variables and counters
+				base_speed = menuItems[0].Value;
 				count = 0;
 				t = 1;
 				last_error = 0;
