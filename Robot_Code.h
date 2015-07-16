@@ -15,7 +15,8 @@ enum {
 // Digital Read Ports
 enum {
 	ENC_L = 0,
-	ENC_R = 1
+	ENC_R = 1,
+	HAND_SWITCH = 7
 };
 
 // Digital Write Ports

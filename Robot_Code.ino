@@ -171,7 +171,7 @@ void loop()
 void tapePID() {
 
 	if (checkPet()) {
-		// TODO: pet fn here
+		// TODO: pet pickup fn here
 		pauseDrive();
 		int a1;
 		int a2;
@@ -194,6 +194,9 @@ void tapePID() {
 			attachISR(INT2, RES);
 			// start checking for slower speed on ramp
 			processfn = speedControl;
+		} else if (petCount == 4) {
+			// TODO: implement more elegant switching to ir
+			pidfn = irPID;
 		}
 
 		LCD.clear(); LCD.home();
@@ -389,7 +392,10 @@ void speedControl() {
 		base_speed = base_speed + 10;
 	} else if (s_L < 50 && s_R < 50) {
 		base_speed = menuItems[0].Value;
-		processfn = [](){}; // TODO: might need to just use empty();
+		processfn = []() {}; // TODO: might need to just use empty();
+		// reset ISRs
+		attachISR(INT1, LE);
+		attachISR(INT2, RE);
 	}
 }
 
