@@ -377,12 +377,16 @@ void pivot(int counts)
 
 // Turn robot left (counts < 0) or right (counts > 0) for 
 // certain amount of encoder counts forward
-void turnFoward(int counts)
+void turnForward(int counts)
 {
+	int turnCount;
+	int turnEncountStart_L, turnEncountStart_R;
+
 	turnCount = abs(counts);
 	turnEncountStart_L = encount_L;
 	turnEncountStart_R = encount_R;
 	lastTurnTime = millis();
+
 	if (counts < 0) {
 		motor.speed(RIGHT_MOTOR, STABLE_SPEED);
 		motor.stop(LEFT_MOTOR);
@@ -406,10 +410,14 @@ void turnFoward(int counts)
 // certain amount of encoder counts backward
 void turnBack(int counts)
 {
+	int turnCount;
+	int turnEncountStart_L, turnEncountStart_R;
+
 	turnCount = abs(counts);
 	turnEncountStart_L = encount_L;
 	turnEncountStart_R = encount_R;
 	lastTurnTime = millis();
+	
 	if (counts < 0) {
 		motor.speed(RIGHT_MOTOR, -STABLE_SPEED);
 		motor.stop(LEFT_MOTOR);
