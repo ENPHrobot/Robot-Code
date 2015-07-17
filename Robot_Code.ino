@@ -624,28 +624,32 @@ void MainMenu() {
 		if (menuIndex == 0) {
 			// mode switching handling
 			if (mode == "qrd") {
-				LCD.print("LQ:"); LCD.print(analogRead(QRD_L)); LCD.print("RQ:"); LCD.print(analogRead(QRD_R)); LCD.print(analogRead(QRD_LINE));
+				LCD.print("LQ:"); LCD.print(analogRead(QRD_L)); LCD.print(" RQ:"); LCD.print(analogRead(QRD_R)); 
+				LCD.setCursor(0,1); LCD.print("HQ:"); LCD.print(analogRead(QRD_LINE));
 			}  else if (mode == "ir") {
 				LCD.print("L:"); LCD.print(analogRead(IR_L)); LCD.print(" R:"); LCD.print(analogRead(IR_R));
 			} else {
 				LCD.print("Error: no mode");
 			}
 			modeIndex = (knob(7) * (sizeof(modes) / sizeof(*modes))) >> 10; // sizeof(a)/sizeof(*a) gives length of array
-			LCD.setCursor(0, 1);
+			LCD.setCursor(9, 1);
 			LCD.print(modes[modeIndex]); LCD.print("?");
 		} else if (menuIndex == 3) {
+			// pivot test menu option
 			LCD.print(mainMenu[menuIndex].Name);
 			LCD.setCursor(0, 1);
 			val = (knob(7) >> 2) - 128;
 			LCD.print(val); LCD.print("?");
 			delay(200);
 		} else if ( menuIndex == 4) {
+			// travel test menu option
 			LCD.print(mainMenu[menuIndex].Name);
 			LCD.setCursor(0, 1);
 			val = map(knob(7), 0, 1023, 0, 3069);
 			LCD.print(val); LCD.print("?");
 			delay(200);
 		} else if (menuIndex == 5) {
+			// launch catapult test menu option
 			LCD.print(mainMenu[menuIndex].Name);
 			LCD.setCursor(0, 1);
 			val = knob(7) >> 1;
