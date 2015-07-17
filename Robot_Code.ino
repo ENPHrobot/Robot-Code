@@ -146,7 +146,7 @@ void setup()
 	// default PID loop is QRD tape following
 	pidfn = tapePID;
 
-	LCD.print("RC3"); LCD.setCursor(0, 1);
+	LCD.print("RC4"); LCD.setCursor(0, 1);
 	LCD.print("Press Start.");
 	while (!startbutton()) {};
 	LCD.clear();
@@ -351,33 +351,16 @@ void pivot(int counts)
 	int pivotEncountStart_R = encount_R;
 	lastPivotTime = millis();
 
-	if (counts < 0) {
-		// pivot left
-		motor.speed(RIGHT_MOTOR, STABLE_SPEED);
-		motor.speed(LEFT_MOTOR, -STABLE_SPEED);
-		while ( lflag == false || rflag == false) {
-			if (encount_L - pivotEncountStart_L >= pivotCount) {
-				motor.stop(LEFT_MOTOR);
-				lflag = true;
-			}
-			if (encount_R - pivotEncountStart_R >= pivotCount) {
-				motor.stop(RIGHT_MOTOR);
-				rflag = true;
-			}
+	motor.speed(RIGHT_MOTOR, counts > 0 ? -STABLE_SPEED : STABLE_SPEED);
+	motor.speed(LEFT_MOTOR, counts > 0 ? STABLE_SPEED : -STABLE_SPEED);
+	while (lflag == false || rflag == false) {
+		if (encount_L - pivotEncountStart_L >= pivotCount) {
+			motor.stop(LEFT_MOTOR);
+			lflag = true;
 		}
-	} else if (counts > 0) {
-		// pivot right
-		motor.speed(RIGHT_MOTOR, -STABLE_SPEED);
-		motor.speed(LEFT_MOTOR, STABLE_SPEED);
-		while (lflag == false || rflag == false) {
-			if (encount_L - pivotEncountStart_L >= pivotCount) {
-				motor.stop(LEFT_MOTOR);
-				lflag = true;
-			}
-			if (encount_R - pivotEncountStart_R >= pivotCount) {
-				motor.stop(RIGHT_MOTOR);
-				rflag = true;
-			}
+		if (encount_R - pivotEncountStart_R >= pivotCount) {
+			motor.stop(RIGHT_MOTOR);
+			rflag = true;
 		}
 	}
 
@@ -453,7 +436,7 @@ void timedPivot(uint32_t t, int d) {
 		motor.speed(LEFT_MOTOR, STABLE_SPEED);
 	}
 	delay(t);
-	pauseDrive(); //TODO: change to use a timer interrupt
+	pauseDrive();
 }
 
 // Travel in a direction d for a number of counts.
@@ -494,10 +477,10 @@ void speedControl() {
 		base_speed = base_speed + 10;
 	} else if (s_L < 50 && s_R < 50) {
 		base_speed = menuItems[0].Value;
-		processfn = []() {}; // TODO: might need to just use empty();
-		// reset ISRs
+		// reset ISRs and processfn
 		attachISR(ENC_L, LE);
 		attachISR(ENC_R, RE);
+		processfn = []() {}; // TODO: might need to just use empty();
 	}
 }
 

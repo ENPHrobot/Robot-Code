@@ -69,7 +69,7 @@ int I_error = 0;
 int32_t P_error;
 int32_t net_error;
 int t = 1;
-int to;
+int to = 0;
 
 // QRD vars
 int q_pro_gain;
