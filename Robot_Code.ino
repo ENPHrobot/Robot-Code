@@ -343,33 +343,40 @@ boolean checkPet() {
 // counts on both motors.
 void pivot(int counts)
 {
+	// flags to check whether motors have stopped or not
+	boolean lflag = false, rflag = false;
+	// cache starting values
 	int pivotCount = abs(counts);
 	int pivotEncountStart_L = encount_L;
 	int pivotEncountStart_R = encount_R;
 	lastPivotTime = millis();
 
 	if (counts < 0) {
+		// pivot left
 		motor.speed(RIGHT_MOTOR, STABLE_SPEED);
 		motor.speed(LEFT_MOTOR, -STABLE_SPEED);
-		while (encount_L - pivotEncountStart_L <= pivotCount
-		        || encount_R - pivotEncountStart_R <= pivotCount) {
+		while ( lflag == false || rflag == false) {
 			if (encount_L - pivotEncountStart_L >= pivotCount) {
 				motor.stop(LEFT_MOTOR);
+				lflag = true;
 			}
 			if (encount_R - pivotEncountStart_R >= pivotCount) {
 				motor.stop(RIGHT_MOTOR);
+				rflag = true;
 			}
 		}
 	} else if (counts > 0) {
+		// pivot right
 		motor.speed(RIGHT_MOTOR, -STABLE_SPEED);
 		motor.speed(LEFT_MOTOR, STABLE_SPEED);
-		while (encount_L - pivotEncountStart_L <= pivotCount
-		        || encount_R - pivotEncountStart_R <= pivotCount) {
+		while (lflag == false || rflag == false) {
 			if (encount_L - pivotEncountStart_L >= pivotCount) {
 				motor.stop(LEFT_MOTOR);
+				lflag = true;
 			}
 			if (encount_R - pivotEncountStart_R >= pivotCount) {
 				motor.stop(RIGHT_MOTOR);
+				rflag = true;
 			}
 		}
 	}
@@ -380,24 +387,27 @@ void pivot(int counts)
 // certain amount of encoder counts forward
 void turnForward(int counts)
 {
+	boolean flag = false;
 	int turnCount = abs(counts);
 	int turnEncountStart_L = encount_L;
 	int turnEncountStart_R = encount_R;
 
 	if (counts < 0) {
-		motor.speed(RIGHT_MOTOR, STABLE_SPEED);
 		motor.stop(LEFT_MOTOR);
-		while (encount_R - turnEncountStart_R <= turnCount) {
+		motor.speed(RIGHT_MOTOR, STABLE_SPEED);
+		while (flag == false) {
 			if (encount_R - turnEncountStart_R >= turnCount) {
 				motor.stop(RIGHT_MOTOR);
+				flag = true;
 			}
 		}
 	} else if (counts > 0) {
 		motor.stop(RIGHT_MOTOR);
 		motor.speed(LEFT_MOTOR, STABLE_SPEED);
-		while (encount_L - turnEncountStart_L <= turnCount) {
+		while (flag == false) {
 			if (encount_L - turnEncountStart_L >= turnCount) {
 				motor.stop(LEFT_MOTOR);
+				flag = true;
 			}
 		}
 	}
@@ -407,6 +417,7 @@ void turnForward(int counts)
 // certain amount of encoder counts backward
 void turnBack(int counts)
 {
+	boolean flag = false;
 	int turnCount = abs(counts);
 	int turnEncountStart_L = encount_L;
 	int turnEncountStart_R = encount_R;
@@ -414,17 +425,19 @@ void turnBack(int counts)
 	if (counts < 0) {
 		motor.speed(RIGHT_MOTOR, -STABLE_SPEED);
 		motor.stop(LEFT_MOTOR);
-		while (encount_R - turnEncountStart_R <= turnCount) {
+		while (flag == false) {
 			if (encount_R - turnEncountStart_R >= turnCount) {
 				motor.stop(RIGHT_MOTOR);
+				flag = true;
 			}
 		}
 	} else if (counts > 0) {
 		motor.stop(RIGHT_MOTOR);
 		motor.speed(LEFT_MOTOR, -STABLE_SPEED);
-		while (encount_L - turnEncountStart_L <= turnCount) {
+		while (flag == false) {
 			if (encount_L - turnEncountStart_L >= turnCount) {
 				motor.stop(LEFT_MOTOR);
+				flag = true;
 			}
 		}
 	}
@@ -445,20 +458,24 @@ void timedPivot(uint32_t t, int d) {
 
 // Travel in a direction d for a number of counts.
 void travel(int counts, int d) {
+
+	boolean lflag = false, rflag = false;
 	int travelCount = counts;
 	int travelEncountStart_L = encount_L;
 	int travelEncountStart_R = encount_R;
 	lastTravelTime = millis();
+
 	// TODO: one motor may need a power offset to travel straight
 	motor.speed(RIGHT_MOTOR, d == FORWARDS ? STABLE_SPEED : -STABLE_SPEED);
 	motor.speed(LEFT_MOTOR, d == FORWARDS ? STABLE_SPEED : -STABLE_SPEED);
-	while (encount_L - travelEncountStart_L >= travelCount
-	        || encount_R - travelEncountStart_R >= travelCount) {
+	while (lflag == false || rflag == false) {
 		if (encount_L - travelEncountStart_L >= travelCount) {
 			motor.stop(LEFT_MOTOR);
+			lflag = true;
 		}
 		if (encount_R - travelEncountStart_R >= travelCount) {
 			motor.stop(RIGHT_MOTOR);
+			rflag = true;
 		}
 	}
 }
