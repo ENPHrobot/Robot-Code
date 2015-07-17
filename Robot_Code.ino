@@ -375,6 +375,60 @@ void pivot(int counts)
 
 }
 
+// Turn robot left (counts < 0) or right (counts > 0) for 
+// certain amount of encoder counts forward
+void turnFoward(int counts)
+{
+	turnCount = abs(counts);
+	turnEncountStart_L = encount_L;
+	turnEncountStart_R = encount_R;
+	lastTurnTime = millis();
+	if (counts < 0) {
+		motor.speed(RIGHT_MOTOR, STABLE_SPEED);
+		motor.stop(LEFT_MOTOR);
+		while (encount_R - turnEncountStart_R <= turnCount) {
+			if (encount_R - turnEncountStart_R >= turnCount) {
+				motor.stop(RIGHT_MOTOR);
+			}
+		}
+	} else if (counts > 0) {
+		motor.stop(RIGHT_MOTOR);
+		motor.speed(LEFT_MOTOR, STABLE_SPEED);
+		while (encount_L - turnEncountStart_L <= turnCount) {
+			if (encount_L - turnEncountStart_L >= turnCount) {
+				motor.stop(LEFT_MOTOR);
+			}
+		}
+	}
+}
+
+// Turn robot left (counts < 0) or right (counts > 0) for 
+// certain amount of encoder counts backward
+void turnBack(int counts)
+{
+	turnCount = abs(counts);
+	turnEncountStart_L = encount_L;
+	turnEncountStart_R = encount_R;
+	lastTurnTime = millis();
+	if (counts < 0) {
+		motor.speed(RIGHT_MOTOR, -STABLE_SPEED);
+		motor.stop(LEFT_MOTOR);
+		while (encount_R - turnEncountStart_R <= turnCount) {
+			if (encount_R - turnEncountStart_R >= turnCount) {
+				motor.stop(RIGHT_MOTOR);
+			}
+		}
+	} else if (counts > 0) {
+		motor.stop(RIGHT_MOTOR);
+		motor.speed(LEFT_MOTOR, -STABLE_SPEED);
+		while (encount_L - turnEncountStart_L <= turnCount) {
+			if (encount_L - turnEncountStart_L >= turnCount) {
+				motor.stop(LEFT_MOTOR);
+			}
+		}
+	}
+}
+
 // Pivot in a direction d for a time t.
 void timedPivot(uint32_t t, int d) {
 	if ( d == LEFT) {
