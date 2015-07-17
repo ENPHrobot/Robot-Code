@@ -138,15 +138,15 @@ void setup()
 	digitalWrite(LAUNCH_F, LOW);
 	digitalWrite(LAUNCH_B, LOW);
 
-	enableExternalInterrupt(INT1, RISING);
-	enableExternalInterrupt(INT2, RISING);
-	attachISR(INT1, LE);
-	attachISR(INT2, RE);
+	enableExternalInterrupt(ENC_L, RISING);
+	enableExternalInterrupt(ENC_R, RISING);
+	attachISR(ENC_L, LE);
+	attachISR(ENC_R, RE);
 
 	// default PID loop is QRD tape following
 	pidfn = tapePID;
 
-	LCD.print("RC2"); LCD.setCursor(0, 1);
+	LCD.print("RC3"); LCD.setCursor(0, 1);
 	LCD.print("Press Start.");
 	while (!startbutton()) {};
 	LCD.clear();
@@ -190,8 +190,8 @@ void tapePID() {
 		if (petCount == 2) {
 			time_L = millis();
 			time_R = millis();
-			attachISR(INT1, LES);
-			attachISR(INT2, RES);
+			attachISR(ENC_L, LES);
+			attachISR(ENC_R, RES);
 			// start checking for slower speed on ramp
 			processfn = speedControl;
 		} else if (petCount == 4) {
@@ -244,11 +244,13 @@ void tapePID() {
 	if ( count == 100 ) {
 		count = 0;
 		LCD.clear(); LCD.home();
-		LCD.print("LQ:"); LCD.print(left_sensor);
+		/*LCD.print("LQ:"); LCD.print(left_sensor);
 		LCD.print(" LM:"); LCD.print(base_speed + net_error);
 		LCD.setCursor(0, 1);
 		LCD.print("RQ:"); LCD.print(right_sensor);
-		LCD.print(" RM:"); LCD.print(base_speed - net_error);
+		LCD.print(" RM:"); LCD.print(base_speed - net_error);*/
+		LCD.print("LE:"); LCD.print(encount_L); LCD.print(" RE:"); LCD.print(encount_R);
+		LCD.setCursor(0, 1); LCD.print(s_L); LCD.print(" "); LCD.print(s_R);
 	}
 
 	last_error = error;
@@ -257,6 +259,9 @@ void tapePID() {
 }
 
 void irPID() {
+
+	processfn();
+
 	left_sensor = analogRead(IR_L);
 	right_sensor = analogRead(IR_R);
 	difference = right_sensor - left_sensor;
@@ -319,11 +324,11 @@ void launch(int ms) {
 	digitalWrite(LAUNCH_F, HIGH);
 	delay(ms);
 	// stop catapult motion (both relays on)
-	digitalWrite(LAUNCH_B, HIGH);
-	// return catapult to start (back relay on)
 	digitalWrite(LAUNCH_F, LOW);
+	// return catapult to start (back relay on)
+	/*digitalWrite(LAUNCH_F, LOW);
 	delay(20);
-	digitalWrite(LAUNCH_B, LOW);
+	digitalWrite(LAUNCH_B, LOW);*/
 }
 
 // Checks for the horizontal line that signals a pet to pick up.
@@ -335,22 +340,39 @@ boolean checkPet() {
 }
 
 // Pivot the robot for a certain number of encoder
-// counts on both. UNTESTED.
+// counts on both motors.
 void pivot(int counts)
 {
-	pivotCount = counts;
+	pivotCount = abs(counts);
 	pivotEncountStart_L = encount_L;
 	pivotEncountStart_R = encount_R;
 	lastPivotTime = millis();
 	if (counts < 0) {
 		motor.speed(RIGHT_MOTOR, STABLE_SPEED);
 		motor.speed(LEFT_MOTOR, -STABLE_SPEED);
-		attachTimerInterrupt(2000, pivotCheck);
+		while (encount_L - pivotEncountStart_L <= pivotCount
+		        || encount_R - pivotEncountStart_R <= pivotCount) {
+			if (encount_L - pivotEncountStart_L >= pivotCount) {
+				motor.stop(LEFT_MOTOR);
+			}
+			if (encount_R - pivotEncountStart_R >= pivotCount) {
+				motor.stop(RIGHT_MOTOR);
+			}
+		}
 	} else if (counts > 0) {
 		motor.speed(RIGHT_MOTOR, -STABLE_SPEED);
 		motor.speed(LEFT_MOTOR, STABLE_SPEED);
-		attachTimerInterrupt(2000, pivotCheck);
+		while (encount_L - pivotEncountStart_L <= pivotCount
+		        || encount_R - pivotEncountStart_R <= pivotCount) {
+			if (encount_L - pivotEncountStart_L >= pivotCount) {
+				motor.stop(LEFT_MOTOR);
+			}
+			if (encount_R - pivotEncountStart_R >= pivotCount) {
+				motor.stop(RIGHT_MOTOR);
+			}
+		}
 	}
+
 }
 
 // Pivot in a direction d for a time t.
@@ -375,7 +397,15 @@ void travel(int counts, int d) {
 	// TODO: one motor may need a power offset to travel straight
 	motor.speed(RIGHT_MOTOR, d == FORWARDS ? STABLE_SPEED : -STABLE_SPEED);
 	motor.speed(LEFT_MOTOR, d == FORWARDS ? STABLE_SPEED : -STABLE_SPEED);
-	attachTimerInterrupt(2000, travelCheck);
+	while (encount_L - travelEncountStart_L >= travelCount
+	        || encount_R - travelEncountStart_R >= travelCount) {
+		if (encount_L - travelEncountStart_L >= travelCount) {
+			motor.stop(LEFT_MOTOR);
+		}
+		if (encount_R - travelEncountStart_R >= travelCount) {
+			motor.stop(RIGHT_MOTOR);
+		}
+	}
 }
 
 // Travel in a direction d for a time t.
@@ -394,8 +424,8 @@ void speedControl() {
 		base_speed = menuItems[0].Value;
 		processfn = []() {}; // TODO: might need to just use empty();
 		// reset ISRs
-		attachISR(INT1, LE);
-		attachISR(INT2, RE);
+		attachISR(ENC_L, LE);
+		attachISR(ENC_R, RE);
 	}
 }
 
@@ -573,7 +603,7 @@ void MainMenu() {
 		if (menuIndex == 0) {
 			// mode switching handling
 			if (mode == "qrd") {
-				LCD.print("LQ:"); LCD.print(analogRead(QRD_L)); LCD.print(" RQ:"); LCD.print(analogRead(QRD_R));
+				LCD.print("LQ:"); LCD.print(analogRead(QRD_L)); LCD.print("RQ:"); LCD.print(analogRead(QRD_R)); LCD.print(analogRead(QRD_LINE));
 			}  else if (mode == "ir") {
 				LCD.print("L:"); LCD.print(analogRead(IR_L)); LCD.print(" R:"); LCD.print(analogRead(IR_R));
 			} else {
@@ -583,19 +613,19 @@ void MainMenu() {
 			LCD.setCursor(0, 1);
 			LCD.print(modes[modeIndex]); LCD.print("?");
 		} else if (menuIndex == 3) {
-			LCD.print(mainMenu[modeIndex].Name);
+			LCD.print(mainMenu[menuIndex].Name);
 			LCD.setCursor(0, 1);
 			val = (knob(7) >> 2) - 128;
 			LCD.print(val); LCD.print("?");
 			delay(200);
 		} else if ( menuIndex == 4) {
-			LCD.print(mainMenu[modeIndex].Name);
+			LCD.print(mainMenu[menuIndex].Name);
 			LCD.setCursor(0, 1);
 			val = map(knob(7), 0, 1023, 0, 3069);
 			LCD.print(val); LCD.print("?");
 			delay(200);
 		} else if (menuIndex == 5) {
-			LCD.print(mainMenu[modeIndex].Name);
+			LCD.print(mainMenu[menuIndex].Name);
 			LCD.setCursor(0, 1);
 			val = knob(7) >> 1;
 			LCD.print(val); LCD.print("?");

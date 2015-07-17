@@ -14,28 +14,28 @@ enum {
 
 // Digital Read Ports
 enum {
-	ENC_L = 0,
-	ENC_R = 1,
-	HAND_SWITCH = 7
+	ENC_L = INT1,
+	ENC_R = INT2,
+	HAND_SWITCH = 6,
+	FRONT_SWITCH = 7
 };
 
 // Digital Write Ports
 enum {
 	LAUNCH_F = 8,
-	LAUNCH_B = 9
+	LAUNCH_B = 10
 };
 
 // Motor Ports
 enum {
 	LEFT_MOTOR = 0,
-	RIGHT_MOTOR = 1,
-	CATAPULT = 2,
+	RIGHT_MOTOR = 2,
 	ARM_MOTOR = 3
 };
 
 // Constants
 enum {
-	STABLE_SPEED = 75,
+	STABLE_SPEED = 70,
 	FORWARDS = 3,
 	BACKWARDS = 4,
 	LEFT = 5,
