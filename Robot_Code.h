@@ -43,24 +43,14 @@ enum {
 };
 
 /* Instantiate variables */
-int count = 0;
-int average;
-int difference;
-int left_sensor;
-int right_sensor;
 volatile int encount_L = 0;
 volatile int encount_R = 0;
 volatile int s_L = 0;
 volatile int s_R = 0;
 volatile int time_L;
 volatile int time_R;
-int pivotCount = 0;
-int pivotEncountStart_L;
-int pivotEncountStart_R;
+int count = 0;
 uint32_t lastPivotTime;
-int travelCount = 0;
-int travelEncountStart_L;
-int travelEncountStart_R;
 uint32_t lastTravelTime;
 int modeIndex = 0;
 int val;
@@ -72,7 +62,6 @@ void (*processfn)() = empty;
 int armControlV = 550; //TODO this initial value should be tuned after potentiometer is mounted onto arm.
 int petCount = 0;
 
-int error;
 int last_error = 0;
 int recent_error = 0;
 int D_error;

@@ -204,8 +204,9 @@ void tapePID() {
 
 	processfn();
 
-	left_sensor = analogRead(QRD_L);
-	right_sensor = analogRead(QRD_R);
+	int left_sensor = analogRead(QRD_L);
+	int right_sensor = analogRead(QRD_R);
+	int error;
 
 	if (left_sensor > q_threshold && right_sensor > q_threshold)
 		error = 0; // both sensors on black
@@ -262,11 +263,10 @@ void irPID() {
 
 	processfn();
 
-	left_sensor = analogRead(IR_L);
-	right_sensor = analogRead(IR_R);
-	difference = right_sensor - left_sensor;
-	average = (left_sensor + right_sensor) >> 3;
-	error = difference;
+	int left_sensor = analogRead(IR_L);
+	int right_sensor = analogRead(IR_R);
+	int error = right_sensor - left_sensor;
+	int average = (left_sensor + right_sensor) >> 3;
 
 	P_error = (ir_pro_gain) * error;
 	D_error = ir_diff_gain * (error - last_error);
@@ -339,14 +339,15 @@ boolean checkPet() {
 	return false;
 }
 
-// Pivot the robot for a certain number of encoder
+// Pivot the robot for a specified number of encoder
 // counts on both motors.
 void pivot(int counts)
 {
-	pivotCount = abs(counts);
-	pivotEncountStart_L = encount_L;
-	pivotEncountStart_R = encount_R;
+	int pivotCount = abs(counts);
+	int pivotEncountStart_L = encount_L;
+	int pivotEncountStart_R = encount_R;
 	lastPivotTime = millis();
+
 	if (counts < 0) {
 		motor.speed(RIGHT_MOTOR, STABLE_SPEED);
 		motor.speed(LEFT_MOTOR, -STABLE_SPEED);
@@ -375,17 +376,13 @@ void pivot(int counts)
 
 }
 
-// Turn robot left (counts < 0) or right (counts > 0) for 
+// Turn robot left (counts < 0) or right (counts > 0) for
 // certain amount of encoder counts forward
 void turnForward(int counts)
 {
-	int turnCount;
-	int turnEncountStart_L, turnEncountStart_R;
-
-	turnCount = abs(counts);
-	turnEncountStart_L = encount_L;
-	turnEncountStart_R = encount_R;
-	lastTurnTime = millis();
+	int turnCount = abs(counts);
+	int turnEncountStart_L = encount_L;
+	int turnEncountStart_R = encount_R;
 
 	if (counts < 0) {
 		motor.speed(RIGHT_MOTOR, STABLE_SPEED);
@@ -406,18 +403,14 @@ void turnForward(int counts)
 	}
 }
 
-// Turn robot left (counts < 0) or right (counts > 0) for 
+// Turn robot left (counts < 0) or right (counts > 0) for
 // certain amount of encoder counts backward
 void turnBack(int counts)
 {
-	int turnCount;
-	int turnEncountStart_L, turnEncountStart_R;
+	int turnCount = abs(counts);
+	int turnEncountStart_L = encount_L;
+	int turnEncountStart_R = encount_R;
 
-	turnCount = abs(counts);
-	turnEncountStart_L = encount_L;
-	turnEncountStart_R = encount_R;
-	lastTurnTime = millis();
-	
 	if (counts < 0) {
 		motor.speed(RIGHT_MOTOR, -STABLE_SPEED);
 		motor.stop(LEFT_MOTOR);
@@ -452,9 +445,9 @@ void timedPivot(uint32_t t, int d) {
 
 // Travel in a direction d for a number of counts.
 void travel(int counts, int d) {
-	travelCount = counts;
-	travelEncountStart_L = encount_L;
-	travelEncountStart_R = encount_R;
+	int travelCount = counts;
+	int travelEncountStart_L = encount_L;
+	int travelEncountStart_R = encount_R;
 	lastTravelTime = millis();
 	// TODO: one motor may need a power offset to travel straight
 	motor.speed(RIGHT_MOTOR, d == FORWARDS ? STABLE_SPEED : -STABLE_SPEED);
@@ -475,7 +468,7 @@ void timedTravel( uint32_t t, int d) {
 	motor.speed(RIGHT_MOTOR, d == FORWARDS ? STABLE_SPEED : -STABLE_SPEED);
 	motor.speed(LEFT_MOTOR, d == FORWARDS ? STABLE_SPEED : -STABLE_SPEED);
 	delay(t);
-	pauseDrive(); //TODO: change to use a timer interrupt
+	pauseDrive();
 }
 
 // Changes base speed depending on how fast encoder counts are triggered.
@@ -516,38 +509,6 @@ void RES() {
 	int ct = millis() - time_R;
 	s_R = ct > 10 ? ct : s_R;
 	time_R = millis();
-}
-
-/* Timer ISRs */
-
-void pivotCheck()
-{
-	if (encount_L - pivotEncountStart_L >= pivotCount) {
-		motor.stop(LEFT_MOTOR);
-	}
-	if (encount_R - pivotEncountStart_R >= pivotCount) {
-		motor.stop(RIGHT_MOTOR);
-	}
-	if (encount_L - pivotEncountStart_L >= pivotCount
-	        && encount_R - pivotEncountStart_R >= pivotCount) {
-		detachTimerInterrupt();
-		lastPivotTime -= millis();
-	}
-}
-
-void travelCheck()
-{
-	if (encount_L - travelEncountStart_L >= travelCount) {
-		motor.stop(LEFT_MOTOR);
-	}
-	if (encount_R - travelEncountStart_R >= travelCount) {
-		motor.stop(RIGHT_MOTOR);
-	}
-	if (encount_L - travelEncountStart_L >= travelCount
-	        && encount_R - travelEncountStart_R >= travelCount) {
-		detachTimerInterrupt();
-		lastTravelTime -= millis();
-	}
 }
 
 /* Menus */
