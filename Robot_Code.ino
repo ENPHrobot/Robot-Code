@@ -103,8 +103,7 @@ uint16_t IRMenuItem::MenuItemCount = 0;
 IRMenuItem IRProportionalGain = IRMenuItem("P-gain");
 IRMenuItem IRDerivativeGain   = IRMenuItem("D-gain");
 IRMenuItem IRIntegralGain     = IRMenuItem("I-gain");
-IRMenuItem IRThreshold		  = IRMenuItem("Threshold");
-IRMenuItem IRmenuItems[]      = {IRProportionalGain, IRDerivativeGain, IRIntegralGain, IRThreshold};
+IRMenuItem IRmenuItems[]      = {IRProportionalGain, IRDerivativeGain, IRIntegralGain};
 
 uint16_t MainMenuItem::MenuItemCount = 0;
 MainMenuItem Sensors     = MainMenuItem("Sensors");
@@ -130,7 +129,6 @@ void setup()
 	ir_pro_gain = IRmenuItems[0].Value;
 	ir_diff_gain = IRmenuItems[1].Value;
 	ir_int_gain = IRmenuItems[2].Value;
-	ir_threshold = IRmenuItems[3].Value;
 
 	// set ports 8 to 15 as OUTPUT
 	portMode(1, OUTPUT);
@@ -138,6 +136,7 @@ void setup()
 	digitalWrite(LAUNCH_F, LOW);
 	digitalWrite(LAUNCH_B, LOW);
 
+	// attach external interrupts on encoder pins
 	enableExternalInterrupt(ENC_L, RISING);
 	enableExternalInterrupt(ENC_R, RISING);
 	attachISR(ENC_L, LE);
@@ -605,7 +604,6 @@ void IRMENU()
 				ir_pro_gain = IRmenuItems[0].Value;
 				ir_diff_gain = IRmenuItems[1].Value;
 				ir_int_gain = IRmenuItems[2].Value;
-				ir_threshold = IRmenuItems[3].Value;
 				delay(500);
 				return;
 			}
