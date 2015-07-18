@@ -63,6 +63,7 @@ void (*processfn)() = empty;
 int armControlV = 550; //TODO this initial value should be tuned after potentiometer is mounted onto arm.
 int petCount = 0;
 boolean onTape = false;
+int lastSpeedUp;
 
 int last_error = 0;
 int recent_error = 0;

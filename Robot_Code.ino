@@ -198,7 +198,8 @@ void tapePID() {
 			attachISR(ENC_L, LES);
 			attachISR(ENC_R, RES);
 			// start checking for slower speed on ramp
-			//processfn = speedControl;
+			lastSpeedUp = millis();
+			processfn = speedControl;
 		} else if (petCount == 4) {
 			// TODO: implement more elegant switching to ir
 			encount_L = 0;
@@ -327,17 +328,13 @@ void pauseDrive() {
 	motor.stop(RIGHT_MOTOR);
 }
 
-// Power the catapult for a time ms, then return it to starting position.
+// Power the catapult for a time ms.
 void launch(int ms) {
 	// start catapult motion (one relay on)
 	digitalWrite(LAUNCH_F, HIGH);
 	delay(ms);
 	// stop catapult motion (both relays on)
 	digitalWrite(LAUNCH_F, LOW);
-	// return catapult to start (back relay on)
-	/*digitalWrite(LAUNCH_F, LOW);
-	delay(20);
-	digitalWrite(LAUNCH_B, LOW);*/
 }
 
 // Checks for the horizontal line that signals a pet to pick up.
@@ -503,8 +500,9 @@ void timedTravel( uint32_t t, int d) {
 
 // Changes base speed depending on how fast encoder counts are triggered.
 void speedControl() {
-	if (s_L > 250 && s_R > 250) {
-		base_speed = base_speed + 10;
+	// TODO: see if reducing speed up rate is required
+	if (s_L > 250 && s_R > 250 && millis() - lastSpeedUp > 1000) {
+		base_speed = constrain(base_speed + 10, 0, 255);
 	} else if (s_L < 50 && s_R < 50) {
 		base_speed = menuItems[0].Value;
 		// reset ISRs and processfn
@@ -753,6 +751,7 @@ void MainMenu() {
 				delay(500);
 				// reset variables and counters
 				base_speed = menuItems[0].Value;
+				petCount = 0;
 				count = 0;
 				t = 1;
 				last_error = 0;
