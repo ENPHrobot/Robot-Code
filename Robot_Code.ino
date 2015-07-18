@@ -169,17 +169,23 @@ void loop()
 /* Control Loops */
 void tapePID() {
 
+	processfn();
+
 	if (checkPet()) {
 		// TODO: pet pickup fn here
 		pauseDrive();
 		int a1;
 		int a2;
 		petCount++;
-		while (stopbutton()) {
-			a1 = map(knob(6), 0, 1023, 0, 180);
-			a2 = map(knob(7), 0, 1023, 0, 180);
+		while (!stopbutton()) {
+			LCD.clear(); LCD.home();
+			a1 = map(knob(6), 0, 1023, 0, 265);
+			//a2 = map(knob(7), 0, 1023, 0, 265);
+			a2 = map(knob(7), 0 , 1023, 500, 930);
 			RCServo0.write(a1);
-			RCServo1.write(a2);
+			setArmVert(a2);
+			armVertControl();
+			//RCServo1.write(a2);
 			LCD.print("lo:"); LCD.print(a1); LCD.print(" hi:"); LCD.print(a2);
 			LCD.setCursor(0, 1); LCD.print(analogRead(ARM_POT));
 			delay(150);
@@ -192,16 +198,16 @@ void tapePID() {
 			attachISR(ENC_L, LES);
 			attachISR(ENC_R, RES);
 			// start checking for slower speed on ramp
-			processfn = speedControl;
+			//processfn = speedControl;
 		} else if (petCount == 4) {
 			// TODO: implement more elegant switching to ir
-			pidfn = irPID;
+			encount_L = 0;
+			encount_R = 0;
+			switchMode();
 		}
 
 		LCD.clear(); LCD.home();
 	}
-
-	processfn();
 
 	int left_sensor = analogRead(QRD_L);
 	int right_sensor = analogRead(QRD_R);
@@ -298,6 +304,10 @@ void irPID() {
 
 /* Helper Functions */
 
+void switchMode() {
+	pidfn = irPID;
+}
+
 // Set arm vertical height
 void setArmVert(int V) {
 	armControlV = V;
@@ -332,7 +342,28 @@ void launch(int ms) {
 
 // Checks for the horizontal line that signals a pet to pick up.
 boolean checkPet() {
-	if ( analogRead(QRD_LINE) > q_threshold ) {
+	int e = analogRead(QRD_LINE);
+	if ( e > q_threshold && onTape == false) {
+		onTape = true;
+		return true;
+	} else if ( e < q_threshold ) {
+		onTape = false;
+	}
+	return false;
+}
+
+// Checks if it is time to pick up the pet on the rafter in IR following
+boolean checkRafterPet() {
+	// TODO: needs tuning
+	if ( encount_L >= ENC_RAFTER && encount_R >= ENC_RAFTER ) {
+		return true;
+	}
+	return false;
+}
+
+// Check if robot has followed to the end, where the box is
+boolean checkBoxedPet() {
+	if (digitalRead(FRONT_SWITCH) == HIGH) {
 		return true;
 	}
 	return false;
@@ -483,6 +514,47 @@ void speedControl() {
 	}
 }
 
+// processfn for first IR segment
+void rafterProcess() {
+	if (checkRafterPet()) {
+		pauseDrive();
+		int a1;
+		int a2;
+		petCount++;
+		// TODO: rafter pet pickup here
+		while (stopbutton()) {
+			a1 = map(knob(6), 0, 1023, 0, 180);
+			a2 = map(knob(7), 0, 1023, 0, 180);
+			RCServo0.write(a1);
+			RCServo1.write(a2);
+			LCD.print("lo:"); LCD.print(a1); LCD.print(" hi:"); LCD.print(a2);
+			LCD.setCursor(0, 1); LCD.print(analogRead(ARM_POT));
+			delay(150);
+		}
+		processfn = buriedProcess;
+	}
+}
+
+// processfn for second IR segment
+void buriedProcess() {
+	if (checkBoxedPet()) {
+		pauseDrive();
+		int a1;
+		int a2;
+		petCount++;
+		// TODO: buried pet pickup here
+		while (stopbutton()) {
+			a1 = map(knob(6), 0, 1023, 0, 180);
+			a2 = map(knob(7), 0, 1023, 0, 180);
+			RCServo0.write(a1);
+			RCServo1.write(a2);
+			LCD.print("lo:"); LCD.print(a1); LCD.print(" hi:"); LCD.print(a2);
+			LCD.setCursor(0, 1); LCD.print(analogRead(ARM_POT));
+			delay(150);
+		}
+	}
+}
+
 
 /* ISRs */
 
@@ -624,8 +696,8 @@ void MainMenu() {
 		if (menuIndex == 0) {
 			// mode switching handling
 			if (mode == "qrd") {
-				LCD.print("LQ:"); LCD.print(analogRead(QRD_L)); LCD.print(" RQ:"); LCD.print(analogRead(QRD_R)); 
-				LCD.setCursor(0,1); LCD.print("HQ:"); LCD.print(analogRead(QRD_LINE));
+				LCD.print("LQ:"); LCD.print(analogRead(QRD_L)); LCD.print(" RQ:"); LCD.print(analogRead(QRD_R));
+				LCD.setCursor(0, 1); LCD.print("HQ:"); LCD.print(analogRead(QRD_LINE));
 			}  else if (mode == "ir") {
 				LCD.print("L:"); LCD.print(analogRead(IR_L)); LCD.print(" R:"); LCD.print(analogRead(IR_R));
 			} else {

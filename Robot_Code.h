@@ -39,7 +39,8 @@ enum {
 	FORWARDS = 3,
 	BACKWARDS = 4,
 	LEFT = 5,
-	RIGHT = 6
+	RIGHT = 6,
+	ENC_RAFTER = 60
 };
 
 /* Instantiate variables */
@@ -57,10 +58,11 @@ int val;
 String modes[] = {"qrd", "ir"};
 String mode = modes[modeIndex];
 void (*pidfn)();
-void empty(){};
+void empty() {};
 void (*processfn)() = empty;
 int armControlV = 550; //TODO this initial value should be tuned after potentiometer is mounted onto arm.
 int petCount = 0;
+boolean onTape = false;
 
 int last_error = 0;
 int recent_error = 0;
@@ -82,6 +84,5 @@ int base_speed;
 int ir_pro_gain;
 int ir_diff_gain;
 int ir_int_gain;
-int ir_threshold;
 
 #endif
