@@ -145,7 +145,7 @@ void setup()
 	// default PID loop is QRD tape following
 	pidfn = tapePID;
 
-	LCD.print("RC4"); LCD.setCursor(0, 1);
+	LCD.print("DEBUG BUILD"); LCD.setCursor(0, 1);
 	LCD.print("Press Start.");
 	while (!startbutton()) {};
 	LCD.clear();
@@ -184,7 +184,7 @@ void tapePID() {
 			a2 = map(knob(7), 0 , 1023, 500, 930);
 			RCServo0.write(a1);
 			setArmVert(a2);
-			armVertControl();
+			//armVertControl();
 			//RCServo1.write(a2);
 			LCD.print("lo:"); LCD.print(a1); LCD.print(" hi:"); LCD.print(a2);
 			LCD.setCursor(0, 1); LCD.print(analogRead(ARM_POT));
@@ -198,7 +198,7 @@ void tapePID() {
 			attachISR(ENC_L, LES);
 			attachISR(ENC_R, RES);
 			// start checking for slower speed on ramp
-			//processfn = speedControl;
+			processfn = speedControl;
 		} else if (petCount == 4) {
 			// TODO: implement more elegant switching to ir
 			encount_L = 0;
@@ -255,8 +255,11 @@ void tapePID() {
 		LCD.setCursor(0, 1);
 		LCD.print("RQ:"); LCD.print(right_sensor);
 		LCD.print(" RM:"); LCD.print(base_speed - net_error);*/
-		LCD.print("LE:"); LCD.print(encount_L); LCD.print(" RE:"); LCD.print(encount_R);
-		LCD.setCursor(0, 1); LCD.print(s_L); LCD.print(" "); LCD.print(s_R);
+		if ( petCount != 2) {
+			LCD.print("LE:"); LCD.print(encount_L); LCD.print(" RE:"); LCD.print(encount_R);
+			LCD.setCursor(0, 1); LCD.print(s_L); LCD.print(" "); LCD.print(s_R);
+		}
+
 	}
 
 	last_error = error;
@@ -342,11 +345,12 @@ void launch(int ms) {
 
 // Checks for the horizontal line that signals a pet to pick up.
 boolean checkPet() {
-	int e = analogRead(QRD_LINE);
-	if ( e > q_threshold && onTape == false) {
+	//int e = analogRead(QRD_LINE);
+	bool e = startbutton();
+	if ( e == HIGH && onTape == false) {
 		onTape = true;
 		return true;
-	} else if ( e < q_threshold ) {
+	} else if ( e == LOW ) {
 		onTape = false;
 	}
 	return false;
@@ -503,8 +507,10 @@ void timedTravel( uint32_t t, int d) {
 
 // Changes base speed depending on how fast encoder counts are triggered.
 void speedControl() {
+	s_L = knob(6);
+	s_R = knob(6);
 	if (s_L > 250 && s_R > 250) {
-		base_speed = base_speed + 10;
+		base_speed = constrain(base_speed + 10, -255, 255);;
 	} else if (s_L < 50 && s_R < 50) {
 		base_speed = menuItems[0].Value;
 		// reset ISRs and processfn
@@ -512,6 +518,8 @@ void speedControl() {
 		attachISR(ENC_R, RE);
 		processfn = []() {}; // TODO: might need to just use empty();
 	}
+	LCD.print("S:"); LCD.print(s_L); LCD.print(" base:"); LCD.print(base_speed);
+	LCD.setCursor(16, 1); LCD.print("S");
 }
 
 // processfn for first IR segment
