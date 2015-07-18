@@ -710,28 +710,24 @@ void MainMenu() {
 			LCD.setCursor(0, 1);
 			val = (knob(7) >> 2) - 128;
 			LCD.print(val); LCD.print("?");
-			delay(200);
 		} else if ( menuIndex == 4) {
 			// travel test menu option
 			LCD.print(mainMenu[menuIndex].Name);
 			LCD.setCursor(0, 1);
 			val = map(knob(7), 0, 1023, 0, 3069);
 			LCD.print(val); LCD.print("?");
-			delay(200);
 		} else if (menuIndex == 5) {
 			// launch catapult test menu option
 			LCD.print(mainMenu[menuIndex].Name);
 			LCD.setCursor(0, 1);
 			val = knob(7) >> 1;
 			LCD.print(val); LCD.print("?");
-			delay(200);
 		} else {
 			// generic submenu handling
 			LCD.print(mainMenu[menuIndex].Name);
 			LCD.setCursor(0, 1);
 			LCD.print("Start to Select.");
 		}
-		delay(100);
 
 		/* Press start button to enter submenu / switch pid modes */
 		if (startbutton())
@@ -761,5 +757,6 @@ void MainMenu() {
 				return;
 			}
 		}
+		delay(150);
 	}
 }
