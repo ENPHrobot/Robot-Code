@@ -258,6 +258,9 @@ void tapePID() {
 		if ( petCount != 2) {
 			LCD.print("LE:"); LCD.print(encount_L); LCD.print(" RE:"); LCD.print(encount_R);
 			LCD.setCursor(0, 1); LCD.print(s_L); LCD.print(" "); LCD.print(s_R);
+		} else {
+			LCD.print("S:"); LCD.print(s_L); LCD.print(" base:"); LCD.print(base_speed);
+			LCD.setCursor(15, 1); LCD.print("S");
 		}
 
 	}
@@ -507,10 +510,13 @@ void timedTravel( uint32_t t, int d) {
 
 // Changes base speed depending on how fast encoder counts are triggered.
 void speedControl() {
-	s_L = knob(6);
-	s_R = knob(6);
-	if (s_L > 250 && s_R > 250) {
+	s_L = knob(7);
+	s_R = knob(7);
+	if (s_L > 250 && s_R > 250 && forSpeedControl == false) {
+		forSpeedControl = true;
 		base_speed = constrain(base_speed + 10, -255, 255);;
+	} else if (s_L < 250 && forSpeedControl == true) {
+		forSpeedControl = false;
 	} else if (s_L < 50 && s_R < 50) {
 		base_speed = menuItems[0].Value;
 		// reset ISRs and processfn
@@ -518,8 +524,6 @@ void speedControl() {
 		attachISR(ENC_R, RE);
 		processfn = []() {}; // TODO: might need to just use empty();
 	}
-	LCD.print("S:"); LCD.print(s_L); LCD.print(" base:"); LCD.print(base_speed);
-	LCD.setCursor(16, 1); LCD.print("S");
 }
 
 // processfn for first IR segment
@@ -720,28 +724,27 @@ void MainMenu() {
 			LCD.setCursor(0, 1);
 			val = (knob(7) >> 2) - 128;
 			LCD.print(val); LCD.print("?");
-			delay(200);
+			delay(150);
 		} else if ( menuIndex == 4) {
 			// travel test menu option
 			LCD.print(mainMenu[menuIndex].Name);
 			LCD.setCursor(0, 1);
 			val = map(knob(7), 0, 1023, 0, 3069);
 			LCD.print(val); LCD.print("?");
-			delay(200);
+			delay(150);
 		} else if (menuIndex == 5) {
 			// launch catapult test menu option
 			LCD.print(mainMenu[menuIndex].Name);
 			LCD.setCursor(0, 1);
 			val = knob(7) >> 1;
 			LCD.print(val); LCD.print("?");
-			delay(200);
+			delay(150);
 		} else {
 			// generic submenu handling
 			LCD.print(mainMenu[menuIndex].Name);
 			LCD.setCursor(0, 1);
 			LCD.print("Start to Select.");
 		}
-		delay(100);
 
 		/* Press start button to enter submenu / switch pid modes */
 		if (startbutton())
@@ -770,5 +773,7 @@ void MainMenu() {
 				return;
 			}
 		}
+
+		delay(150);
 	}
 }

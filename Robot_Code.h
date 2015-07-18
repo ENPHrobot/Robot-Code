@@ -85,4 +85,6 @@ int ir_pro_gain;
 int ir_diff_gain;
 int ir_int_gain;
 
+boolean forSpeedControl = false;
+
 #endif
