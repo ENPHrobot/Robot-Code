@@ -86,5 +86,6 @@ int ir_diff_gain;
 int ir_int_gain;
 
 boolean forSpeedControl = false;
+boolean speedFlag = false;
 
 #endif

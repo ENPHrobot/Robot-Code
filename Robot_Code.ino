@@ -199,6 +199,7 @@ void tapePID() {
 			attachISR(ENC_R, RES);
 			// start checking for slower speed on ramp
 			processfn = speedControl;
+			speedFlag = true;
 		} else if (petCount == 4) {
 			// TODO: implement more elegant switching to ir
 			encount_L = 0;
@@ -255,10 +256,10 @@ void tapePID() {
 		LCD.setCursor(0, 1);
 		LCD.print("RQ:"); LCD.print(right_sensor);
 		LCD.print(" RM:"); LCD.print(base_speed - net_error);*/
-		if ( petCount != 2) {
+		if ( petCount != 2 || !speedFlag) {
 			LCD.print("LE:"); LCD.print(encount_L); LCD.print(" RE:"); LCD.print(encount_R);
 			LCD.setCursor(0, 1); LCD.print(s_L); LCD.print(" "); LCD.print(s_R);
-		} else {
+		} else if (speedFlag) {
 			LCD.print("S:"); LCD.print(s_L); LCD.print(" base:"); LCD.print(base_speed);
 			LCD.setCursor(15, 1); LCD.print("S");
 		}
@@ -283,13 +284,12 @@ void irPID() {
 	D_error = ir_diff_gain * (error - last_error);
 	I_error += ir_int_gain * error;
 	net_error = static_cast<int32_t>(P_error + D_error + I_error) >> 4;
-	Serial.print(average); Serial.print(" ");
-	Serial.println(net_error);
-	//Serial.print(D_error); Serial.print(" ");
+	//Serial.print(average); Serial.print(" ");
+	//Serial.println(net_error);
 
 	// Limit max error
 	//net_error = constrain(net_error, -base_speed, base_speed);
-	// TODO: Divide gain by average.
+
 	//if net error is positive, right_motor will be stronger, will turn to the left
 	motor.speed(LEFT_MOTOR, base_speed + net_error);
 	motor.speed(RIGHT_MOTOR, base_speed - net_error);
@@ -301,7 +301,6 @@ void irPID() {
 		LCD.print(" R:"); LCD.print(right_sensor);
 		LCD.setCursor(0, 1);
 		LCD.print("ERR:"); LCD.print(net_error);
-		//LCD.print("LM:"); LCD.print(base_speed + net_error); LCD.print(" RM:"); LCD.print(base_speed - net_error);
 	}
 
 	last_error = error;
@@ -510,14 +509,16 @@ void timedTravel( uint32_t t, int d) {
 
 // Changes base speed depending on how fast encoder counts are triggered.
 void speedControl() {
-	s_L = knob(7);
-	s_R = knob(7);
+	
+	s_L = knob(6);
+	s_R = knob(6);
 	if (s_L > 250 && s_R > 250 && forSpeedControl == false) {
 		forSpeedControl = true;
 		base_speed = constrain(base_speed + 10, -255, 255);;
 	} else if (s_L < 250 && forSpeedControl == true) {
 		forSpeedControl = false;
 	} else if (s_L < 50 && s_R < 50) {
+		speedFlag = false;
 		base_speed = menuItems[0].Value;
 		// reset ISRs and processfn
 		attachISR(ENC_L, LE);
@@ -763,6 +764,7 @@ void MainMenu() {
 				LCD.print("Leaving menu");
 				delay(500);
 				// reset variables and counters
+				petCount = 0;
 				base_speed = menuItems[0].Value;
 				count = 0;
 				t = 1;
