@@ -142,6 +142,10 @@ void setup()
 	attachISR(ENC_L, LE);
 	attachISR(ENC_R, RE);
 
+	// if testing overall speed
+	/*attachISR(ENC_L, LES);
+	attachISR(ENC_R, RES);*/
+
 	// default PID loop is QRD tape following
 	pidfn = tapePID;
 
