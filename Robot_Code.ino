@@ -178,15 +178,15 @@ void tapePID() {
 
 	int left_sensor = analogRead(QRD_L);
 	int right_sensor = analogRead(QRD_R);
-	int error;
+	int error = 0;
 
 	if (left_sensor > q_threshold && right_sensor > q_threshold)
 		error = 0; // both sensors on black
-	else if (left_sensor > q_threshold && right_sensor < q_threshold)
+	else if (left_sensor > q_threshold && right_sensor <= q_threshold)
 		error = -1;	// left sensor on black
-	else if (left_sensor < q_threshold && right_sensor > q_threshold)
+	else if (left_sensor <= q_threshold && right_sensor > q_threshold)
 		error = 1; // right sensor on black
-	else if (left_sensor < q_threshold && right_sensor < q_threshold)
+	else if (left_sensor <= q_threshold && right_sensor <= q_threshold)
 	{
 		// neither sensor on black. check last error to see which side we are on.
 		if ( last_error > 0)
