@@ -22,8 +22,7 @@ enum {
 
 // Digital Write Ports
 enum {
-	LAUNCH_F = 8,
-	LAUNCH_B = 10
+	LAUNCH_F = 8
 };
 
 // Motor Ports
@@ -79,6 +78,7 @@ int q_pro_gain;
 int q_diff_gain;
 int q_int_gain;
 int q_threshold;
+int h_threshold;
 int base_speed;
 
 // IR vars

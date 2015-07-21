@@ -97,7 +97,8 @@ MenuItem ProportionalGain = MenuItem("P-gain");
 MenuItem DerivativeGain   = MenuItem("D-gain");
 MenuItem IntegralGain     = MenuItem("I-gain");
 MenuItem ThresholdVoltage = MenuItem("T-volt");
-MenuItem menuItems[]      = {Speed, ProportionalGain, DerivativeGain, IntegralGain, ThresholdVoltage};
+MenuItem HorThreshold = MenuItem("H-volt");
+MenuItem menuItems[]      = {Speed, ProportionalGain, DerivativeGain, IntegralGain, ThresholdVoltage, HorThreshold};
 
 uint16_t IRMenuItem::MenuItemCount = 0;
 IRMenuItem IRProportionalGain = IRMenuItem("P-gain");
@@ -126,6 +127,7 @@ void setup()
 	q_diff_gain = menuItems[2].Value;
 	q_int_gain = menuItems[3].Value;
 	q_threshold = menuItems[4].Value;
+	h_threshold = menuItems[5].Value;
 	ir_pro_gain = IRmenuItems[0].Value;
 	ir_diff_gain = IRmenuItems[1].Value;
 	ir_int_gain = IRmenuItems[2].Value;
@@ -134,7 +136,6 @@ void setup()
 	portMode(1, OUTPUT);
 	// ensure relays are LOW on start.
 	digitalWrite(LAUNCH_F, LOW);
-	digitalWrite(LAUNCH_B, LOW);
 
 	// attach external interrupts on encoder pins
 	enableExternalInterrupt(ENC_L, RISING);
@@ -175,25 +176,45 @@ void tapePID() {
 
 	processfn();
 
+	int left_sensor = analogRead(QRD_L);
+	int right_sensor = analogRead(QRD_R);
+	int error;
+
+	if (left_sensor > q_threshold && right_sensor > q_threshold)
+		error = 0; // both sensors on black
+	else if (left_sensor > q_threshold && right_sensor < q_threshold)
+		error = -1;	// left sensor on black
+	else if (left_sensor < q_threshold && right_sensor > q_threshold)
+		error = 1; // right sensor on black
+	else if (left_sensor < q_threshold && right_sensor < q_threshold)
+	{
+		// neither sensor on black. check last error to see which side we are on.
+		if ( last_error > 0)
+			error = 4;
+		else if ( last_error < 0)
+			error = -4;
+	}
+
 	if (checkPet()) {
 		// TODO: pet pickup fn here
 		pauseDrive();
 		int a1;
 		int a2;
 		petCount++;
-		while (!stopbutton()) {
+
+		/*while (!stopbutton()) {
 			LCD.clear(); LCD.home();
 			a1 = map(knob(6), 0, 1023, 0, 265);
 			//a2 = map(knob(7), 0, 1023, 0, 265);
 			a2 = map(knob(7), 0 , 1023, 500, 930);
-			RCServo0.write(a1);
+			//RCServo0.write(a1);
 			setArmVert(a2);
-			armVertControl();
+			//armVertControl();
 			//RCServo1.write(a2);
 			LCD.print("lo:"); LCD.print(a1); LCD.print(" hi:"); LCD.print(a2);
 			LCD.setCursor(0, 1); LCD.print(analogRead(ARM_POT));
 			delay(150);
-		}
+		}*/
 
 		// change ISR of encoders and processfn after 2nd pet
 		if (petCount == 2) {
@@ -212,25 +233,6 @@ void tapePID() {
 		}
 
 		LCD.clear(); LCD.home();
-	}
-
-	int left_sensor = analogRead(QRD_L);
-	int right_sensor = analogRead(QRD_R);
-	int error;
-
-	if (left_sensor > q_threshold && right_sensor > q_threshold)
-		error = 0; // both sensors on black
-	else if (left_sensor > q_threshold && right_sensor < q_threshold)
-		error = -1;	// left sensor on black
-	else if (left_sensor < q_threshold && right_sensor > q_threshold)
-		error = 1; // right sensor on black
-	else if (left_sensor < q_threshold && right_sensor < q_threshold)
-	{
-		// neither sensor on black. check last error to see which side we are on.
-		if ( last_error > 0)
-			error = 5;
-		else if ( last_error < 0)
-			error = -5;
 	}
 
 	if ( !(error == last_error))
@@ -255,13 +257,13 @@ void tapePID() {
 	if ( count == 100 ) {
 		count = 0;
 		LCD.clear(); LCD.home();
-		/*LCD.print("LQ:"); LCD.print(left_sensor);
+		LCD.print("LQ:"); LCD.print(left_sensor);
 		LCD.print(" LM:"); LCD.print(base_speed + net_error);
 		LCD.setCursor(0, 1);
 		LCD.print("RQ:"); LCD.print(right_sensor);
-		LCD.print(" RM:"); LCD.print(base_speed - net_error);*/
-		LCD.print("LE:"); LCD.print(encount_L); LCD.print(" RE:"); LCD.print(encount_R);
-		LCD.setCursor(0, 1); LCD.print(s_L); LCD.print(" "); LCD.print(s_R);
+		LCD.print(" RM:"); LCD.print(base_speed - net_error);
+		/*LCD.print("LE:"); LCD.print(encount_L); LCD.print(" RE:"); LCD.print(encount_R);
+		LCD.setCursor(0, 1); LCD.print(s_L); LCD.print(" "); LCD.print(s_R);*/
 	}
 
 	last_error = error;
@@ -287,7 +289,8 @@ void irPID() {
 	//Serial.print(D_error); Serial.print(" ");
 
 	// Limit max error
-	//net_error = constrain(net_error, -base_speed, base_speed);
+	net_error = constrain(net_error, -base_speed, base_speed);
+
 	// TODO: Divide gain by average.
 	//if net error is positive, right_motor will be stronger, will turn to the left
 	motor.speed(LEFT_MOTOR, base_speed + net_error);
@@ -344,7 +347,7 @@ void launch(int ms) {
 // Checks for the horizontal line that signals a pet to pick up.
 boolean checkPet() {
 	int e = analogRead(QRD_LINE);
-	if ( e > q_threshold && onTape == false) {
+	if ( e > h_threshold && onTape == false) {
 		onTape = true;
 		return true;
 	} else if ( e < q_threshold ) {
@@ -598,7 +601,15 @@ void QRDMENU()
 		LCD.clear(); LCD.home();
 		LCD.print(menuItems[menuIndex].Name); LCD.print(" "); LCD.print(menuItems[menuIndex].Value);
 		LCD.setCursor(0, 1);
-		LCD.print("Set to "); LCD.print(menuIndex != 0 ? knob(7) : knob(7) >> 2); LCD.print("?");
+		LCD.print("Set to "); 
+		if(menuIndex == 0 || menuIndex == 1 || menuIndex == 2) {
+			LCD.print(knob(7) >> 2); 
+		} else {
+			LCD.print(knob(7));
+		}
+
+			LCD.print("?");	
+		
 		delay(100);
 
 		/* Press start button to save the new value */
@@ -611,6 +622,8 @@ void QRDMENU()
 				LCD.clear(); LCD.home();
 				LCD.print("Speed set to "); LCD.print(val);
 				delay(250);
+			} else if (menuIndex == 1 || menuIndex == 2) {
+				val = val >> 2;
 			}
 
 			menuItems[menuIndex].Value = val;
@@ -633,6 +646,7 @@ void QRDMENU()
 				q_diff_gain = menuItems[2].Value;
 				q_int_gain = menuItems[3].Value;
 				q_threshold = menuItems[4].Value;
+				h_threshold = menuItems[5].Value;
 				delay(500);
 				return;
 			}
