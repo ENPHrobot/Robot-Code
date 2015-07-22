@@ -208,7 +208,6 @@ void tapePID() {
 		LCD.clear(); LCD.home();
 		int a;
 		int s = 90; // temp
-		int last_s = s + 1;
 		int c = 0;
 		petCount++;
 		if (petCount == 3) {
@@ -221,9 +220,9 @@ void tapePID() {
 			int selection = map(knob(6), 0 , 1023, 0, 3);
 
 			if (selection == 0) {
-				a = map(knob(7), 0 , 1023, 0 , 180);
+				a = map(knob(7), 0 , 1023, 0 , 184);
 			} else if (selection == 1) {
-				a = map(knob(7), 0, 1023, 180, 550); // lower arm
+				a = map(knob(7), 0, 1023, 350, 600); // lower arm
 			} else if ( selection == 2) {
 				a = map(knob(7), 0 , 1023, 380, 740); // higher arm
 			}
@@ -234,9 +233,9 @@ void tapePID() {
 				if (selection == 0)
 					LCD.print("PIVOT ARM:");
 				else if (selection == 1)
-					LCD.print("LOWER ARM:");
+					LCD.print("LOWER ARM: "); LCD.print(analogRead(LOWER_POT));
 				else if (selection == 2)
-					LCD.print("UPPER ARM:");
+					LCD.print("UPPER ARM:"); LCD.print(analogRead(UPPER_POT));
 
 				LCD.setCursor(0, 1); LCD.print(a); LCD.print("? S:");
 				if (selection == 0)
@@ -251,6 +250,7 @@ void tapePID() {
 				delay(200);
 				if (selection == 0) {
 					s = a;
+					RCServo0.write(s);
 				} else if (selection == 1) {
 					setLowerArm(a);
 				} else if (selection == 2) {
@@ -265,11 +265,8 @@ void tapePID() {
 			}
 
 			// move arm
-			if ( last_s != s)
-				RCServo0.write(s);
 			upperArmPID();
 			lowerArmPID();
-			last_s = s;
 			c++;
 		}
 
@@ -393,7 +390,7 @@ void upperArmPID() {
 
 void lowerArmPID() {
 	int currentV = analogRead(LOWER_POT);
-	int diff = 2 * (currentV - lowerArmV);
+	int diff = 3 * (currentV - lowerArmV);
 	diff = constrain(diff, -255, 255);
 	motor.speed(LOWER_ARM, diff);
 }
