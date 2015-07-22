@@ -224,7 +224,7 @@ void tapePID() {
 			} else if (selection == 1) {
 				a = map(knob(7), 0, 1023, 350, 600); // lower arm
 			} else if ( selection == 2) {
-				a = map(knob(7), 0 , 1023, 380, 740); // higher arm
+				a = map(knob(7), 0 , 1023, 300, 740); // higher arm
 			}
 
 			if ( c >= 100) {
@@ -383,14 +383,22 @@ void setLowerArm(int V) {
 // Keep arm vertically in place. Should be run along with PID.
 void upperArmPID() {
 	int currentV = analogRead(UPPER_POT);
-	int diff = 2 * (currentV - upperArmV);
+	int diff = currentV - upperArmV;
+	if ( diff <= 10 || diff >= -10) {
+		diff = 0;
+	}
+	diff = 2 * diff;
 	diff = constrain(diff, -255, 255);
 	motor.speed(UPPER_ARM, diff);
 }
 
 void lowerArmPID() {
 	int currentV = analogRead(LOWER_POT);
-	int diff = 3 * (currentV - lowerArmV);
+	int diff = currentV - lowerArmV;
+	if (diff <= 10 || diff >= -10) {
+		diff = 0;
+	}
+	diff = 3 * (diff);
 	diff = constrain(diff, -255, 255);
 	motor.speed(LOWER_ARM, diff);
 }
