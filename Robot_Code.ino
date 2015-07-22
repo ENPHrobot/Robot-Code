@@ -244,10 +244,12 @@ void tapePID() {
 				LCD.clear(); LCD.home();
 				if (selection == 0)
 					LCD.print("PIVOT ARM:");
-				else if (selection == 1)
+				else if (selection == 1) {
 					LCD.print("LOWER ARM: "); LCD.print(analogRead(LOWER_POT));
-				else if (selection == 2)
+				}
+				else if (selection == 2) {
 					LCD.print("UPPER ARM:"); LCD.print(analogRead(UPPER_POT));
+				}
 
 				LCD.setCursor(0, 1); LCD.print(a); LCD.print("? S:");
 				if (selection == 0)
@@ -396,7 +398,7 @@ void setLowerArm(int V) {
 void upperArmPID() {
 	int currentV = analogRead(UPPER_POT);
 	int diff = currentV - upperArmV;
-	if ( diff <= 10 || diff >= -10) {
+	if ( diff <= 10 && diff >= -10) {
 		diff = 0;
 	}
 	diff = 2 * diff;
@@ -407,7 +409,7 @@ void upperArmPID() {
 void lowerArmPID() {
 	int currentV = analogRead(LOWER_POT);
 	int diff = currentV - lowerArmV;
-	if (diff <= 10 || diff >= -10) {
+	if (diff <= 10 && diff >= -10) {
 		diff = 0;
 	}
 	diff = 3 * (diff);
@@ -852,6 +854,7 @@ void MainMenu() {
 				delay(500);
 				// reset variables and counters
 				base_speed = menuItems[0].Value;
+				onTape = false;
 				petCount = 0;
 				count = 0;
 				t = 1;
