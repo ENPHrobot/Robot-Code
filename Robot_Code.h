@@ -6,10 +6,11 @@
 enum {
 	IR_L = 0,
 	IR_R = 1,
-	ARM_POT = 2,
-	QRD_L = 3,
-	QRD_R = 4,
-	QRD_LINE = 5
+	UPPER_POT = 2,
+	LOWER_POT = 3,
+	QRD_L = 4,
+	QRD_R = 5,
+	QRD_LINE = 6
 };
 
 // Digital Read Ports
@@ -23,14 +24,15 @@ enum {
 // Digital Write Ports
 enum {
 	LAUNCH_F = 8,
-	LAUNCH_B = 10
+	LAUNCH_B = 4
 };
 
 // Motor Ports
 enum {
 	LEFT_MOTOR = 0,
 	RIGHT_MOTOR = 2,
-	ARM_MOTOR = 3
+	UPPER_ARM = 3,
+	LOWER_ARM = 1
 };
 
 // Constants
@@ -40,8 +42,27 @@ enum {
 	BACKWARDS = 4,
 	LEFT = 5,
 	RIGHT = 6,
-	ENC_RAFTER = 60
+	ENC_RAFTER = 60,
+	ARM_POT = 4,
+	ARM_MOTOR =3
 };
+
+/* Functions */
+
+void tapePID();
+void irPID();
+void setArmVert(int V);
+void armVertControl();
+void pauseDrive();
+void launch(int ms);
+boolean checkPet();
+void pivot(int counts);
+void speedControl();
+void switchMode();
+
+boolean speedFlag;
+int armControlV;
+boolean forSpeedControl;
 
 /* Instantiate variables */
 volatile int encount_L = 0;
@@ -57,12 +78,15 @@ int modeIndex = 0;
 int val;
 String modes[] = {"qrd", "ir"};
 String mode = modes[modeIndex];
-void (*pidfn)();
+
 void empty() {};
-void (*processfn)() = empty;
-int armControlV = 550; //TODO this initial value should be tuned after potentiometer is mounted onto arm.
+int upperArmV = 740;
+int lowerArmV = 550;
 int petCount = 0;
 boolean onTape = false;
+int lastSpeedUp;
+void (*pidfn)();
+void (*processfn)() = empty;
 
 int last_error = 0;
 int recent_error = 0;
@@ -78,14 +102,12 @@ int q_pro_gain;
 int q_diff_gain;
 int q_int_gain;
 int q_threshold;
+int h_threshold;
 int base_speed;
 
 // IR vars
 int ir_pro_gain;
 int ir_diff_gain;
 int ir_int_gain;
-
-boolean forSpeedControl = false;
-boolean speedFlag = false;
 
 #endif
