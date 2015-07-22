@@ -59,6 +59,7 @@ public:
 	}
 	static void Open(int index)
 	{
+		boolean f = true;
 		switch (index) {
 		case 0:
 			// set pid mode for testing
@@ -88,7 +89,6 @@ public:
 			LCD.clear(); LCD.home();
 			LCD.print("R U SURE~");
 			LCD.setCursor(0, 1); LCD.print("PRESS START");
-			boolean f = true;
 			while (f) {
 				if ( startbutton()) {
 					f = false;
@@ -97,6 +97,12 @@ public:
 					f = false;
 				}
 			}
+			break;
+		case 6:
+			armCal();
+			LCD.clear(); LCD.home();
+			LCD.print("Returning...");
+			delay(300);
 			break;
 		}
 	}
@@ -125,7 +131,8 @@ MainMenuItem IRPID       = MainMenuItem("IR PID");
 MainMenuItem pivotTest   = MainMenuItem("pivotTest");
 MainMenuItem travelTest  = MainMenuItem("travelTest");
 MainMenuItem launchTest  = MainMenuItem("launchTest");
-MainMenuItem mainMenu[]  = {Sensors, TapePID, IRPID, pivotTest, travelTest, launchTest};
+MainMenuItem armTest  = MainMenuItem("armTest");
+MainMenuItem mainMenu[]  = {Sensors, TapePID, IRPID, pivotTest, travelTest, launchTest, armTest};
 
 void setup()
 {
@@ -169,7 +176,7 @@ void setup()
 	// default PID loop is QRD tape following
 	pidfn = tapePID;
 
-	LCD.print("RC4"); LCD.setCursor(0, 1);
+	LCD.print("RC5"); LCD.setCursor(0, 1);
 	LCD.print("Press Start.");
 	while (!startbutton()) {};
 	LCD.clear();
@@ -218,71 +225,13 @@ void tapePID() {
 		// TODO: pet pickup fn here
 		pauseDrive();
 		LCD.clear(); LCD.home();
-		int a;
-		int s = 90; // temp
-		int c = 0;
 		petCount++;
 		if (petCount == 3) {
 			motor.speed(LEFT_MOTOR, 15);
 			motor.speed(RIGHT_MOTOR, 15);
 		}
 
-		while (!stopbutton()) {
-			// temporary arm calibration code
-			int selection = map(knob(6), 0 , 1023, 0, 3);
-
-			if (selection == 0) {
-				a = map(knob(7), 0 , 1023, 0 , 184);
-			} else if (selection == 1) {
-				a = map(knob(7), 0, 1023, 350, 600); // lower arm
-			} else if ( selection == 2) {
-				a = map(knob(7), 0 , 1023, 300, 740); // higher arm
-			}
-
-			if ( c >= 100) {
-				c = 0;
-				LCD.clear(); LCD.home();
-				if (selection == 0)
-					LCD.print("PIVOT ARM:");
-				else if (selection == 1) {
-					LCD.print("LOWER ARM: "); LCD.print(analogRead(LOWER_POT));
-				}
-				else if (selection == 2) {
-					LCD.print("UPPER ARM:"); LCD.print(analogRead(UPPER_POT));
-				}
-
-				LCD.setCursor(0, 1); LCD.print(a); LCD.print("? S:");
-				if (selection == 0)
-					LCD.print(s);
-				else if (selection == 1)
-					LCD.print(lowerArmV);
-				else if (selection == 2)
-					LCD.print(upperArmV);
-			}
-
-			if (startbutton()) {
-				delay(200);
-				if (selection == 0) {
-					s = a;
-					RCServo0.write(s);
-				} else if (selection == 1) {
-					setLowerArm(a);
-				} else if (selection == 2) {
-					setUpperArm(a);
-				}
-			}
-
-			if (digitalRead(FRONT_SWITCH) == LOW) {
-				RCServo2.write(0);
-				delay(500);
-				RCServo2.write(90);
-			}
-
-			// move arm
-			upperArmPID();
-			lowerArmPID();
-			c++;
-		}
+		armCal();
 
 		// change ISR of encoders and processfn after 2nd pet
 		if (petCount == 2) {
@@ -646,6 +595,69 @@ void buriedProcess() {
 			LCD.setCursor(0, 1); LCD.print(analogRead(ARM_POT));
 			delay(150);*/
 		}
+	}
+}
+
+void armCal() {
+	int a;
+	int s = 90; // temp
+	int c = 0;
+
+	while (!stopbutton()) {
+		// temporary arm calibration code
+		int selection = map(knob(6), 0 , 1023, 0, 3);
+
+		if (selection == 0) {
+			a = map(knob(7), 0 , 1023, 0 , 184);
+		} else if (selection == 1) {
+			a = map(knob(7), 0, 1023, 350, 600); // lower arm
+		} else if ( selection == 2) {
+			a = map(knob(7), 0 , 1023, 300, 740); // higher arm
+		}
+
+		if ( c >= 100) {
+			c = 0;
+			LCD.clear(); LCD.home();
+			if (selection == 0)
+				LCD.print("PIVOT ARM:");
+			else if (selection == 1) {
+				LCD.print("LOWER ARM: "); LCD.print(analogRead(LOWER_POT));
+			}
+			else if (selection == 2) {
+				LCD.print("UPPER ARM:"); LCD.print(analogRead(UPPER_POT));
+			}
+
+			LCD.setCursor(0, 1); LCD.print(a); LCD.print("? S:");
+			if (selection == 0)
+				LCD.print(s);
+			else if (selection == 1)
+				LCD.print(lowerArmV);
+			else if (selection == 2)
+				LCD.print(upperArmV);
+		}
+
+		if (startbutton()) {
+			delay(200);
+			if (selection == 0) {
+				s = a;
+				RCServo0.write(s);
+			} else if (selection == 1) {
+				setLowerArm(a);
+			} else if (selection == 2) {
+				setUpperArm(a);
+			}
+		}
+
+		if (digitalRead(FRONT_SWITCH) == LOW) {
+			RCServo2.write(0);
+			delay(500);
+			RCServo2.write(90);
+		}
+
+		// move arm
+		upperArmPID();
+		lowerArmPID();
+		c++;
 	}
 }
 
