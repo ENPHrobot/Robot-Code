@@ -222,27 +222,28 @@ void tapePID() {
 	}
 
 	if (checkPet()) {
-		// TODO: pet pickup fn here
+
 		pauseDrive();
 		LCD.clear(); LCD.home();
 		petCount++;
-		if (petCount == 3) {
-			motor.speed(LEFT_MOTOR, 15);
-			motor.speed(RIGHT_MOTOR, 15);
-		}
+
 
 		armCal();
 
-		// change ISR of encoders and processfn after 2nd pet
-		if (petCount == 2) {
-			/*time_L = millis();
-			time_R = millis();*/
-			//attachISR(ENC_L, LES);
-			//attachISR(ENC_R, RES);
-			// start checking for slower speed on ramp
-			//lastSpeedUp = millis();
-			//turnUp();
-			//processfn = speedControl;
+		// TODO: pet pickup actions
+		if (petCount == 1) {
+
+			// upon exit, apply correcting negative error so that robot returns to line
+			error = -3;
+		} else if (petCount == 2) {
+
+			error = -3;
+		} else if (petCount == 3) {
+			// for pausing motors on the ramp.
+			motor.speed(LEFT_MOTOR, 15);
+			motor.speed(RIGHT_MOTOR, 15);
+
+			// TODO: correcting error needed, dependent on pickup fn
 		} else if (petCount == 4) {
 			// TODO: implement more elegant switching to ir
 			encount_L = 0;
@@ -598,6 +599,7 @@ void buriedProcess() {
 	}
 }
 
+// testing arm calibration code
 void armCal() {
 	int a;
 	int s = 90; // temp
