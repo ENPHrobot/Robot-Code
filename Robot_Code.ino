@@ -258,7 +258,7 @@ void tapePID() {
 				}
 			}
 
-			if (digitalRead(FRONT_SWITCH) == HIGH) {
+			if (digitalRead(FRONT_SWITCH) == LOW) {
 				RCServo2.write(0);
 				delay(500);
 				RCServo2.write(90);
