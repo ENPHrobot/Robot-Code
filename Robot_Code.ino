@@ -84,7 +84,19 @@ public:
 			travel(val, FORWARDS);
 			break;
 		case 5:
-			launch(val);
+			delay(1000);
+			LCD.clear(); LCD.home();
+			LCD.print("R U SURE~");
+			LCD.setCursor(0, 1); LCD.print("PRESS START");
+			boolean f = true;
+			while (f) {
+				if ( startbutton()) {
+					f = false;
+					launch(val);
+				} else if (stopbutton()) {
+					f = false;
+				}
+			}
 			break;
 		}
 	}
