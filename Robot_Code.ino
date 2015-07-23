@@ -240,7 +240,7 @@ void tapePID() {
 		// TODO: pet pickup actions
 		if (petCount == 1) {
 			getFirstPet();
-			pivot(800);  //TODO: tune 
+			timedPivot(800);  //TODO: tune
 
 			// upon exit, apply correcting negative error so that robot returns to line
 			error = +2;
@@ -619,6 +619,24 @@ void buriedProcess() {
 	}
 }
 
+// Drop the pet helper function
+void dropPet() {
+	RCServo2.write(0);
+	delay(450);
+	RCServo2.write(90);
+}
+
+// Pivot the arm from and to
+void pivotArm( int from, int to) {
+	int p = from;
+	while ( p < to ) {
+		p += pivotIncrement;
+		p = constrain(p, 0, 185);
+		RCServo0.write(p);
+		delay(100);
+	}
+}
+
 //Function to get first pet
 void getFirstPet() {
 	boolean flag = false;
@@ -666,7 +684,7 @@ void getFirstPet() {
 		if (dt >= 0 && c == 3) {
 			setLowerArm(480);
 			c++;
-		} else if ( dt >= 1000 && c == 4){
+		} else if ( dt >= 1000 && c == 4) {
 			flag = true;
 		}
 	}
@@ -696,10 +714,10 @@ void getSecondPet() {
 			setLowerArm(545); //TODO
 			c++;
 		} else if ( dt >= 1300 && c == 1 ) {
-			setUpperArm(360);  
+			setUpperArm(360);
 			c++;
 		} else if ( dt >= 2300 && c == 2 ) {
-			setUpperArm(715); 
+			setUpperArm(715);
 			c++;
 		} else if ( dt >= 4000 ) {
 			if (petOnArm()) {
@@ -714,18 +732,43 @@ void getSecondPet() {
 	placePetCatapult(pivotPosition);
 }
 
+void placeSecondPet() {
+	boolean flag = false;
+	uint32_t timeStart = millis();
+	int pivotPosition = 150;  // TODO
+	int c = 0;
+
+	setUpperArm(500);
+	while (!flag) {
+		upperArmPID();
+		lowerArmPID();
+
+		unsigned int dt = millis() - timeStart;
+
+		if ( dt >= 750 && c == 0) {
+			setUpperArm(715);
+			c++;
+		} else if ( dt >= 1500 && c == 1) {
+			RCServo0.write(pivotPosition);
+			c++;
+		} else if (dt >= 2300 && c == 2) {
+			setUpperArm(600);
+			setLowerArm(450); //TODO tuning
+			c++;
+		} else if ( dt >=  3500 && c == 3) {
+			dropPet();
+		}
+	}
+
+
+}
+
 // Place pet in catapult from pivot arm's position 'pivot'
 void placePetCatapult(int pivot) {
-	int pivotIncrement = 10;
 	boolean flag = false;
 	int c = 0;
 
-	while ( pivot < 185 ) {
-		pivot += pivotIncrement;
-		pivot = constrain(pivot, 0, 185);
-		RCServo0.write(pivot);
-		delay(100);
-	}
+	pivotArm(pivot, 185);
 
 	uint32_t timeStart = millis();
 	while (!flag) {
@@ -739,9 +782,7 @@ void placePetCatapult(int pivot) {
 			c++;
 		}
 		else if ( dt >= 1500) {
-			RCServo2.write(0);
-			delay(450);
-			RCServo2.write(90);
+			dropPet();
 			flag = true;
 		}
 	}
