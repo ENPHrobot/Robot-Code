@@ -155,10 +155,10 @@ void setup()
 
 	// attach servos
 	pinMode(SERVO_0_Pin, OUTPUT);
-	pinMode(SERVO_1_Pin, OUTPUT);
+	//pinMode(SERVO_1_Pin, OUTPUT);
 	pinMode(SERVO_2_Pin, OUTPUT);
 	RCServo0.attach(SERVO_0_Pin);
-	RCServo1.attach(SERVO_1_Pin);
+	//RCServo1.attach(SERVO_1_Pin);
 	RCServo2.attach(SERVO_2_Pin);
 
 	// set ports 8 to 15 as OUTPUT
@@ -362,24 +362,29 @@ void setLowerArm(int V) {
 
 // Keep arm vertically in place. Should be run along with PID.
 void upperArmPID() {
-	int currentV = constrain(analogRead(UPPER_POT), 300, 740);
+	int currentV = constrain(analogRead(UPPER_POT), 300, 710);
 	int diff = currentV - upperArmV;
-	if ( diff <= 10 && diff >= -10) {
+	if ( diff <= 20 && diff >= -20) {
 		diff = 0;
 	}
-	diff = 2 * diff;
-	diff = constrain(diff, -255, 255);
+	if ( diff  > 0) diff = 255;
+	else if (diff < 0) diff = -255;
+	// diff = 2 * diff;
+	// diff = constrain(diff, -255, 255);
 	motor.speed(UPPER_ARM, diff);
+	LCD.setCursor(11,1); LCD.print(diff);
 }
 
 void lowerArmPID() {
 	int currentV = constrain(analogRead(LOWER_POT), 350, 600);
 	int diff = currentV - lowerArmV;
-	if (diff <= 10 && diff >= -10) {
+	if (diff <= 25 && diff >= -25) {
 		diff = 0;
 	}
-	diff = 3 * (diff);
-	diff = constrain(diff, -255, 255);
+	if ( diff  > 0) diff = 255;
+	else if (diff < 0) diff = -255;
+	// diff = 3 * (diff);
+	// diff = constrain(diff, -255, 255);
 	motor.speed(LOWER_ARM, diff);
 }
 
@@ -625,22 +630,22 @@ void getFirstPet() {
 
 		unsigned int dt = millis() - timeStart;
 		// TODO: may be able to set lower upper arm at same time as pivot
-		if ( dt >= 1000 && c == 0 ) {
-			setLowerArm(600);
+		if ( dt >= 800 && c == 0 ) {
+			setLowerArm(550);
 			c++;
-		} else if ( dt >= 3000 && c == 1 ) {
+		} else if ( dt >= 1300 && c == 1 ) {
 			setUpperArm(400);
 			c++;
-		} else if ( dt >= 4000 && c == 2 ) {
-			setUpperArm(740);
+		} else if ( dt >= 2300 && c == 2 ) {
+			setUpperArm(700);
 			c++;
-		} else if ( dt >= 6000 ) {
+		} else if ( dt >= 3500 ) {
 			if (petOnArm()) {
 				flag = true;
 				delay(1000);
 			} else {
 				c = 1;
-				timeStart = millis();
+				timeStart = millis() - 3000;
 			}
 		}
 	}
@@ -653,25 +658,24 @@ void placePetCatapult(int pivot) {
 	boolean flag = false;
 	int c = 0;
 
-	while ( pivot < 165 ) {
+	while ( pivot < 180 ) {
 		pivot += pivotIncrement;
-		pivot = constrain(pivot, 25, 165);
+		pivot = constrain(pivot, 25, 180);
 		RCServo0.write(pivot);
-		delay(150);
+		delay(100);
 	}
 
-	delay(1000);
 	uint32_t timeStart = millis();
 	while (!flag) {
 		lowerArmPID();
 		upperArmPID();
 
 		unsigned int dt = millis() - timeStart;
-		if ( dt >= 1000 && c == 0 ) {
+		if ( dt >= 500 && c == 0 ) {
 			setLowerArm(500);
 			c++;
 		}
-		else if ( dt >= 2000) {
+		else if ( dt >= 1500) {
 			RCServo2.write(0);
 			delay(100);
 			RCServo2.write(90);
@@ -690,14 +694,14 @@ void armCal() {
 
 	while (!stopbutton()) {
 		// temporary arm calibration code
-		int selection = map(knob(6), 0 , 1023, 0, 2);
+		int selection = map(knob(6), 0 , 1023, 0, 3);
 
 		if (selection == 0) {
 			a = map(knob(7), 0 , 1023, 0 , 184);
 		} else if (selection == 1) {
 			a = map(knob(7), 0, 1023, 350, 600); // lower arm
 		} else if ( selection == 2) {
-			a = map(knob(7), 0 , 1023, 300, 740); // higher arm
+			a = map(knob(7), 0 , 1023, 300, 720); // higher arm
 		}
 
 		if ( c >= 100) {

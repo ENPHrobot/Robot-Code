@@ -29,9 +29,9 @@ enum {
 // Motor Ports
 enum {
 	LEFT_MOTOR = 0,
-	RIGHT_MOTOR = 2,
+	RIGHT_MOTOR = 1,
 	UPPER_ARM = 3,
-	LOWER_ARM = 1
+	LOWER_ARM = 2
 };
 
 // Constants
@@ -95,8 +95,8 @@ String modes[] = {"qrd", "ir"};
 String mode = modes[modeIndex];
 
 void empty() {};
-int upperArmV = 740;
-int lowerArmV = 600;
+int upperArmV = 720;
+int lowerArmV = 550;
 int petCount = 0;
 boolean onTape = false;
 int lastSpeedUp;
@@ -126,7 +126,6 @@ int ir_diff_gain;
 int ir_int_gain;
 
 Servo RCServo0;
-Servo RCServo1;
 Servo RCServo2;
 
 #endif
