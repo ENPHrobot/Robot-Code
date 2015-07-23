@@ -44,6 +44,10 @@ enum {
 	ENC_RAFTER = 60
 };
 
+#define SERVO_0_Pin (35)
+#define SERVO_1_Pin (31)
+#define SERVO_2_Pin (34)
+
 /* Functions */
 
 void tapePID();
@@ -120,5 +124,9 @@ int base_speed;
 int ir_pro_gain;
 int ir_diff_gain;
 int ir_int_gain;
+
+Servo RCServo0;
+Servo RCServo1;
+Servo RCServo2;
 
 #endif

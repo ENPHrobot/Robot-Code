@@ -1,5 +1,6 @@
 #include <avr/EEPROM.h>
 #include <Interrupts.h>
+#include <Servo.h>
 #include <phys253.h>
 #include <LiquidCrystal.h>
 #include "Robot_Code.h"
@@ -150,6 +151,14 @@ void setup()
 	ir_pro_gain = IRmenuItems[0].Value;
 	ir_diff_gain = IRmenuItems[1].Value;
 	ir_int_gain = IRmenuItems[2].Value;
+
+	// attach servos
+	pinMode(SERVO_0_Pin, OUTPUT);
+	pinMode(SERVO_1_Pin, OUTPUT);
+	pinMode(SERVO_2_Pin, OUTPUT);
+	RCServo0.attach(SERVO_0_Pin);
+	RCServo1.attach(SERVO_1_Pin);
+	RCServo2.attach(SERVO_2_Pin);
 
 	// set ports 8 to 15 as OUTPUT
 	portMode(1, OUTPUT);
