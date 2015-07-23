@@ -167,7 +167,7 @@ void setup()
 	attachISR(ENC_R, RES);
 	time_L = millis();
 	time_R = millis();
-	lastSpeedUp = millis();
+	lastSpeedUp = 0;
 
 	// set servo initial positions
 	RCServo2.write(90);
@@ -200,7 +200,7 @@ void loop()
 /* Control Loops */
 void tapePID() {
 
-	//speedControl();
+	speedControl();
 
 	int left_sensor = analogRead(QRD_L);
 	int right_sensor = analogRead(QRD_R);
@@ -228,7 +228,6 @@ void tapePID() {
 		petCount++;
 
 
-		armCal();
 
 		// TODO: pet pickup actions
 		if (petCount == 1) {
@@ -240,15 +239,22 @@ void tapePID() {
 			error = -3;
 		} else if (petCount == 3) {
 			// for pausing motors on the ramp.
-			motor.speed(LEFT_MOTOR, 15);
-			motor.speed(RIGHT_MOTOR, 15);
+			motor.speed(LEFT_MOTOR, 50);
+			motor.speed(RIGHT_MOTOR, 50);
 
 			// TODO: correcting error needed, dependent on pickup fn
+			error = 1;
 		} else if (petCount == 4) {
 			// TODO: implement more elegant switching to ir
 			encount_L = 0;
 			encount_R = 0;
 			switchMode();
+		}
+		armCal();
+		if (petCount == 2 ) {
+			lastSpeedUp = millis();
+		} else if (petCount == 3 ) {
+			lastSpeedUp = millis();
 		}
 
 		LCD.clear(); LCD.home();
@@ -546,10 +552,11 @@ void timedTravel( uint32_t t, int d) {
 // Changes base speed depending on how fast encoder counts are triggered.
 void speedControl() {
 	// TODO: see if reducing speed up rate is required
-	if (s_L > 200 && s_R > 200 && millis() - lastSpeedUp > 1000) {
-		base_speed = constrain(base_speed + 10, 0, 255);
-		lastSpeedUp = millis();
-	} else if (s_L < 50 && s_R < 50) {
+	if (petCount == 2 && millis() - lastSpeedUp > 750) {
+		//base_speed = constrain(base_speed + 10, 0, 255);
+		base_speed = 180;
+		//lastSpeedUp = millis();
+	} else if (petCount == 3 && millis() - lastSpeedUp > 1650) {
 		base_speed = menuItems[0].Value;
 		/*// reset ISRs and processfn
 		attachISR(ENC_L, LE);
@@ -567,13 +574,7 @@ void rafterProcess() {
 		petCount++;
 		// TODO: rafter pet pickup here
 		while (stopbutton()) {
-			/*a1 = map(knob(6), 0, 1023, 0, 180);
-			a2 = map(knob(7), 0, 1023, 0, 180);
-			RCServo0.write(a1);
-			RCServo1.write(a2);
-			LCD.print("lo:"); LCD.print(a1); LCD.print(" hi:"); LCD.print(a2);
-			LCD.setCursor(0, 1); LCD.print(analogRead(ARM_POT));
-			delay(150);*/
+			armCal();
 		}
 		processfn = buriedProcess;
 	}
@@ -588,13 +589,7 @@ void buriedProcess() {
 		petCount++;
 		// TODO: buried pet pickup here
 		while (stopbutton()) {
-			/*a1 = map(knob(6), 0, 1023, 0, 180);
-			a2 = map(knob(7), 0, 1023, 0, 180);
-			RCServo0.write(a1);
-			RCServo1.write(a2);
-			LCD.print("lo:"); LCD.print(a1); LCD.print(" hi:"); LCD.print(a2);
-			LCD.setCursor(0, 1); LCD.print(analogRead(ARM_POT));
-			delay(150);*/
+			armCal();
 		}
 	}
 }
@@ -607,7 +602,7 @@ void armCal() {
 
 	while (!stopbutton()) {
 		// temporary arm calibration code
-		int selection = map(knob(6), 0 , 1023, 0, 3);
+		int selection = map(knob(6), 0 , 1023, 0, 2);
 
 		if (selection == 0) {
 			a = map(knob(7), 0 , 1023, 0 , 184);

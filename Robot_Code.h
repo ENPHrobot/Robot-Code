@@ -48,7 +48,6 @@ enum {
 
 void tapePID();
 void irPID();
-void setArmVert(int V);
 void armVertControl();
 void pauseDrive();
 void launch(int ms);
