@@ -1,5 +1,5 @@
 #include <avr/EEPROM.h>
-//#include <Interrupts.h>
+#include <Interrupts.h>
 #include <phys253.h>
 #include <LiquidCrystal.h>
 #include "Robot_Code.h"
@@ -171,7 +171,7 @@ void setup()
 
 	// set servo initial positions
 	RCServo2.write(90);
-	RCServo0.write(65);
+	RCServo0.write(75);
 
 	// default PID loop is QRD tape following
 	pidfn = tapePID;
@@ -227,13 +227,12 @@ void tapePID() {
 		LCD.clear(); LCD.home();
 		petCount++;
 
-
-
 		// TODO: pet pickup actions
 		if (petCount == 1) {
 			getFirstPet();
 			// upon exit, apply correcting negative error so that robot returns to line
-			error = -3;
+			while(!stopbutton()){} // check getFirstPet
+ 			error = -3;
 		} else if (petCount == 2) {
 
 			error = -3;
@@ -419,7 +418,7 @@ boolean checkBoxedPet() {
 
 // Check if switch on arm is activated
 boolean petOnArm() {
-	if (digitalRead(HAND_SWITCH) == HIGH) {
+	if (digitalRead(HAND_SWITCH) == LOW) {
 		return true;
 	}
 	return false;
@@ -614,20 +613,22 @@ void getFirstPet() {
 		lowerArmPID();
 
 		unsigned int dt = millis() - timeStart;
-		if ( dt >= 100 && c == 0 ) {
+		if ( dt >= 1000 && c == 0 ) {
 			setLowerArm(600);
 			c++;
-		} else if ( dt >= 600 && c == 1 ) {
+		} else if ( dt >= 3000 && c == 1 ) {
 			setUpperArm(400);
 			c++;
-		} else if ( dt >= 1600 && c == 2 ) {
-			setUpperArm(700);
-		} else if ( dt >= 2300 ) {
+		} else if ( dt >= 4000 && c == 2 ) {
+			setUpperArm(740);
+			c++;
+		} else if ( dt >= 6000 ) {
 			if (petOnArm()) {
 				flag = true;
+				delay(1000);
 			} else {
 				c = 1;
-				timeStart = millis() + 600;
+				timeStart = millis();
 			}
 		}
 	}
@@ -636,33 +637,36 @@ void getFirstPet() {
 
 // Place pet in catapult from start position 'pivot'
 void placePetCatapult(int pivot) {
-	int pivotIncrement = 15;
+	int pivotIncrement = 5;
 	boolean flag = false;
-	uint32_t timeStart = millis();
 	int c = 0;
 
-	while( pivot < 170 ){
+	while( pivot < 165 ){
 		pivot += pivotIncrement;
-		pivot = constrain(pivot, 25, 170);
+		pivot = constrain(pivot, 25, 165);
 		RCServo0.write(pivot);
-		delay(100);
+		delay(150);
 	}
 
-	delay(200);
+	delay(1000);
+	uint32_t timeStart = millis();
 	while (!flag) {
 		lowerArmPID();
 		upperArmPID();
 
 		unsigned int dt = millis() - timeStart;
-		if ( dt >= 100 && c == 0 ) {
+		if ( dt >= 1000 && c == 0 ) {
 			setLowerArm(500);
 			c++;
 		}
-		else if ( dt >= 300) {
+		else if ( dt >= 2000) {
 			RCServo2.write(0);
+			delay(100);
+			RCServo2.write(90);
 			flag = true;
 		}
 	}
+	delay(1000);
 	RCServo0.write(65);
 }
 
