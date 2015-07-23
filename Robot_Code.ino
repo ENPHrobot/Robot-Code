@@ -240,14 +240,12 @@ void tapePID() {
 		// TODO: pet pickup actions
 		if (petCount == 1) {
 			getFirstPet();
-			// pivot(1800);
-			// launch(85);
-
+			pivot(800);  //TODO: tune 
 
 			// upon exit, apply correcting negative error so that robot returns to line
-			while (!stopbutton()) {} // check getFirstPet
-			error = -3;
+			error = +2;
 		} else if (petCount == 2) {
+			getSecondPet();
 
 			error = -3;
 		} else if (petCount == 3) {
@@ -642,7 +640,7 @@ void getFirstPet() {
 			setLowerArm(545);
 			c++;
 		} else if ( dt >= 1300 && c == 1 ) {
-			setUpperArm(375);
+			setUpperArm(360);
 			c++;
 		} else if ( dt >= 2300 && c == 2 ) {
 			setUpperArm(715);
@@ -676,6 +674,44 @@ void getFirstPet() {
 	delay(500);
 	launch(85);
 
+}
+
+void getSecondPet() {
+	boolean flag = false;
+	uint32_t timeStart = millis();
+	int pivotPosition = 37;  // TODO
+	int c = 0;
+
+	// first stage pickup - pick up pet; checks if pet is picked up,
+	// if not, pick up pet again
+	RCServo0.write(pivotPosition);
+	delay(200);
+	while (!flag) {
+		upperArmPID();
+		lowerArmPID();
+
+		unsigned int dt = millis() - timeStart;
+		// TODO: may be able to set lower upper arm at same time as pivot
+		if ( dt >= 800 && c == 0 ) {
+			setLowerArm(545); //TODO
+			c++;
+		} else if ( dt >= 1300 && c == 1 ) {
+			setUpperArm(360);  
+			c++;
+		} else if ( dt >= 2300 && c == 2 ) {
+			setUpperArm(715); 
+			c++;
+		} else if ( dt >= 4000 ) {
+			if (petOnArm()) {
+				flag = true;
+				delay(1000);
+			} else {
+				c = 1;
+				timeStart = millis() - 800;
+			}
+		}
+	}
+	placePetCatapult(pivotPosition);
 }
 
 // Place pet in catapult from pivot arm's position 'pivot'
