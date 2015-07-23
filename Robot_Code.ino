@@ -1,5 +1,5 @@
 #include <avr/EEPROM.h>
-#include <Interrupts.h>
+//#include <Interrupts.h>
 #include <phys253.h>
 #include <LiquidCrystal.h>
 #include "Robot_Code.h"
@@ -231,7 +231,7 @@ void tapePID() {
 
 		// TODO: pet pickup actions
 		if (petCount == 1) {
-
+			getFirstPet();
 			// upon exit, apply correcting negative error so that robot returns to line
 			error = -3;
 		} else if (petCount == 2) {
@@ -599,16 +599,14 @@ void buriedProcess() {
 	}
 }
 
-//TODO: Function to get first pet
+//Function to get first pet
 void getFirstPet() {
-	int pivotIncrement = 25;
-	int lowerAngle2 = 500;
-	int upperAngle2 = 700;
 	boolean flag = false;
 	uint32_t timeStart = millis();
 	int c = 0;
 
-	// first stage pickup
+	// first stage pickup - pick up pet; checks if pet is picked up, 
+	// if not, pick up pet again
 	RCServo0.write(25);
 	delay(200);
 	while (!flag) {
@@ -616,30 +614,56 @@ void getFirstPet() {
 		lowerArmPID();
 
 		unsigned int dt = millis() - timeStart;
-		if ( dt >= 100 && c == 0) {
+		if ( dt >= 100 && c == 0 ) {
 			setLowerArm(600);
 			c++;
-		} else if ( dt >= 600 && c == 1) {
+		} else if ( dt >= 600 && c == 1 ) {
 			setUpperArm(400);
 			c++;
-		} else if (dt >= 1600) {
+		} else if ( dt >= 1600 && c == 2 ) {
+			setUpperArm(700);
+		} else if ( dt >= 2300 ) {
 			if (petOnArm()) {
 				flag = true;
 			} else {
-				c = 0;
-				timeStart = millis();
+				c = 1;
+				timeStart = millis() + 600;
 			}
-
 		}
 	}
+	placePetCatapult(25);
+}
 
-	//second stage pickup - put on catapult
-	flag = false;
-	timeStart = millis();
+// Place pet in catapult from start position 'pivot'
+void placePetCatapult(int pivot) {
+	int pivotIncrement = 15;
+	boolean flag = false;
+	uint32_t timeStart = millis();
+	int c = 0;
 
+	while( pivot < 170 ){
+		pivot += pivotIncrement;
+		pivot = constrain(pivot, 25, 170);
+		RCServo0.write(pivot);
+		delay(100);
+	}
 
-	setLowerArm(lowerAngle2);
-	setUpperArm(upperAngle2);
+	delay(200);
+	while (!flag) {
+		lowerArmPID();
+		upperArmPID();
+
+		unsigned int dt = millis() - timeStart;
+		if ( dt >= 100 && c == 0 ) {
+			setLowerArm(500);
+			c++;
+		}
+		else if ( dt >= 300) {
+			RCServo2.write(0);
+			flag = true;
+		}
+	}
+	RCServo0.write(65);
 }
 
 // testing arm calibration code
