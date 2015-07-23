@@ -253,6 +253,7 @@ void tapePID() {
 			motor.speed(LEFT_MOTOR, 50);
 			motor.speed(RIGHT_MOTOR, 50);
 
+
 			error = 1;
 		} else if (petCount == 4) {
 			// TODO: implement more elegant switching to ir
