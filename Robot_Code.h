@@ -92,7 +92,7 @@ String mode = modes[modeIndex];
 
 void empty() {};
 int upperArmV = 740;
-int lowerArmV = 550;
+int lowerArmV = 600;
 int petCount = 0;
 boolean onTape = false;
 int lastSpeedUp;

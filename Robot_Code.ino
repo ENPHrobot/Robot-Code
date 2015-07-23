@@ -171,7 +171,7 @@ void setup()
 
 	// set servo initial positions
 	RCServo2.write(90);
-	RCServo0.write(90);
+	RCServo0.write(65);
 
 	// default PID loop is QRD tape following
 	pidfn = tapePID;
@@ -601,28 +601,45 @@ void buriedProcess() {
 
 //TODO: Function to get first pet
 void getFirstPet() {
-	int pivotAngle1 = 25;
-	int lowerAngle1 = 600;
-	int upperAngle1 = 400;
 	int pivotIncrement = 25;
 	int lowerAngle2 = 500;
 	int upperAngle2 = 700;
+	boolean flag = false;
+	uint32_t timeStart = millis();
+	int c = 0;
 
-	while(!petOnArm) {
-		RCServo0.write(pivotAngle1);
-		pause(100);
-		setLowerArm(lowerAngle1);
-		pause(100);
-		setUpperArm(upperAngle1);
-		pause(100);
-		setLowerArm(lowerAngle2);
-		setUpperArm(upperAngle2);
+	// first stage pickup
+	RCServo0.write(25);
+	delay(200);
+	while (!flag) {
+		upperArmPID();
+		lowerArmPID();
 
-		if(petOnArm){
+		unsigned int dt = millis() - timeStart;
+		if ( dt >= 100 && c == 0) {
+			setLowerArm(600);
+			c++;
+		} else if ( dt >= 600 && c == 1) {
+			setUpperArm(400);
+			c++;
+		} else if (dt >= 1600) {
+			if (petOnArm()) {
+				flag = true;
+			} else {
+				c = 0;
+				timeStart = millis();
+			}
 
 		}
-
 	}
+
+	//second stage pickup - put on catapult
+	flag = false;
+	timeStart = millis();
+
+
+	setLowerArm(lowerAngle2);
+	setUpperArm(upperAngle2);
 }
 
 // testing arm calibration code
