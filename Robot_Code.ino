@@ -351,7 +351,7 @@ void setLowerArm(int V) {
 
 // Keep arm vertically in place. Should be run along with PID.
 void upperArmPID() {
-	int currentV = analogRead(UPPER_POT);
+	int currentV = constrain(analogRead(UPPER_POT), 300, 740);
 	int diff = currentV - upperArmV;
 	if ( diff <= 10 && diff >= -10) {
 		diff = 0;
@@ -362,7 +362,7 @@ void upperArmPID() {
 }
 
 void lowerArmPID() {
-	int currentV = analogRead(LOWER_POT);
+	int currentV = constrain(analogRead(LOWER_POT), 350, 600);
 	int diff = currentV - lowerArmV;
 	if (diff <= 10 && diff >= -10) {
 		diff = 0;
