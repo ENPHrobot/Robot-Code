@@ -629,6 +629,7 @@ void dropPet() {
 
 // Pivot the arm from and to
 void pivotArm( int from, int to) {
+	int pivotIncrement = 10;
 	int p = from;
 	while ( p < to ) {
 		p += pivotIncrement;
@@ -760,8 +761,71 @@ void placeSecondPet() {
 			dropPet();
 		}
 	}
+}
+
+void getThirdPet() {
+	boolean flag = false;
+	uint32_t timeStart = millis();
+	int pivotPosition = 37;  // TODO: tune
+	int c = 0;
+
+	// first stage pickup - pick up pet; checks if pet is picked up,
+	// if not, pick up pet again
+	RCServo0.write(pivotPosition);
+	delay(200);
+	while (!flag) {
+		upperArmPID();
+		lowerArmPID();
+
+		unsigned int dt = millis() - timeStart;
+		// TODO: may be able to set lower upper arm at same time as pivot
+		if ( dt >= 800 && c == 0 ) {
+			setLowerArm(545); //TODO: tune
+			c++;
+		} else if ( dt >= 1300 && c == 1 ) {
+			setUpperArm(360);  
+			c++;
+		} else if ( dt >= 2300 && c == 2 ) {
+			setUpperArm(715); 
+			c++;
+		} else if ( dt >= 4000 ) {
+			if (petOnArm()) {
+				flag = true;
+				delay(1000);
+			} else {
+				c = 1;
+				timeStart = millis() - 800;
+			}
+		}
+	}
+	// placePetCatapult(pivotPosition); No need to place in catapult
+	
+	//Pivot arm to correct location
+
+	pivotArm(pivotPosition, 130); //TODO: tune
 
 
+	timeStart = millis();
+	flag = false;
+
+	//move upper/lower arm to correct position for drop;
+	while (!flag) {
+		upperArmPID();
+		lowerArmPID();
+
+		unsigned int dt = millis() - timeStart;
+		// TODO: may be able to set lower upper arm at same time as pivot
+		if ( dt >= 300 && c == 0 ) {
+			setLowerArm(450); //TODO: tune
+			c++;
+		} else if ( dt >= 1300 && c == 1 ) {
+			setUpperArm(600); //TODO: tune
+			c++;
+		} else if ( dt >= 2300) {
+			dropPet();
+			flag = true;
+		}
+	}
 }
 
 // Place pet in catapult from pivot arm's position 'pivot'
