@@ -417,10 +417,17 @@ boolean checkBoxedPet() {
 	return false;
 }
 
+// Check if switch on arm is activated
+boolean petOnArm() {
+	if (digitalRead(HAND_SWITCH) == HIGH) {
+		return true;
+	}
+	return false;
+}
+
 // Pivot the robot for a specified number of encoder
 // counts on both motors.
-void pivot(int counts)
-{
+void pivot(int counts) {
 	// flags to check whether motors have stopped or not
 	boolean lflag = false, rflag = false;
 	// cache starting values
@@ -446,8 +453,7 @@ void pivot(int counts)
 
 // Turn robot left (counts < 0) or right (counts > 0) for
 // certain amount of encoder counts forward
-void turnForward(int counts)
-{
+void turnForward(int counts) {
 	boolean flag = false;
 	int turnCount = abs(counts);
 	int turnEncountStart_L = encount_L;
@@ -476,8 +482,7 @@ void turnForward(int counts)
 
 // Turn robot left (counts < 0) or right (counts > 0) for
 // certain amount of encoder counts backward
-void turnBack(int counts)
-{
+void turnBack(int counts) {
 	boolean flag = false;
 	int turnCount = abs(counts);
 	int turnEncountStart_L = encount_L;
@@ -594,6 +599,32 @@ void buriedProcess() {
 	}
 }
 
+//TODO: Function to get first pet
+void getFirstPet() {
+	int pivotAngle1 = 25;
+	int lowerAngle1 = 600;
+	int upperAngle1 = 400;
+	int pivotIncrement = 25;
+	int lowerAngle2 = 500;
+	int upperAngle2 = 700;
+
+	while(!petOnArm) {
+		RCServo0.write(pivotAngle1);
+		pause(100);
+		setLowerArm(lowerAngle1);
+		pause(100);
+		setUpperArm(upperAngle1);
+		pause(100);
+		setLowerArm(lowerAngle2);
+		setUpperArm(upperAngle2);
+
+		if(petOnArm){
+
+		}
+
+	}
+}
+
 // testing arm calibration code
 void armCal() {
 	int a;
@@ -657,7 +688,6 @@ void armCal() {
 		c++;
 	}
 }
-
 
 /* ISRs */
 

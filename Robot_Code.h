@@ -48,13 +48,32 @@ enum {
 
 void tapePID();
 void irPID();
-void armVertControl();
 void pauseDrive();
 void launch(int ms);
-boolean checkPet();
 void pivot(int counts);
 void speedControl();
 void switchMode();
+void buriedProcess();
+void rafterProcess();
+void timedTravel( uint32_t t, int d);
+void travel(int counts, int d);
+void timedPivot(uint32_t t, int d);
+void turnBack(int counts);
+void turnForward(int counts);
+void lowerArmPID();
+void upperArmPID();
+void setLowerArm(int V);
+void setUpperArm(int V);
+void RES();
+void LES();
+void RE();
+void LE();
+void armCal();
+void getFirstPet();
+boolean checkPet();
+boolean petOnArm();
+boolean checkBoxedPet();
+boolean checkRafterPet();
 
 /* Instantiate variables */
 volatile int encount_L = 0;
