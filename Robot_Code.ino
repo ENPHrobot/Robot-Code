@@ -100,6 +100,7 @@ public:
 			}
 			break;
 		case 6:
+			delay(250);
 			armCal();
 			LCD.clear(); LCD.home();
 			LCD.print("Returning...");
@@ -240,8 +241,8 @@ void tapePID() {
 		if (petCount == 1) {
 			getFirstPet();
 			// upon exit, apply correcting negative error so that robot returns to line
-			while(!stopbutton()){} // check getFirstPet
- 			error = -3;
+			while (!stopbutton()) {} // check getFirstPet
+			error = -3;
 		} else if (petCount == 2) {
 
 			error = -3;
@@ -250,7 +251,6 @@ void tapePID() {
 			motor.speed(LEFT_MOTOR, 50);
 			motor.speed(RIGHT_MOTOR, 50);
 
-			// TODO: correcting error needed, dependent on pickup fn
 			error = 1;
 		} else if (petCount == 4) {
 			// TODO: implement more elegant switching to ir
@@ -259,6 +259,8 @@ void tapePID() {
 			switchMode();
 		}
 		armCal();
+
+		// speed control
 		if (petCount == 2 ) {
 			lastSpeedUp = millis();
 		} else if (petCount == 3 ) {
@@ -389,10 +391,10 @@ void pauseDrive() {
 
 // Power the catapult for a time ms.
 void launch(int ms) {
-	// start catapult motion (one relay on)
+	// start catapult motion (relay on)
 	digitalWrite(LAUNCH_F, HIGH);
 	delay(ms);
-	// stop catapult motion (both relays on)
+	// stop catapult motion (relay off)
 	digitalWrite(LAUNCH_F, LOW);
 }
 
@@ -565,7 +567,7 @@ void timedTravel( uint32_t t, int d) {
 // Changes base speed depending on how fast encoder counts are triggered.
 void speedControl() {
 	// TODO: see if reducing speed up rate is required
-	if (petCount == 2 && millis() - lastSpeedUp > 750) {
+	if (petCount == 2 && millis() - lastSpeedUp > 800) {
 		//base_speed = constrain(base_speed + 10, 0, 255);
 		base_speed = 180;
 		//lastSpeedUp = millis();
@@ -613,7 +615,7 @@ void getFirstPet() {
 	uint32_t timeStart = millis();
 	int c = 0;
 
-	// first stage pickup - pick up pet; checks if pet is picked up, 
+	// first stage pickup - pick up pet; checks if pet is picked up,
 	// if not, pick up pet again
 	RCServo0.write(25);
 	delay(200);
@@ -622,6 +624,7 @@ void getFirstPet() {
 		lowerArmPID();
 
 		unsigned int dt = millis() - timeStart;
+		// TODO: may be able to set lower upper arm at same time as pivot
 		if ( dt >= 1000 && c == 0 ) {
 			setLowerArm(600);
 			c++;
@@ -644,13 +647,13 @@ void getFirstPet() {
 	placePetCatapult(25);
 }
 
-// Place pet in catapult from start position 'pivot'
+// Place pet in catapult from pivot arm's position 'pivot'
 void placePetCatapult(int pivot) {
-	int pivotIncrement = 5;
+	int pivotIncrement = 10;
 	boolean flag = false;
 	int c = 0;
 
-	while( pivot < 165 ){
+	while ( pivot < 165 ) {
 		pivot += pivotIncrement;
 		pivot = constrain(pivot, 25, 165);
 		RCServo0.write(pivot);
@@ -961,3 +964,4 @@ void MainMenu() {
 		delay(150);
 	}
 }
+
