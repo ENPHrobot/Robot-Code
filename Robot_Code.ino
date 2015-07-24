@@ -210,8 +210,6 @@ void loop()
 /* Control Loops */
 void tapePID() {
 
-	speedControl();
-
 	int left_sensor = analogRead(QRD_L);
 	int right_sensor = analogRead(QRD_R);
 	int error = 0;
@@ -259,6 +257,8 @@ void tapePID() {
 			delay(800);
 			getThirdPet();
 
+			base_speed = 180;
+
 			error = 1;
 		} else if (petCount == 4) {
 			// TODO: implement more elegant switching to ir -in timedPivot
@@ -277,8 +277,9 @@ void tapePID() {
 			lastSpeedUp = millis();
 		}
 
-		LCD.clear(); LCD.home();
 	}
+
+	speedControl();
 
 	if ( !(error == last_error))
 	{
@@ -308,7 +309,9 @@ void tapePID() {
 		LCD.print("RQ:"); LCD.print(right_sensor);
 		LCD.print(" RM:"); LCD.print(base_speed - net_error);*/
 		LCD.print("LE:"); LCD.print(encount_L); LCD.print(" RE:"); LCD.print(encount_R);
-		LCD.setCursor(0, 1); LCD.print(s_L); LCD.print(" "); LCD.print(s_R); LCD.print(" "); LCD.print((s_L + s_R) / 2);
+		LCD.setCursor(0, 1); //LCD.print(s_L); LCD.print(" "); LCD.print(s_R); LCD.print(" ");
+		LCD.print("base:"); LCD.print(base_speed); LCD.print(" ");
+		LCD.print((s_L + s_R) / 2);
 	}
 
 	last_error = error;
