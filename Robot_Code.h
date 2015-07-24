@@ -4,8 +4,8 @@
 /* Sensor Ports */
 // Analog Ports
 enum {
-	IR_L = 0,
-	IR_R = 1,
+	IR_R = 0,
+	IR_L = 1,
 	UPPER_POT = 2,
 	LOWER_POT = 3,
 	QRD_L = 4,
@@ -105,7 +105,7 @@ String mode = modes[modeIndex];
 
 void empty() {};
 int upperArmV = 720;
-int lowerArmV = 550;
+int lowerArmV = 600;
 int petCount = 0;
 boolean onTape = false;
 int lastSpeedUp;
