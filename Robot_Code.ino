@@ -259,7 +259,7 @@ void tapePID() {
 			error = 1;
 		} else if (petCount == 4) {
 			// TODO: implement more elegant switching to ir
-			// getFourthPet(); 
+			// getFourthPet();
 			// timedPivot(1100); TODO: Tune to face IR
 			encount_L = 0;
 			encount_R = 0;
@@ -831,15 +831,128 @@ void getThirdPet() {
 		// TODO: may be able to set lower upper arm at same time as pivot
 		if ( dt >= 300 && c == 0 ) {
 			setLowerArm(450); //TODO: tune
-			c++;
-		} else if ( dt >= 1300 && c == 1 ) {
 			setUpperArm(600); //TODO: tune
 			c++;
-		} else if ( dt >= 2300) {
+		} else if ( dt >= 2300 && c == 1) {
 			dropPet();
 			flag = true;
 		}
 	}
+}
+
+void getFourthPet() {
+	boolean flag = false;
+	uint32_t timeStart = millis();
+	//might need to pivot first if pet is directly in front
+	int pivotPosition = 37; //TODO: tune
+	int c = 0;
+
+	// first stage pickup - pick up pet; checks if pet is picked up,
+	// if not, pick up pet again
+	RCServo0.write(pivotPosition);
+	delay(200);
+	while (!flag) {
+		upperArmPID();
+		lowerArmPID();
+
+		unsigned int dt = millis() - timeStart;
+		// TODO: may be able to set lower upper arm at same time as pivot
+		if ( dt >= 800 && c == 0 ) {
+			setLowerArm(650);
+			setLowerArm(545); //TODO: tune
+			c++;
+		} else if ( dt >= 1300 && c == 1 ) {
+			setUpperArm(360);
+			c++;
+		} else if ( dt >= 2300 && c == 2 ) {
+			setUpperArm(715);
+			c++;
+		} else if ( dt >= 4000 ) {
+			if (petOnArm()) {
+				flag = true;
+				delay(1000);
+			} else {
+				c = 1;
+				timeStart = millis() - 800;
+			}
+		}
+	}
+	placePetCatapult(pivotPosition);
+	flag = false;
+	delay(500);
+	RCServo0.write(80);
+	timeStart = millis();
+	while (!flag) {
+		lowerArmPID();
+		unsigned int dt = millis() - timeStart;
+		if (dt >= 0 && c == 3) {
+			setLowerArm(480);
+			c++;
+		} else if ( dt >= 1000 && c == 4) {
+			flag = true;
+		}
+	}
+	timedPivot(1800); //TODO: tune
+	delay(500);
+	launch(85); //TODO: tune
+
+}
+
+void getFifthPet() {
+	boolean flag = false;
+	uint32_t timeStart = millis();
+	int pivotPosition = 37; //TODO: tune
+	int c = 0;
+
+	// first stage pickup - pick up pet; checks if pet is picked up,
+	// if not, pick up pet again
+	RCServo0.write(pivotPosition);
+	delay(200);
+	while (!flag) {
+		upperArmPID();
+		lowerArmPID();
+
+		unsigned int dt = millis() - timeStart;
+		// TODO: may be able to set lower upper arm at same time as pivot
+		if ( dt >= 800 && c == 0 ) {
+			setLowerArm(650);
+			setLowerArm(545); //TODO: tune
+			c++;
+		} else if ( dt >= 1300 && c == 1 ) {
+			setUpperArm(360);
+			c++;
+		} else if ( dt >= 2300 && c == 2 ) {
+			setUpperArm(715);
+			c++;
+		} else if ( dt >= 4000 ) {
+			if (petOnArm()) {
+				flag = true;
+				delay(1000);
+			} else {
+				c = 1;
+				timeStart = millis() - 800;
+			}
+		}
+	}
+	placePetCatapult(pivotPosition);
+	flag = false;
+	delay(500);
+	RCServo0.write(80);
+	timeStart = millis();
+	while (!flag) {
+		lowerArmPID();
+		unsigned int dt = millis() - timeStart;
+		if (dt >= 0 && c == 3) {
+			setLowerArm(480);
+			c++;
+		} else if ( dt >= 1000 && c == 4) {
+			flag = true;
+		}
+	}
+	timedPivot(1800); //TODO: tune pivot towards the left..
+	delay(500);
+	launch(85); //TODO: tune
+
 }
 
 // Place pet in catapult from pivot arm's position 'pivot'
@@ -860,8 +973,10 @@ void placePetCatapult(int pivot) {
 			setLowerArm(500);
 			c++;
 		}
-		else if ( dt >= 1500) {
+		else if ( dt >= 1500 && c == 1) {
 			dropPet();
+			c++;
+		} else if (dt >= 2000 && c == 2) {
 			flag = true;
 		}
 	}
@@ -919,9 +1034,7 @@ void armCal() {
 		}
 
 		if (digitalRead(FRONT_SWITCH) == LOW) {
-			RCServo2.write(0);
-			delay(500);
-			RCServo2.write(90);
+			dropPet();
 		}
 
 		// move arm

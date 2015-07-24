@@ -18,7 +18,7 @@ enum {
 	ENC_L = INT1,
 	ENC_R = INT2,
 	FRONT_SWITCH = 6,
-	HAND_SWITCH = 7,
+	HAND_SWITCH = 7
 };
 
 // Digital Write Ports
