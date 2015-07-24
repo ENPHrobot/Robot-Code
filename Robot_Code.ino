@@ -239,7 +239,7 @@ void tapePID() {
 
 		if (petCount == 1) {
 			getFirstPet();
-			timedPivot(1500);  //TODO: tune
+			timedPivot(1500);
 
 			// decrease base speed for the turn
 			base_speed = 80;
@@ -599,7 +599,7 @@ void timedTravel( uint32_t t, int d) {
 // Changes base speed depending on how fast encoder counts are triggered.
 void speedControl() {
 	// TODO: see if reducing speed up rate is required
-	if (petCount == 2 && millis() - lastSpeedUp > 800) {
+	if (petCount == 2 && millis() - lastSpeedUp > 1500) {
 		//base_speed = constrain(base_speed + 10, 0, 255);
 		base_speed = 180;
 		//lastSpeedUp = millis();
@@ -650,19 +650,18 @@ void dropPet() {
 }
 
 // Pivot the arm from and to
-void pivotArm( int from, int to) {
-	int pivotIncrement = 10;
+void pivotArm( int from, int to, int increment) {
 	int p = from;
 	if (from > to) {
 		while ( p > to) {
-			p -= pivotIncrement;
+			p -= increment;
 			p = constrain(p, to, 185);
 			RCServo0.write(p);
 			delay(100);
 		}
 	} else if ( from < to) {
 		while ( p < to ) {
-			p += pivotIncrement;
+			p += increment;
 			p = constrain(p, 0, to);
 			RCServo0.write(p);
 			delay(100);
@@ -798,7 +797,7 @@ void placeSecondPet() {
 			setUpperArm(720);
 			c++;
 		} else if ( dt >= 1500 && c == 1) {
-			pivotArm(180, pivotPosition);
+			pivotArm(180, pivotPosition, 10);
 			c++;
 		} else if (dt >= 2300 && c == 2) { // Separate into two intervals
 			setLowerArm(420); //TODO tuning
@@ -853,7 +852,7 @@ void getThirdPet() {
 	}
 
 	//Pivot arm to correct location
-	pivotArm(pivotPosition, 120); //TODO: tune
+	pivotArm(pivotPosition, 120, 5); //TODO: tune
 
 
 	timeStart = millis();
@@ -1063,7 +1062,7 @@ void placePetCatapult(int pivot) {
 	boolean flag = false;
 	int c = 0;
 
-	pivotArm(pivot, 167);
+	pivotArm(pivot, 167, 10);
 
 	uint32_t timeStart = millis();
 	while (!flag) {
