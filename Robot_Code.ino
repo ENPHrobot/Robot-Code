@@ -677,25 +677,27 @@ void getFirstPet() {
 
 		unsigned int dt = millis() - timeStart;
 		// TODO: may be able to set lower upper arm at same time as pivot
-		if ( dt >= 800 && c == 0 ) {
+		if ( dt >= 1000 && c == 0 ) {
 			setLowerArm(530);
 			c++;
-		} else if ( dt >= 1300 && c == 1 ) {
-			setUpperArm(370);
+		} else if ( dt >= 2000 && c == 1 ) {
+			setUpperArm(350);
 			c++;
-		} else if ( dt >= 2300 && c == 2 ) {
+		} else if ( dt >= 4000 && c == 2 ) {
 			setUpperArm(720);
 			c++;
-		} else if ( dt >= 3000 && c == 3) {
-			setLowerArm(600);
-			c++;
-		} else if ( dt >= 4500 && c == 4) {
+		} else if ( dt >= 6000 && c == 3) {
 			if (petOnArm()) {
-				flag = true;
+				c++;
 			} else {
 				c = 1;
-				timeStart = millis() - 800;
+				timeStart = millis() - 1500;
 			}
+		} else if ( c == 4) {
+			setLowerArm(600);
+			c++;
+		} else if ( dt >= 7500 && c == 5) {
+			flag = true;
 		}
 	}
 	motor.stop_all();
@@ -729,32 +731,34 @@ void getSecondPet() {
 	// first stage pickup - pick up pet; checks if pet is picked up,
 	// if not, pick up pet again
 	RCServo0.write(pivotPosition);
-	delay(200);
+	delay(500);
 	while (!flag) {
 		upperArmPID();
 		lowerArmPID();
 
 		unsigned int dt = millis() - timeStart;
 		// TODO: may be able to set lower upper arm at same time as pivot
-		if ( dt >= 800 && c == 0 ) {
+		if ( dt >= 1000 && c == 0 ) {
 			setLowerArm(530);
 			c++;
-		} else if ( dt >= 1300 && c == 1 ) {
-			setUpperArm(370);
+		} else if ( dt >= 2000 && c == 1 ) {
+			setUpperArm(350);
 			c++;
-		} else if ( dt >= 2300 && c == 2 ) {
+		} else if ( dt >= 4000 && c == 2 ) {
 			setUpperArm(720);
 			c++;
-		} else if ( dt >= 3000 && c == 3) {
-			setLowerArm(600);
-			c++;
-		} else if ( dt >= 4500 && c == 4) {
+		} else if ( dt >= 6000 && c == 3) {
 			if (petOnArm()) {
-				flag = true;
+				c++;
 			} else {
 				c = 1;
-				timeStart = millis() - 800;
+				timeStart = millis() - 1500;
 			}
+		} else if ( c == 4) {
+			setLowerArm(600);
+			c++;
+		} else if ( dt >= 7500 && c == 5) {
+			flag = true;
 		}
 	}
 	motor.stop_all();
