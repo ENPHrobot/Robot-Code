@@ -261,9 +261,9 @@ void tapePID() {
 
 			error = 1;
 		} else if (petCount == 4) {
-			// TODO: implement more elegant switching to ir
-			// getFourthPet();
-			// timedPivot(1100); TODO: Tune to face IR
+			// TODO: implement more elegant switching to ir -in timedPivot
+			getFourthPet();
+			// timedPivot(1100); TODO: Tune to face IR -or until IR average above
 			encount_L = 0;
 			encount_R = 0;
 			switchMode();
@@ -708,7 +708,7 @@ void getFirstPet() {
 				timeStart = millis() - 1500;
 			}
 		} else if ( c == 4) {
-			setLowerArm(590);
+			setLowerArm(590); // See "REDUN" can set lower arm position here?
 			c++;
 		} else if ( dt >= 7500 && c == 5) {
 			flag = true;
@@ -882,9 +882,9 @@ void getThirdPet() {
 
 void getFourthPet() {
 	boolean flag = false;
-	//timedPivot(400); //TODO pivot first if pet is directly in front
+	timedPivot(300); // TODO tune: makes pet pick up easier
 	uint32_t timeStart = millis();
-	int pivotPosition = 37; //TODO: tune
+	int pivotPosition = 100; //TODO: tune -pet will be on left side of robot
 	int c = 0;
 
 	// first stage pickup - pick up pet; checks if pet is picked up,
@@ -896,25 +896,28 @@ void getFourthPet() {
 		lowerArmPID();
 
 		unsigned int dt = millis() - timeStart;
-		// TODO: may be able to set lower upper arm at same time as pivot
-		if ( dt >= 800 && c == 0 ) {
-			setLowerArm(650);
-			setLowerArm(545); //TODO: tune
+
+		if ( dt >= 1000 && c == 0 ) {
+			setLowerArm(530); //TODO: tune
 			c++;
-		} else if ( dt >= 1300 && c == 1 ) {
-			setUpperArm(360);
+		} else if ( dt >= 2000 && c == 1 ) {
+			setUpperArm(350);
 			c++;
-		} else if ( dt >= 2300 && c == 2 ) {
-			setUpperArm(715);
+		} else if ( dt >= 4000 && c == 2 ) {
+			setUpperArm(720);
 			c++;
-		} else if ( dt >= 4000 ) {
+		} else if ( dt >= 6000 && c == 3) {
 			if (petOnArm()) {
-				flag = true;
-				delay(1000);
+				c++;
 			} else {
 				c = 1;
-				timeStart = millis() - 800;
+				timeStart = millis() - 1500;
 			}
+		} else if ( c == 4) {
+			setLowerArm(590);
+			c++;
+		} else if ( dt >= 7500 && c == 5) {
+			flag = true;
 		}
 	}
 	placePetCatapult(pivotPosition);
@@ -932,9 +935,9 @@ void getFourthPet() {
 			flag = true;
 		}
 	}
-	timedPivot(1800); //TODO: tune
+	timedPivot(600); //TODO: tune to lineup catapult
 	delay(500);
-	launch(85); //TODO: tune
+	launch(130); //TODO: tune to get enough distance
 
 }
 
@@ -954,24 +957,27 @@ void getFifthPet() {
 
 		unsigned int dt = millis() - timeStart;
 		// TODO: may be able to set lower upper arm at same time as pivot
-		if ( dt >= 800 && c == 0 ) {
-			setLowerArm(650);
-			setLowerArm(545); //TODO: tune
+		if ( dt >= 1000 && c == 0 ) {
+			setLowerArm(530); //TODO: tune
 			c++;
-		} else if ( dt >= 1300 && c == 1 ) {
-			setUpperArm(360);
+		} else if ( dt >= 2000 && c == 1 ) {
+			setUpperArm(650); //TODO: tune
 			c++;
-		} else if ( dt >= 2300 && c == 2 ) {
-			setUpperArm(715);
+		} else if ( dt >= 4000 && c == 2 ) {
+			setUpperArm(720);
 			c++;
-		} else if ( dt >= 4000 ) {
+		} else if ( dt >= 6000 && c == 3) {
 			if (petOnArm()) {
-				flag = true;
-				delay(1000);
+				c++;
 			} else {
 				c = 1;
-				timeStart = millis() - 800;
+				timeStart = millis() - 1500;
 			}
+		} else if ( c == 4) {
+			setLowerArm(590);
+			c++;
+		} else if ( dt >= 7500 && c == 5) {
+			flag = true;
 		}
 	}
 	placePetCatapult(pivotPosition);
@@ -993,10 +999,9 @@ void getFifthPet() {
 		}
 	}
 	motor.stop_all();
-	timedPivot(1800); //TODO: tune pivot towards the left..
+	timedPivot(-2400); //TODO: tune pivot towards the left or will hit stand
 	delay(500);
-	launch(85); //TODO: tune
-
+	launch(150); //TODO: tune to get enough distance
 }
 
 void getSixthPet() {
@@ -1050,7 +1055,7 @@ void getSixthPet() {
 		lowerArmPID();
 		unsigned int dt = millis() - timeStart;
 		if (dt >= 0 && c == 3) {
-			setLowerArm(480);
+			setLowerArm(480); 
 			c++;
 		} else if ( dt >= 1000 && c == 4) {
 			flag = true;
@@ -1075,7 +1080,6 @@ void placePetCatapult(int pivot) {
 
 		unsigned int dt = millis() - timeStart;
 		if ( dt >= 250 && c == 0 ) {
-			setLowerArm(600);
 			setLowerArm(475);
 			c++;
 		}
