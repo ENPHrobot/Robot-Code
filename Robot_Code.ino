@@ -632,7 +632,8 @@ void buriedProcess() {
 
 // Drop the pet helper function
 void dropPet() {
-	LCD.clear(); LCD.home(); LCD.print("DROP THE PET");
+	LCD.clear(); LCD.home(); LCD.print("DR- DR- DR-");
+	LCD.setCursor(0, 1); LCD.print("DROP THE PET!");
 	RCServo2.write(0);
 	delay(450);
 	RCServo2.write(90);
@@ -691,13 +692,13 @@ void getFirstPet() {
 		} else if ( dt >= 4500 && c == 4) {
 			if (petOnArm()) {
 				flag = true;
-				delay(1000);
 			} else {
 				c = 1;
 				timeStart = millis() - 800;
 			}
 		}
 	}
+	motor.stop_all();
 	placePetCatapult(pivotPosition);
 	flag = false;
 	delay(500);
@@ -736,15 +737,18 @@ void getSecondPet() {
 		unsigned int dt = millis() - timeStart;
 		// TODO: may be able to set lower upper arm at same time as pivot
 		if ( dt >= 800 && c == 0 ) {
-			setLowerArm(545); //TODO
+			setLowerArm(530);
 			c++;
 		} else if ( dt >= 1300 && c == 1 ) {
-			setUpperArm(360);
+			setUpperArm(370);
 			c++;
 		} else if ( dt >= 2300 && c == 2 ) {
-			setUpperArm(715);
+			setUpperArm(720);
 			c++;
-		} else if ( dt >= 4300 ) {
+		} else if ( dt >= 3000 && c == 3) {
+			setLowerArm(600);
+			c++;
+		} else if ( dt >= 4500 && c == 4) {
 			if (petOnArm()) {
 				flag = true;
 			} else {
@@ -753,6 +757,7 @@ void getSecondPet() {
 			}
 		}
 	}
+	motor.stop_all();
 	placePetCatapult(pivotPosition);
 }
 
