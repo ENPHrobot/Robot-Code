@@ -687,10 +687,10 @@ void getFirstPet() {
 		lowerArmPID();
 
 		unsigned int dt = millis() - timeStart;
-		LCD.clear(); LCD.home();
-		LCD.print("first pet");
-		LCD.setCursor(0, 1); LCD.print(dt); LCD.print(" C:"); LCD.print(c);
-		// TODO: may be able to set lower upper arm at same time as pivot
+		// LCD.clear(); LCD.home();
+		// LCD.print("first pet");
+		// LCD.setCursor(0, 1); LCD.print(dt); LCD.print(" C:"); LCD.print(c);
+
 		if ( dt >= 1000 && c == 0 ) {
 			setLowerArm(530);
 			c++;
@@ -714,23 +714,27 @@ void getFirstPet() {
 			flag = true;
 		}
 	}
-	motor.stop_all();
+	motor.stop_all(); // ensure motors are not being powered
 	placePetCatapult(pivotPosition);
-	flag = false;
 	delay(500);
+
+	// move arm out of catapult's way
 	RCServo0.write(70);
-	timeStart = millis();
 	c = 0;
+	flag = false;
+	timeStart = millis();
 	while (!flag) {
 		lowerArmPID();
 		unsigned int dt = millis() - timeStart;
 		if (dt >= 0 && c == 0) {
-			setLowerArm(480);
+			// this lower arm height is also the height second pet is picked up from
+			setLowerArm(470);
 			c++;
 		} else if ( dt >= 1000 && c == 1) {
 			flag = true;
 		}
 	}
+	pauseArms(); // ensure arms are not powered
 	timedPivot(2150);
 	delay(500);
 	launch(85);
@@ -740,7 +744,7 @@ void getFirstPet() {
 void getSecondPet() {
 	boolean flag = false;
 	uint32_t timeStart = millis();
-	int pivotPosition = 37;  // TODO
+	int pivotPosition = 37;
 	int c = 0;
 
 	// first stage pickup - pick up pet; checks if pet is picked up,
@@ -750,29 +754,25 @@ void getSecondPet() {
 	while (!flag) {
 		upperArmPID();
 		lowerArmPID();
-
 		unsigned int dt = millis() - timeStart;
-		// TODO: may be able to set lower upper arm at same time as pivot
-		if ( dt >= 1000 && c == 0 ) {
-			setLowerArm(530);
-			c++;
-		} else if ( dt >= 2000 && c == 1 ) {
+
+		if ( dt >= 500 && c == 0 ) {
 			setUpperArm(350);
 			c++;
-		} else if ( dt >= 4000 && c == 2 ) {
+		} else if ( dt >= 2500 && c == 1 ) {
 			setUpperArm(720);
 			c++;
-		} else if ( dt >= 6000 && c == 3) {
+		} else if ( dt >= 4500 && c == 2) {
 			if (petOnArm()) {
 				c++;
 			} else {
-				c = 1;
-				timeStart = millis() - 1500;
+				c = 0;
+				timeStart = millis() - 500;
 			}
-		} else if ( c == 4) {
+		} else if ( c == 3) {
 			setLowerArm(590);
 			c++;
-		} else if ( dt >= 7500 && c == 5) {
+		} else if ( dt >= 6000 && c == 4) {
 			flag = true;
 		}
 	}
@@ -853,7 +853,6 @@ void getThirdPet() {
 
 	//Pivot arm to correct location
 	pivotArm(pivotPosition, 120, 5); //TODO: tune
-
 
 	timeStart = millis();
 	flag = false;
