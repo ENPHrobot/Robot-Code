@@ -240,10 +240,10 @@ void tapePID() {
 		// TODO: pet pickup actions
 		if (petCount == 1) {
 			getFirstPet();
-			timedPivot(800);  //TODO: tune
+			timedPivot(1100);  //TODO: tune
 
 			// upon exit, apply correcting negative error so that robot returns to line
-			error = +2;
+			error = 2;
 		} else if (petCount == 2) {
 			getSecondPet();
 
@@ -253,15 +253,19 @@ void tapePID() {
 			motor.speed(LEFT_MOTOR, 50);
 			motor.speed(RIGHT_MOTOR, 50);
 
+			placeSecondPet();
+			getThirdPet();
 
 			error = 1;
 		} else if (petCount == 4) {
 			// TODO: implement more elegant switching to ir
+			// getFourthPet(); 
+			// timedPivot(1100); TODO: Tune to face IR
 			encount_L = 0;
 			encount_R = 0;
 			switchMode();
 		}
-		armCal();
+		armCal(); //tune arm location
 
 		// speed control
 		if (petCount == 2 ) {
@@ -429,7 +433,7 @@ boolean checkRafterPet() {
 
 // Check if robot has followed to the end, where the box is
 boolean checkBoxedPet() {
-	if (digitalRead(FRONT_SWITCH) == HIGH) {
+	if (digitalRead(FRONT_SWITCH) == LOW) {
 		return true;
 	}
 	return false;
@@ -594,12 +598,11 @@ void speedControl() {
 // processfn for first IR segment
 void rafterProcess() {
 	if (checkRafterPet()) {
-		pauseDrive();
-		int a1;
-		int a2;
 		petCount++;
+		pauseDrive();
 		// TODO: rafter pet pickup here
-		while (stopbutton()) {
+		// getFifthPet();
+		while (!stopbutton()) {
 			armCal();
 		}
 		processfn = buriedProcess;
@@ -609,12 +612,11 @@ void rafterProcess() {
 // processfn for second IR segment
 void buriedProcess() {
 	if (checkBoxedPet()) {
-		pauseDrive();
-		int a1;
-		int a2;
 		petCount++;
+		pauseDrive();
 		// TODO: buried pet pickup here
-		while (stopbutton()) {
+		// getSixthPet();
+		while (!stopbutton()) {
 			armCal();
 		}
 	}
@@ -667,6 +669,7 @@ void getFirstPet() {
 		unsigned int dt = millis() - timeStart;
 		// TODO: may be able to set lower upper arm at same time as pivot
 		if ( dt >= 800 && c == 0 ) {
+			setLowerArm(650);
 			setLowerArm(545);
 			c++;
 		} else if ( dt >= 1300 && c == 1 ) {
@@ -747,7 +750,7 @@ void getSecondPet() {
 void placeSecondPet() {
 	boolean flag = false;
 	uint32_t timeStart = millis();
-	int pivotPosition = 150;  // TODO
+	int pivotPosition = 125;  // TODO
 	int c = 0;
 
 	setUpperArm(500);
@@ -761,7 +764,7 @@ void placeSecondPet() {
 			setUpperArm(715);
 			c++;
 		} else if ( dt >= 1500 && c == 1) {
-			RCServo0.write(pivotPosition);
+			pivotArm(180, pivotPosition);
 			c++;
 		} else if (dt >= 2300 && c == 2) {
 			setUpperArm(600);
@@ -769,6 +772,9 @@ void placeSecondPet() {
 			c++;
 		} else if ( dt >=  3500 && c == 3) {
 			dropPet();
+			c++;
+		} else if ( c == 4) {
+			flag = true;
 		}
 	}
 }
@@ -793,10 +799,10 @@ void getThirdPet() {
 			setLowerArm(545); //TODO: tune
 			c++;
 		} else if ( dt >= 1300 && c == 1 ) {
-			setUpperArm(360);  
+			setUpperArm(360);
 			c++;
 		} else if ( dt >= 2300 && c == 2 ) {
-			setUpperArm(715); 
+			setUpperArm(715);
 			c++;
 		} else if ( dt >= 4000 ) {
 			if (petOnArm()) {
@@ -808,16 +814,14 @@ void getThirdPet() {
 			}
 		}
 	}
-	// placePetCatapult(pivotPosition); No need to place in catapult
-	
-	//Pivot arm to correct location
 
-	pivotArm(pivotPosition, 130); //TODO: tune
+	//Pivot arm to correct location
+	pivotArm(pivotPosition, 120); //TODO: tune
 
 
 	timeStart = millis();
 	flag = false;
-
+	c = 0;
 	//move upper/lower arm to correct position for drop;
 	while (!flag) {
 		upperArmPID();

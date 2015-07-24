@@ -17,8 +17,8 @@ enum {
 enum {
 	ENC_L = INT1,
 	ENC_R = INT2,
-	HAND_SWITCH = 6,
-	FRONT_SWITCH = 7
+	FRONT_SWITCH = 6,
+	HAND_SWITCH = 7,
 };
 
 // Digital Write Ports
@@ -74,6 +74,15 @@ void RE();
 void LE();
 void armCal();
 void getFirstPet();
+void getSecondPet();
+void getThirdPet();
+void getFourthPet();
+void getFifthPet();
+void getSixthPet();
+void placeSecondPet();
+void placePetCatapult();
+void pivotArm(int from, int to);
+void dropPet();
 boolean checkPet();
 boolean petOnArm();
 boolean checkBoxedPet();
