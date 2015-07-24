@@ -622,6 +622,7 @@ void buriedProcess() {
 
 // Drop the pet helper function
 void dropPet() {
+	LCD.clear(); LCD.home(); LCD.print("DROP THE PET");
 	RCServo2.write(0);
 	delay(450);
 	RCServo2.write(90);
@@ -631,11 +632,20 @@ void dropPet() {
 void pivotArm( int from, int to) {
 	int pivotIncrement = 10;
 	int p = from;
-	while ( p < to ) {
-		p += pivotIncrement;
-		p = constrain(p, 0, 185);
-		RCServo0.write(p);
-		delay(100);
+	if (from > to) {
+		while ( p > to) {
+			p -= pivotIncrement;
+			p = constrain(p, to, 185);
+			RCServo0.write(p);
+			delay(100);
+		}
+	} else if ( from < to) {
+		while ( p < to ) {
+			p += pivotIncrement;
+			p = constrain(p, 0, to);
+			RCServo0.write(p);
+			delay(100);
+		}
 	}
 }
 
