@@ -710,7 +710,7 @@ void getFirstPet() {
 		} else if ( c == 4) {
 			setLowerArm(590); // See "REDUN" can set lower arm position here?
 			c++;
-		} else if ( dt >= 7500 && c == 5) {
+		} else if ( dt >= 7000 && c == 5) {
 			flag = true;
 		}
 	}
@@ -822,62 +822,68 @@ void placeSecondPet() {
 
 void getThirdPet() {
 	boolean flag = false;
-	int pivotPosition = 37;  // TODO: tune
+	int pivotPosition = 30;  // TODO: tune
 	int c = 0;
 
 	RCServo0.write(pivotPosition);
+	delay(500);
+	uint32_t timeStart = millis();
+
 	// first stage pickup - pick up pet; checks if pet is picked up,
 	// if not, pick up pet again
-	delay(200);
-	uint32_t timeStart = millis();
 	while (!flag) {
+
 		upperArmPID();
 		lowerArmPID();
-
 		unsigned int dt = millis() - timeStart;
-		// TODO: may be able to set lower upper arm at same time as pivot
-		if ( dt >= 800 && c == 0 ) {
-			setLowerArm(545); //TODO: tune
+
+		if ( dt >= 1000 && c == 0 ) {
+			setLowerArm(510);
 			c++;
-		} else if ( dt >= 1300 && c == 1 ) {
-			setUpperArm(360);
+		} else if ( dt >= 2000 && c == 1 ) {
+			setUpperArm(350);
 			c++;
-		} else if ( dt >= 2300 && c == 2 ) {
-			setUpperArm(715);
+		} else if ( dt >= 4000 && c == 2 ) {
+			setUpperArm(720);
 			c++;
-		} else if ( dt >= 4000 ) {
+		} else if ( dt >= 6000 && c == 3) {
 			if (petOnArm()) {
-				flag = true;
-				delay(1000);
+				c++;
 			} else {
 				c = 1;
-				timeStart = millis() - 800;
+				timeStart = millis() - 1500;
 			}
+		} else if ( c == 4) {
+			setLowerArm(590) // See "REDUN" can set lower arm position here?
+			c++;
+		} else if ( dt >= 7000 && c == 5) {
+			flag = true;
 		}
 	}
 
-	//Pivot arm to correct location
-	pivotArm(pivotPosition, 120, 5); //TODO: tune
+	// pivot arm to correct location
+	pivotArm(pivotPosition, 115, 5); //TODO: tune
 
-	timeStart = millis();
 	flag = false;
 	c = 0;
+	timeStart = millis();
 	//move upper/lower arm to correct position for drop;
 	while (!flag) {
 		upperArmPID();
 		lowerArmPID();
 
 		unsigned int dt = millis() - timeStart;
-		// TODO: may be able to set lower upper arm at same time as pivot
+		// TODO: just copy place second pet drop loop once that is working.
 		if ( dt >= 300 && c == 0 ) {
-			setLowerArm(450); //TODO: tune
-			setUpperArm(600); //TODO: tune
+			setLowerArm(400); //TODO: tune
+			setUpperArm(580); //TODO: tune
 			c++;
-		} else if ( dt >= 2300 && c == 1) {
+		} else if ( dt >= 1500 && c == 1) {
 			dropPet();
 			flag = true;
 		}
 	}
+	pauseArms();
 }
 
 void getFourthPet() {
@@ -1055,7 +1061,7 @@ void getSixthPet() {
 		lowerArmPID();
 		unsigned int dt = millis() - timeStart;
 		if (dt >= 0 && c == 3) {
-			setLowerArm(480); 
+			setLowerArm(480);
 			c++;
 		} else if ( dt >= 1000 && c == 4) {
 			flag = true;
