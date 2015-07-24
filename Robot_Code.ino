@@ -783,36 +783,41 @@ void getSecondPet() {
 void placeSecondPet() {
 	boolean flag = false;
 	uint32_t timeStart = millis();
-	int pivotPosition = 125;  // TODO
+	int pivotTo = 115;  // TODO
 	int c = 0;
 
-	setUpperArm(520);
+	setLowerArm(480);
 	while (!flag) {
 		upperArmPID();
 		lowerArmPID();
 
 		unsigned int dt = millis() - timeStart;
 
-		if ( dt >= 750 && c == 0) {
+		if ( dt >= 1000 && c == 0) {
+			setUpperArm(520);
+			c++;
+		} else if ( dt >= 1750 && c == 1) {
 			setUpperArm(720);
 			c++;
-		} else if ( dt >= 1500 && c == 1) {
-			pivotArm(180, pivotPosition, 10);
+		} else if (dt >= 2500 && c == 2) {
+			pivotArm(180, pivotTo, 10);
+			delay(500);
+			setLowerArm(400); //TODO tuning
 			c++;
-		} else if (dt >= 2300 && c == 2) { // Separate into two intervals
-			setLowerArm(420); //TODO tuning
+		} else if ( dt >= 4500 && c == 3) {
+			setUpperArm(580);
 			c++;
-		} else if ( dt >= 3800 && c == 3) {
-			setUpperArm(600);
-			c++;
-		} else if ( dt >=  4800 && c == 4) {
+		} else if ( dt >=  5200 && c == 4) {
 			dropPet();
 			c++;
 		} else if ( dt >= 5800 && c == 5) {
+			setLowerArm(590);
+			c++;
+		} else if ( dt >= 6500 && c == 6) {
 			flag = true;
-			pauseArms();
 		}
 	}
+	pauseArms();
 }
 
 void getThirdPet() {
@@ -1071,16 +1076,20 @@ void placePetCatapult(int pivot) {
 		unsigned int dt = millis() - timeStart;
 		if ( dt >= 250 && c == 0 ) {
 			setLowerArm(600);
-			setLowerArm(480); //TODO: tune to make sure pet does not hit IR Stand
+			setLowerArm(475);
 			c++;
 		}
 		else if ( dt >= 1500 && c == 1) {
 			dropPet();
 			c++;
-		} else if (dt >= 2000 && c == 2) {
+		} else if (dt >= 2100 && c == 2) {
+			setLowerArm(590);
+			c++;
+		} else if (dt >= 3000 && c == 3 ) {
 			flag = true;
 		}
 	}
+	pauseArms(); // ensure arms stop moving
 }
 
 // testing arm calibration code
