@@ -854,7 +854,7 @@ void getThirdPet() {
 				timeStart = millis() - 1500;
 			}
 		} else if ( c == 4) {
-			setLowerArm(590) // See "REDUN" can set lower arm position here?
+			setLowerArm(590); // See "REDUN" can set lower arm position here?
 			c++;
 		} else if ( dt >= 7000 && c == 5) {
 			flag = true;
@@ -862,7 +862,7 @@ void getThirdPet() {
 	}
 
 	// pivot arm to correct location
-	pivotArm(pivotPosition, 115, 5); //TODO: tune
+	pivotArm(pivotPosition, 110, 5); //TODO: tune
 
 	flag = false;
 	c = 0;
@@ -875,8 +875,8 @@ void getThirdPet() {
 		unsigned int dt = millis() - timeStart;
 		// TODO: just copy place second pet drop loop once that is working.
 		if ( dt >= 300 && c == 0 ) {
-			setLowerArm(400); //TODO: tune
-			setUpperArm(580); //TODO: tune
+			setLowerArm(400);
+			setUpperArm(580);
 			c++;
 		} else if ( dt >= 1500 && c == 1) {
 			dropPet();
