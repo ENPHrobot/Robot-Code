@@ -108,7 +108,7 @@ int upperArmV = 720;
 int lowerArmV = 600;
 int petCount = 0;
 boolean onTape = false;
-int lastSpeedUp;
+uint32_t lastSpeedUp;
 void (*pidfn)();
 void (*processfn)() = empty;
 

@@ -188,7 +188,11 @@ void setup()
 
 	LCD.print("RC5"); LCD.setCursor(0, 1);
 	LCD.print("Press Start.");
-	while (!startbutton()) {};
+	while (!startbutton()) {
+		lowerArmPID();
+		upperArmPID();
+	};
+	motor.stop_all();
 	LCD.clear();
 	MainMenu();
 }
@@ -237,7 +241,8 @@ void tapePID() {
 
 		if (petCount == 1) {
 			getFirstPet();
-			timedPivot(1500);
+			//timedPivot(1500);
+			timedPivot(1400);
 
 			// decrease base speed for the turn
 			base_speed = 80;
@@ -262,13 +267,13 @@ void tapePID() {
 			error = 1;
 		} else if (petCount == 4) {
 			// TODO: implement more elegant switching to ir -in timedPivot
-			getFourthPet();
-			// timedPivot(1100); TODO: Tune to face IR -or until IR average above
+			//getFourthPet();
+			timedPivot(300); //TODO: Tune to face IR -or until IR average above
 			encount_L = 0;
 			encount_R = 0;
 			switchMode();
 		}
-		armCal(); //tune arm location
+		//armCal(); //tune arm location
 
 		// speed control
 		if (petCount == 2 ) {
@@ -279,7 +284,12 @@ void tapePID() {
 
 	}
 
-	speedControl();
+	// speed control
+	if (petCount == 2 && millis() - lastSpeedUp > 1500) {
+		base_speed = 180;
+	} else if (petCount == 3 && millis() - lastSpeedUp > 1650) {
+		base_speed = menuItems[0].Value;
+	}
 
 	if ( !(error == last_error))
 	{
@@ -393,7 +403,6 @@ void upperArmPID() {
 	// diff = 2 * diff;
 	// diff = constrain(diff, -255, 255);
 	motor.speed(UPPER_ARM, diff);
-	LCD.setCursor(11, 1); LCD.print(diff);
 }
 
 void lowerArmPID() {
@@ -738,7 +747,8 @@ void getFirstPet() {
 		}
 	}
 	pauseArms(); // ensure arms are not powered
-	timedPivot(2150);
+	//timedPivot(2150);
+	timedPivot(1900);
 	delay(500);
 	launch(85);
 
@@ -789,7 +799,7 @@ void placeSecondPet() {
 	int pivotTo = 115;  // TODO
 	int c = 0;
 
-	setLowerArm(480);
+	setLowerArm(490);
 	while (!flag) {
 		upperArmPID();
 		lowerArmPID();
@@ -800,23 +810,24 @@ void placeSecondPet() {
 			setUpperArm(520);
 			c++;
 		} else if ( dt >= 1750 && c == 1) {
-			setUpperArm(720);
+			setUpperArm(700);
 			c++;
 		} else if (dt >= 2500 && c == 2) {
 			pivotArm(180, pivotTo, 10);
 			delay(500);
-			setLowerArm(400); //TODO tuning
+			setLowerArm(360); //TODO tuning
 			c++;
-		} else if ( dt >= 4500 && c == 3) {
-			setUpperArm(580);
+		} else if ( dt >= 4000 && c == 3) {
+			setUpperArm(520);
 			c++;
-		} else if ( dt >=  5200 && c == 4) {
+		} else if ( dt >=  5000 && c == 4) {
 			dropPet();
 			c++;
 		} else if ( dt >= 5800 && c == 5) {
+			setUpperArm(700);
 			setLowerArm(590);
 			c++;
-		} else if ( dt >= 6500 && c == 6) {
+		} else if ( dt >= 6800 && c == 6) {
 			flag = true;
 		}
 	}
@@ -865,7 +876,7 @@ void getThirdPet() {
 	}
 
 	// pivot arm to correct location
-	pivotArm(pivotPosition, 110, 5); //TODO: tune
+	pivotArm(pivotPosition, 120, 5); //TODO: tune
 
 	flag = false;
 	c = 0;
@@ -877,12 +888,19 @@ void getThirdPet() {
 
 		unsigned int dt = millis() - timeStart;
 		// TODO: just copy place second pet drop loop once that is working.
-		if ( dt >= 300 && c == 0 ) {
-			setLowerArm(400);
-			setUpperArm(580);
+		if ( dt >= 500 && c == 0 ) {
+			setLowerArm(360);
 			c++;
 		} else if ( dt >= 1500 && c == 1) {
+			setUpperArm(520);
+			c++;
+		} else if ( dt >= 2500 && c == 2) {
 			dropPet();
+			delay(200);
+			setUpperArm(700);
+			setLowerArm(590);
+			c++;
+		} else if (dt >= 4000 && c == 3) {
 			flag = true;
 		}
 	}
