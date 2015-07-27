@@ -53,8 +53,10 @@ enum {
 void tapePID();
 void irPID();
 void pauseDrive();
+void pauseArms();
 void launch(int ms);
 void pivot(int counts);
+void pivotToLine(int d);
 void speedControl();
 void switchMode();
 void buriedProcess();

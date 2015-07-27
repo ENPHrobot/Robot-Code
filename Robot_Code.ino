@@ -357,7 +357,6 @@ void irPID() {
 	// Limit max error
 	net_error = constrain(net_error, -base_speed, base_speed);
 
-	// TODO: Divide gain by average.
 	//if net error is positive, right_motor will be stronger, will turn to the left
 	motor.speed(LEFT_MOTOR, base_speed + net_error);
 	motor.speed(RIGHT_MOTOR, base_speed - net_error);
@@ -499,7 +498,23 @@ void pivot(int counts) {
 			rflag = true;
 		}
 	}
+}
 
+// Pivot robot a direction d (LEFT/RIGHT) until both QRDs are over threshold
+void pivotToLine(int d) {
+	if ( d == LEFT) {
+		motor.speed(RIGHT_MOTOR, STABLE_SPEED + 20);
+		motor.speed(LEFT_MOTOR, -STABLE_SPEED);
+	} else if ( d == RIGHT) {
+		motor.speed(RIGHT_MOTOR, -STABLE_SPEED - 20);
+		motor.speed(LEFT_MOTOR, STABLE_SPEED);
+	}
+	while (true) {
+		if (analogRead(ENC_L) >= q_threshold && analogRead(ENC_R) >= q_threshold) {
+			pauseDrive();
+			return;
+		}
+	}
 }
 
 // Turn robot left (counts < 0) or right (counts > 0) for
