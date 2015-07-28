@@ -636,7 +636,7 @@ void timedTravel( uint32_t t, int d) {
 // Changes base speed depending on how fast encoder counts are triggered.
 void speedControl() {
 	// TODO: see if reducing speed up rate is required
-	if (petCount == 2 && millis() - lastSpeedUp > 1500) {
+	if (petCount == 2 && millis() - lastSpeedUp > 1200) {
 		//base_speed = constrain(base_speed + 10, 0, 255);
 		base_speed = 180;
 		//lastSpeedUp = millis();
