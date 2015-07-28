@@ -241,8 +241,6 @@ void tapePID() {
 
 		if (petCount == 1) {
 			getFirstPet();
-			//timedPivot(1500);
-			//timedPivot(1400);
 			pivotToLine(RIGHT, 1000);
 
 			// decrease base speed for the turn
@@ -256,7 +254,6 @@ void tapePID() {
 			error = -3;
 		} else if (petCount == 3) {
 			// for pausing motors on the ramp.
-			//delay(150);
 			motor.speed(LEFT_MOTOR, 50);
 			motor.speed(RIGHT_MOTOR, 50);
 
@@ -861,7 +858,7 @@ void placeSecondPet() {
 			c++;
 		}
 		if (dt >= 2500 && c == 2) {
-			pivotArm(40, pivotTo, 10);
+			pivotArm(167, pivotTo, 10);
 			delay(500);
 			setLowerArm(320); //TODO tuning
 			c++;
