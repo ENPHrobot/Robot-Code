@@ -98,7 +98,6 @@ volatile int s_R = 0;
 volatile int time_L;
 volatile int time_R;
 int count = 0;
-uint32_t lastPivotTime;
 uint32_t lastTravelTime;
 int modeIndex = 0;
 int val;

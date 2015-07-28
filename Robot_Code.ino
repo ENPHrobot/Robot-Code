@@ -478,23 +478,28 @@ boolean petOnArm() {
 // counts on both motors.
 void pivot(int counts) {
 	// flags to check whether motors have stopped or not
-	boolean lflag = false, rflag = false;
+	boolean lflag = false, rflag = false, lcheck = false, rcheck = false;
 	// cache starting values
 	int pivotCount = abs(counts);
 	int pivotEncountStart_L = encount_L;
 	int pivotEncountStart_R = encount_R;
-	lastPivotTime = millis();
 
 	motor.speed(RIGHT_MOTOR, counts > 0 ? -STABLE_SPEED - 20 : STABLE_SPEED);
 	motor.speed(LEFT_MOTOR, counts > 0 ? STABLE_SPEED : -STABLE_SPEED - 50);
-	while (lflag == false || rflag == false) {
-		if (encount_L - pivotEncountStart_L >= pivotCount) {
-			motor.stop(LEFT_MOTOR);
+	while (lcheck == false || rcheck == false) {
+		if (lflag == false && encount_L - pivotEncountStart_L >= pivotCount) {
+			motor.speed(LEFT_MOTOR, counts > 0 ? -STABLE_SPEED : STABLE_SPEED);
 			lflag = true;
+		} else {
+			motor.stop(LEFT_MOTOR);
+			lcheck = true;
 		}
-		if (encount_R - pivotEncountStart_R >= pivotCount) {
-			motor.stop(RIGHT_MOTOR);
+		if (rflag == false && encount_R - pivotEncountStart_R >= pivotCount) {
+			motor.speed(RIGHT_MOTOR, counts > 0 ? STABLE_SPEED : -STABLE_SPEED);
 			rflag = true;
+		} else {
+			motor.stop(RIGHT_MOTOR);
+			rcheck = true;
 		}
 	}
 }
