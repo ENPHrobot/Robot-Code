@@ -244,11 +244,21 @@ void tapePID() {
 			pivotToLine(RIGHT, 1000);
 
 			// decrease base speed for the turn
-			base_speed = 80;
+			base_speed = 50;
 
 			// upon exit, apply correcting error so that robot returns to line
-			error = -1;
+			// int ql = analogRead(QRD_L);
+			// int qr = analogRead(QRD_R);
+			// if (ql > q_threshold && qr > q_threshold) {
+			// 	error = 0;
+			// } else if ( ql > q_threshold && qr <= q_threshold) {
+			// 	error = -2;
+			// } else if (ql <= q_threshold && qr > q_threshold) {
+			// 	error = 2;
+			// }
+			error = -2;
 		} else if (petCount == 2) {
+			hardStop();
 			getSecondPet();
 
 			error = -3;
@@ -264,7 +274,7 @@ void tapePID() {
 			base_speed = 180;
 
 			error = 1;
-		} else if (petCount == 4) {
+		} else if (petCount == 5) { //TODO: temporarily 5 for 4th pet
 			// TODO: implement more elegant switching to ir -in timedPivot
 			//getFourthPet();
 			armCal();
@@ -272,6 +282,7 @@ void tapePID() {
 			encount_L = 0;
 			encount_R = 0;
 			switchMode();
+			petCount = 4;
 		}
 
 		// speed control
@@ -284,9 +295,9 @@ void tapePID() {
 	}
 
 	// speed control
-	if (petCount == 2 && millis() - lastSpeedUp > 1500) {
+	if (petCount == 2 && millis() - lastSpeedUp > 1200) {
 		base_speed = 180;
-	} else if (petCount == 3 && millis() - lastSpeedUp > 1650) {
+	} else if (petCount == 3 && millis() - lastSpeedUp > 1350) {
 		base_speed = menuItems[0].Value;
 	}
 
@@ -422,6 +433,13 @@ void pauseDrive() {
 	motor.stop(RIGHT_MOTOR);
 }
 
+void hardStop() {
+	motor.speed(LEFT_MOTOR, -base_speed);
+	motor.speed(RIGHT_MOTOR, base_speed);
+	delay(50);
+	pauseDrive();
+}
+
 // Stop arm movement
 void pauseArms() {
 	motor.stop(LOWER_ARM);
@@ -514,7 +532,8 @@ void pivotToLine(int d, int timer) {
 		motor.speed(RIGHT_MOTOR, -STABLE_SPEED - 20);
 		motor.speed(LEFT_MOTOR, STABLE_SPEED);
 	}
-	uint16_t start = millis();
+	delay(20);
+	uint16_t start = millis() - 20;
 	while (true) {
 		if ((analogRead(QRD_L) >= q_threshold || analogRead(QRD_R) >= q_threshold) && millis() - start >= timer) {
 			if (d == LEFT) {
@@ -716,7 +735,7 @@ void getFirstPet() {
 
 	boolean flag = false;
 	uint32_t timeStart = millis();
-	int pivotPosition = 37;
+	int pivotPosition = 35;
 	int c = 0;
 
 	// first stage pickup - pick up pet; checks if pet is picked up,
@@ -783,7 +802,7 @@ void getFirstPet() {
 void getSecondPet() {
 	boolean flag = false;
 	uint32_t timeStart = millis();
-	int pivotPosition = 50;
+	int pivotPosition = 43;
 	int c = 0;
 
 	// first stage pickup - pick up pet; checks if pet is picked up,
@@ -817,8 +836,9 @@ void getSecondPet() {
 	}
 	motor.stop_all();
 
-	pivotArm(pivotPosition, 167, 10);
+	pivotArm(pivotPosition, 172, 10);
 	c = 0;
+	flag = false;
 	timeStart = millis();
 	while (!flag) {
 		lowerArmPID();
@@ -826,10 +846,14 @@ void getSecondPet() {
 
 		unsigned int dt = millis() - timeStart;
 		if ( dt >= 500 && c == 0 ) {
-			setLowerArm(475);
+			setLowerArm(530);
+			c++;
+		} else if (dt >= 1250 && c == 1) {
+			setUpperArm(650);
 			c++;
 		}
-		else if ( dt >= 1500 && c == 1) {
+		else if ( dt >= 1800 && c == 2) {
+			pauseArms();
 			flag = true;
 		}
 	}
@@ -841,12 +865,12 @@ void placeSecondPet() {
 	int pivotTo = 120;
 	int c = 1;
 	// TODO: test if pivoting is actually needed
-	pivot(-2);
-	motor.speed(LEFT_MOTOR, 60);
+	//pivot(-2);
+	motor.speed(LEFT_MOTOR, 50);
 	motor.speed(RIGHT_MOTOR, 50);
 
+	setUpperArm(700);
 	uint32_t timeStart = millis();
-
 	while (!flag) {
 		upperArmPID();
 		lowerArmPID();
@@ -856,22 +880,24 @@ void placeSecondPet() {
 		if ( dt >= 750 && c == 1) {
 			setLowerArm(590);
 			c++;
-		} else if (dt >= 1500 && c == 2) {
+		} else if (dt >= 2000 && c == 2) {
 			pivotArm(167, pivotTo, 10);
 			delay(500);
 			setLowerArm(320);
 			c++;
-		} else if ( dt >= 3000 && c == 3) {
+		} else if ( dt >= 3500 && c == 3) {
 			setUpperArm(520);
 			c++;
-		} else if ( dt >=  4000 && c == 4) {
+		} else if ( dt >=  4500 && c == 4) {
 			dropPet();
 			c++;
-		} else if ( dt >= 4800 && c == 5) {
-			setUpperArm(700);
+		} else if ( dt >= 5300 && c == 5) {
 			setLowerArm(590);
 			c++;
-		} else if ( dt >= 5800 && c == 6) {
+		} else if ( dt >= 6300 && c == 6) {
+			setUpperArm(700);
+			c++;
+		} else if ( dt >= 7300 && c == 7) {
 			flag = true;
 		}
 	}
@@ -883,7 +909,8 @@ void getThirdPet() {
 	int pivotPosition = 40;  // TODO: tune
 	int c = 0;
 
-	RCServo0.write(pivotPosition);
+	// RCServo0.write(pivotPosition);
+	pivotArm(120, pivotPosition, 8);
 	uint32_t timeStart = millis();
 
 	// first stage pickup - pick up pet; checks if pet is picked up,
@@ -898,7 +925,7 @@ void getThirdPet() {
 			setLowerArm(510);
 			c++;
 		} else if ( dt >= 1600 && c == 1 ) {
-			setUpperArm(350);
+			setUpperArm(370);
 			c++;
 		} else if ( dt >= 3600 && c == 2 ) {
 			setUpperArm(720);
@@ -919,7 +946,7 @@ void getThirdPet() {
 	}
 
 	// pivot arm to correct location
-	pivotArm(pivotPosition, 120, 10); //TODO: tune
+	pivotArm(pivotPosition, 127, 10); //TODO: tune
 
 	flag = false;
 	c = 0;
