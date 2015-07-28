@@ -267,12 +267,12 @@ void tapePID() {
 		} else if (petCount == 4) {
 			// TODO: implement more elegant switching to ir -in timedPivot
 			//getFourthPet();
-			timedPivot(300); //TODO: Tune to face IR -or until IR average above
+			armCal();
+			//timedPivot(300); //TODO: Tune to face IR -or until IR average above
 			encount_L = 0;
 			encount_R = 0;
 			switchMode();
 		}
-		//armCal(); //tune arm location
 
 		// speed control
 		if (petCount == 2 ) {
