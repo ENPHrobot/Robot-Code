@@ -839,45 +839,39 @@ void getSecondPet() {
 void placeSecondPet() {
 	boolean flag = false;
 	int pivotTo = 120;
-	int c = 0;
+	int c = 1;
 	// TODO: test if pivoting is actually needed
 	pivot(-2);
 	motor.speed(LEFT_MOTOR, 60);
 	motor.speed(RIGHT_MOTOR, 50);
 
-
 	uint32_t timeStart = millis();
 
-	//setLowerArm(490);
 	while (!flag) {
 		upperArmPID();
 		lowerArmPID();
 
 		unsigned int dt = millis() - timeStart;
 
-		if ( dt >= 1000 && c == 0) {
-			//setUpperArm(520);
-			c++;
-		} else if ( dt >= 1750 && c == 1) {
+		if ( dt >= 750 && c == 1) {
 			setLowerArm(590);
 			c++;
-		}
-		if (dt >= 2500 && c == 2) {
+		} else if (dt >= 1500 && c == 2) {
 			pivotArm(167, pivotTo, 10);
 			delay(500);
-			setLowerArm(320); //TODO tuning
+			setLowerArm(320);
 			c++;
-		} else if ( dt >= 4000 && c == 3) {
+		} else if ( dt >= 3000 && c == 3) {
 			setUpperArm(520);
 			c++;
-		} else if ( dt >=  5000 && c == 4) {
+		} else if ( dt >=  4000 && c == 4) {
 			dropPet();
 			c++;
-		} else if ( dt >= 5800 && c == 5) {
+		} else if ( dt >= 4800 && c == 5) {
 			setUpperArm(700);
 			setLowerArm(590);
 			c++;
-		} else if ( dt >= 6800 && c == 6) {
+		} else if ( dt >= 5800 && c == 6) {
 			flag = true;
 		}
 	}
@@ -890,7 +884,6 @@ void getThirdPet() {
 	int c = 0;
 
 	RCServo0.write(pivotPosition);
-	delay(500);
 	uint32_t timeStart = millis();
 
 	// first stage pickup - pick up pet; checks if pet is picked up,
@@ -901,16 +894,16 @@ void getThirdPet() {
 		lowerArmPID();
 		unsigned int dt = millis() - timeStart;
 
-		if ( dt >= 1000 && c == 0 ) {
+		if ( dt >= 600 && c == 0 ) {
 			setLowerArm(510);
 			c++;
-		} else if ( dt >= 2000 && c == 1 ) {
+		} else if ( dt >= 1600 && c == 1 ) {
 			setUpperArm(350);
 			c++;
-		} else if ( dt >= 4000 && c == 2 ) {
+		} else if ( dt >= 3600 && c == 2 ) {
 			setUpperArm(720);
 			c++;
-		} else if ( dt >= 6000 && c == 3) {
+		} else if ( dt >= 5600 && c == 3) {
 			if (petOnArm()) {
 				c++;
 			} else {
@@ -920,7 +913,7 @@ void getThirdPet() {
 		} else if ( c == 4) {
 			setLowerArm(590); // See "REDUN" can set lower arm position here?
 			c++;
-		} else if ( dt >= 7000 && c == 5) {
+		} else if ( dt >= 6600 && c == 5) {
 			flag = true;
 		}
 	}
