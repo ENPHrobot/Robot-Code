@@ -1138,15 +1138,13 @@ void getSixthPet() {
 	launch(85); //TODO: tune
 
 }
-// Place pet in catapult from pivot arm's position 'pivot'
-void placePetCatapult(int pivot) {
-	boolean flag = false;
+// Place pet in catapult from pivot arm's position 'pivotFrom'
+void placePetCatapult(int pivotFrom) {
 	int c = 0;
-
-	pivotArm(pivot, 167, 10);
-
+	pivotArm(pivotFrom, 168, 10);
 	uint32_t timeStart = millis();
-	while (!flag) {
+
+	while (true) {
 		lowerArmPID();
 		upperArmPID();
 
@@ -1155,17 +1153,17 @@ void placePetCatapult(int pivot) {
 			setLowerArm(475);
 			c++;
 		}
-		else if ( dt >= 1500 && c == 1) {
+		else if ( dt >= 1400 && c == 1) {
 			dropPet();
 			c++;
-		} else if (dt >= 2100 && c == 2) {
+		} else if (dt >= 2000 && c == 2) {
 			setLowerArm(590);
 			c++;
 		} else if (dt >= 3000 && c == 3 ) {
-			flag = true;
+			pauseArms(); // ensure arms stop moving
+			return;
 		}
 	}
-	pauseArms(); // ensure arms stop moving
 }
 
 // testing arm calibration code
