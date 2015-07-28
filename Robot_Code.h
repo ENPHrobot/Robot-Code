@@ -36,12 +36,12 @@ enum {
 
 // Constants
 enum {
-	STABLE_SPEED = 70,
+	STABLE_SPEED = 60,
 	FORWARDS = 3,
 	BACKWARDS = 4,
 	LEFT = 5,
 	RIGHT = 6,
-	ENC_RAFTER = 60
+	ENC_RAFTER = 10
 };
 
 #define SERVO_0_Pin (35)

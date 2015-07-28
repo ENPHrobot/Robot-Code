@@ -242,19 +242,21 @@ void tapePID() {
 		if (petCount == 1) {
 			getFirstPet();
 			//timedPivot(1500);
-			timedPivot(1400);
+			//timedPivot(1400);
+			pivotToLine(RIGHT, 1000);
 
 			// decrease base speed for the turn
 			base_speed = 80;
 
 			// upon exit, apply correcting error so that robot returns to line
-			error = -2;
+			error = -1;
 		} else if (petCount == 2) {
 			getSecondPet();
 
 			error = -3;
 		} else if (petCount == 3) {
 			// for pausing motors on the ramp.
+			//delay(150);
 			motor.speed(LEFT_MOTOR, 50);
 			motor.speed(RIGHT_MOTOR, 50);
 
@@ -501,7 +503,8 @@ void pivot(int counts) {
 }
 
 // Pivot robot a direction d (LEFT/RIGHT) until both QRDs are over threshold
-void pivotToLine(int d) {
+// Will not start checking for tape until after timer
+void pivotToLine(int d, int timer) {
 	if ( d == LEFT) {
 		motor.speed(RIGHT_MOTOR, STABLE_SPEED + 20);
 		motor.speed(LEFT_MOTOR, -STABLE_SPEED);
@@ -509,8 +512,18 @@ void pivotToLine(int d) {
 		motor.speed(RIGHT_MOTOR, -STABLE_SPEED - 20);
 		motor.speed(LEFT_MOTOR, STABLE_SPEED);
 	}
+	uint16_t start = millis();
 	while (true) {
-		if (analogRead(ENC_L) >= q_threshold && analogRead(ENC_R) >= q_threshold) {
+		if ((analogRead(QRD_L) >= q_threshold || analogRead(QRD_R) >= q_threshold) && millis() - start >= timer) {
+			if (d == LEFT) {
+				motor.speed(RIGHT_MOTOR, -STABLE_SPEED);
+				motor.speed(LEFT_MOTOR, STABLE_SPEED);
+				delay(110);
+			} else if (d == RIGHT) {
+				motor.speed(RIGHT_MOTOR, STABLE_SPEED);
+				motor.speed(LEFT_MOTOR, -STABLE_SPEED);
+				delay(110);
+			}
 			pauseDrive();
 			return;
 		}
@@ -714,9 +727,6 @@ void getFirstPet() {
 		lowerArmPID();
 
 		unsigned int dt = millis() - timeStart;
-		// LCD.clear(); LCD.home();
-		// LCD.print("first pet");
-		// LCD.setCursor(0, 1); LCD.print(dt); LCD.print(" C:"); LCD.print(c);
 
 		if ( dt >= 1000 && c == 0 ) {
 			setLowerArm(530);
@@ -755,15 +765,14 @@ void getFirstPet() {
 		unsigned int dt = millis() - timeStart;
 		if (dt >= 0 && c == 0) {
 			// this lower arm height is also the height second pet is picked up from
-			setLowerArm(470);
+			setLowerArm(440);
 			c++;
 		} else if ( dt >= 1000 && c == 1) {
 			flag = true;
 		}
 	}
 	pauseArms(); // ensure arms are not powered
-	//timedPivot(2150);
-	timedPivot(1900);
+	pivotToLine(RIGHT, 1600);
 	delay(500);
 	launch(85);
 
@@ -772,7 +781,7 @@ void getFirstPet() {
 void getSecondPet() {
 	boolean flag = false;
 	uint32_t timeStart = millis();
-	int pivotPosition = 37;
+	int pivotPosition = 50;
 	int c = 0;
 
 	// first stage pickup - pick up pet; checks if pet is picked up,
@@ -805,16 +814,39 @@ void getSecondPet() {
 		}
 	}
 	motor.stop_all();
-	placePetCatapult(pivotPosition);
+
+	pivotArm(pivotPosition, 167, 10);
+	c = 0;
+	timeStart = millis();
+	while (!flag) {
+		lowerArmPID();
+		upperArmPID();
+
+		unsigned int dt = millis() - timeStart;
+		if ( dt >= 500 && c == 0 ) {
+			setLowerArm(475);
+			c++;
+		}
+		else if ( dt >= 1500 && c == 1) {
+			flag = true;
+		}
+	}
+	//placePetCatapult(pivotPosition);
 }
 
 void placeSecondPet() {
 	boolean flag = false;
-	uint32_t timeStart = millis();
-	int pivotTo = 115;  // TODO
+	int pivotTo = 120;
 	int c = 0;
+	// TODO: test if pivoting is actually needed
+	pivot(-2);
+	motor.speed(LEFT_MOTOR, 60);
+	motor.speed(RIGHT_MOTOR, 50);
 
-	setLowerArm(490);
+
+	uint32_t timeStart = millis();
+
+	//setLowerArm(490);
 	while (!flag) {
 		upperArmPID();
 		lowerArmPID();
@@ -822,15 +854,16 @@ void placeSecondPet() {
 		unsigned int dt = millis() - timeStart;
 
 		if ( dt >= 1000 && c == 0) {
-			setUpperArm(520);
+			//setUpperArm(520);
 			c++;
 		} else if ( dt >= 1750 && c == 1) {
-			setUpperArm(700);
+			setLowerArm(590);
 			c++;
-		} else if (dt >= 2500 && c == 2) {
-			pivotArm(180, pivotTo, 10);
+		}
+		if (dt >= 2500 && c == 2) {
+			pivotArm(40, pivotTo, 10);
 			delay(500);
-			setLowerArm(360); //TODO tuning
+			setLowerArm(320); //TODO tuning
 			c++;
 		} else if ( dt >= 4000 && c == 3) {
 			setUpperArm(520);
@@ -851,7 +884,7 @@ void placeSecondPet() {
 
 void getThirdPet() {
 	boolean flag = false;
-	int pivotPosition = 30;  // TODO: tune
+	int pivotPosition = 40;  // TODO: tune
 	int c = 0;
 
 	RCServo0.write(pivotPosition);
@@ -891,7 +924,7 @@ void getThirdPet() {
 	}
 
 	// pivot arm to correct location
-	pivotArm(pivotPosition, 120, 5); //TODO: tune
+	pivotArm(pivotPosition, 120, 10); //TODO: tune
 
 	flag = false;
 	c = 0;
@@ -904,7 +937,7 @@ void getThirdPet() {
 		unsigned int dt = millis() - timeStart;
 		// TODO: just copy place second pet drop loop once that is working.
 		if ( dt >= 500 && c == 0 ) {
-			setLowerArm(360);
+			setLowerArm(350);
 			c++;
 		} else if ( dt >= 1500 && c == 1) {
 			setUpperArm(520);
