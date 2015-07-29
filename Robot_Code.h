@@ -91,8 +91,8 @@ boolean checkBoxedPet();
 boolean checkRafterPet();
 
 /* Instantiate variables */
-volatile int encount_L = 0;
-volatile int encount_R = 0;
+int encount_L = 0;
+int encount_R = 0;
 volatile int s_L = 0;
 volatile int s_R = 0;
 volatile int time_L;
@@ -109,6 +109,8 @@ int upperArmV = 720;
 int lowerArmV = 600;
 int petCount = 0;
 boolean onTape = false;
+boolean ecL = false;
+boolean ecR = false;
 uint32_t lastSpeedUp;
 void (*pidfn)();
 void (*processfn)() = empty;

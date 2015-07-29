@@ -167,14 +167,14 @@ void setup()
 	digitalWrite(LAUNCH_F, LOW);
 
 	// attach external interrupts on encoder pins
-	enableExternalInterrupt(ENC_L, RISING);
-	enableExternalInterrupt(ENC_R, RISING);
+	//enableExternalInterrupt(ENC_L, RISING);
+	//enableExternalInterrupt(ENC_R, RISING);
 	/*attachISR(ENC_L, LE);
 	attachISR(ENC_R, RE);*/
 
 	// if testing overall speed
-	attachISR(ENC_L, LES);
-	attachISR(ENC_R, RES);
+	//attachISR(ENC_L, LES);
+	//attachISR(ENC_R, RES);
 	time_L = millis();
 	time_R = millis();
 	lastSpeedUp = 0;
@@ -217,6 +217,8 @@ void tapePID() {
 	int left_sensor = analogRead(QRD_L);
 	int right_sensor = analogRead(QRD_R);
 	int error = 0;
+
+	encoderProcess();
 
 	if (left_sensor > q_threshold && right_sensor > q_threshold)
 		error = 0; // both sensors on black
@@ -286,7 +288,7 @@ void tapePID() {
 		}
 
 		// speed control
-		if (petCount == 2 ) {
+		if ( petCount == 2 ) {
 			lastSpeedUp = millis();
 		} else if (petCount == 3 ) {
 			lastSpeedUp = millis();
@@ -553,28 +555,29 @@ void pivotToLine(int d, int timer) {
 
 // Turn robot left (counts < 0) or right (counts > 0) for
 // certain amount of encoder counts forward
-void turnForward(int counts) {
-	boolean flag = false;
+void turnForward(int counts, int s) {
 	int turnCount = abs(counts);
 	int turnEncountStart_L = encount_L;
 	int turnEncountStart_R = encount_R;
 
 	if (counts < 0) {
 		motor.stop(LEFT_MOTOR);
-		motor.speed(RIGHT_MOTOR, STABLE_SPEED);
-		while (flag == false) {
+		motor.speed(RIGHT_MOTOR, s);
+		while (true) {
+			encoderProcess();
 			if (encount_R - turnEncountStart_R >= turnCount) {
 				motor.stop(RIGHT_MOTOR);
-				flag = true;
+				return;
 			}
 		}
 	} else if (counts > 0) {
 		motor.stop(RIGHT_MOTOR);
-		motor.speed(LEFT_MOTOR, STABLE_SPEED);
-		while (flag == false) {
+		motor.speed(LEFT_MOTOR, s);
+		while (true) {
+			encoderProcess();
 			if (encount_L - turnEncountStart_L >= turnCount) {
 				motor.stop(LEFT_MOTOR);
-				flag = true;
+				return;
 			}
 		}
 	}
@@ -638,6 +641,7 @@ void travel(int counts, int d) {
 	motor.speed(RIGHT_MOTOR, d == FORWARDS ? STABLE_SPEED : -STABLE_SPEED);
 	motor.speed(LEFT_MOTOR, d == FORWARDS ? STABLE_SPEED : -STABLE_SPEED);
 	while (lflag == false || rflag == false) {
+		encoderProcess();
 		if (encount_L - travelEncountStart_L >= travelCount) {
 			motor.stop(LEFT_MOTOR);
 			lflag = true;
@@ -1256,6 +1260,21 @@ void armCal() {
 /* ISRs */
 
 // Encoder ISRs. S == speed
+void encoderProcess() {
+	if (digitalRead(1) == HIGH && !ecL) {
+		encount_L++;
+		ecL = true;
+	} else if (digitalRead(1) == LOW) {
+		ecL = false;
+	}
+	if (digitalRead(2) == HIGH && !ecR) {
+		encount_R++;
+		ecR = true;
+	} else if (digitalRead(2) == LOW) {
+		ecR = false;
+	}
+}
+
 void LE() {
 	encount_L++;
 }
