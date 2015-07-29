@@ -353,6 +353,8 @@ void tapePID() {
 
 void irPID() {
 
+	encoderProcess();
+
 	if (petCount == 4) {
 		rafterProcess();
 	} else if ( petCount == 5) {
@@ -778,6 +780,15 @@ void pivotArm( int from, int to, int increment) {
 	}
 }
 
+// Adjust pivot arm position in multiple attempts of pet
+void adjustArm(int pivotPosition, int try_num){
+	if (try_num == 1){
+		RCServo0.write(pivotPosition + 2); //TODO: Tune adjust amount
+	} else if (try_num == 2) {
+		RCServo0.write(pivotPosition - 2);
+	}
+}
+
 //Function to get first pet
 void getFirstPet() {
 
@@ -808,10 +819,12 @@ void getFirstPet() {
 			setUpperArm(720);
 			c++;
 		} else if ( dt >= 6000 && c == 3) {
-			if (petOnArm()) {
+			if (petOnArm() || try_num >= 2) { //Gives up after three attempts preventing infinite loop
 				c++;
 			} else {
 				try_num++;
+				adjustArm(pivotPosition, try_num); // Adjust pivot arm during multiple attempts
+												   // May waste a lot of time potentially.. (~6s each attempt)
 				c = 1;
 				timeStart = millis() - 1500;
 			}
