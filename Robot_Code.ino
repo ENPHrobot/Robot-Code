@@ -245,7 +245,7 @@ void tapePID() {
 			getFirstPet();
 
 			// decrease base speed for the turn
-			base_speed = 50;
+			base_speed = 70;
 			// q_pro_gain = 20;
 			// q_diff_gain = 5;
 
@@ -260,6 +260,7 @@ void tapePID() {
 			// 	error = 2;
 			// }
 			error = -2;
+			recent_error = error;
 			last_error = 0;
 		} else if (petCount == 2) {
 			hardStop();
@@ -267,6 +268,7 @@ void tapePID() {
 			pivotToLine(LEFT, 100);
 			last_error = 0;
 			error = 0;
+			recent_error = error;
 		} else if (petCount == 3) {
 			// for pausing motors on the ramp.
 			motor.speed(LEFT_MOTOR, base_speed);
@@ -332,22 +334,22 @@ void tapePID() {
 	// prevent adjusting errors from going over actual speed.
 	net_error = constrain(net_error, -base_speed, base_speed);
 
-	//if net error is positive, right_motor will be stronger, will turn to the left
+	//if net error is positive, right_motor will be weaker, will turn to the right
 	motor.speed(LEFT_MOTOR, base_speed + net_error);
 	motor.speed(RIGHT_MOTOR, base_speed - net_error);
 
 	if ( count == 100 ) {
 		count = 0;
 		LCD.clear(); LCD.home();
-		/*LCD.print("LQ:"); LCD.print(left_sensor);
+		LCD.print("LQ:"); LCD.print(left_sensor);
 		LCD.print(" LM:"); LCD.print(base_speed + net_error);
 		LCD.setCursor(0, 1);
 		LCD.print("RQ:"); LCD.print(right_sensor);
-		LCD.print(" RM:"); LCD.print(base_speed - net_error);*/
-		LCD.print("LE:"); LCD.print(encount_L); LCD.print(" RE:"); LCD.print(encount_R);
-		LCD.setCursor(0, 1); //LCD.print(s_L); LCD.print(" "); LCD.print(s_R); LCD.print(" ");
-		LCD.print("base:"); LCD.print(base_speed); LCD.print(" ");
-		LCD.print((s_L + s_R) / 2);
+		LCD.print(" RM:"); LCD.print(base_speed - net_error);
+		// LCD.print("LE:"); LCD.print(encount_L); LCD.print(" RE:"); LCD.print(encount_R);
+		// LCD.setCursor(0, 1); //LCD.print(s_L); LCD.print(" "); LCD.print(s_R); LCD.print(" ");
+		// LCD.print("base:"); LCD.print(base_speed); LCD.print(" ");
+		// LCD.print((s_L + s_R) / 2);
 	}
 
 	last_error = error;
@@ -869,12 +871,12 @@ void getFirstPet() {
 			flag = true;
 		}
 	}
+
+	motor.stop_all(); // ensure motors are not being powered
 	
 	if(!unsuccessful) {
-		motor.stop_all(); // ensure motors are not being powered
 		placePetCatapult(pivotPosition);
 		delay(500);
-
 		// move arm out of catapult's way
 		RCServo0.write(70);
 		c = 0;
@@ -896,6 +898,12 @@ void getFirstPet() {
 		delay(500);
 		launch(85);
 		pivotToLine(RIGHT, 1000);
+	} else {
+		while(!stopbutton()){
+			LCD.clear(); LCD.home();
+			LCD.print(analogRead(QRD_L)); LCD.print(" "); LCD.print(analogRead(QRD_R));
+			delay(200);
+		}
 	}
 
 }
@@ -945,8 +953,9 @@ void getSecondPet() {
 		}
 	}
 
+	motor.stop_all();
+
 	if(!unsuccessful){ 
-		motor.stop_all();
 
 		pivotArm(pivotPosition, 172, 10);
 		c = 0;
@@ -1111,7 +1120,7 @@ void getFourthPet() {
 		unsigned int dt = millis() - timeStart;
 
 		if ( dt >= 1000 && c == 0 ) {
-			setLowerArm(530); //TODO: tune
+			setLowerArm(490); //TODO: tune
 			c++;
 		} else if ( dt >= 2000 && c == 1 ) {
 			setUpperArm(350);
