@@ -817,6 +817,7 @@ void adjustArm(int pivotPosition, int try_num){
 void getFirstPet() {
 
 	boolean flag = false;
+	boolean unsuccessful = false;
 	uint32_t timeStart = millis();
 	int pivotPosition = 32;
 	int c = 0;
@@ -843,15 +844,18 @@ void getFirstPet() {
 			setUpperArm(720);
 			c++;
 		} else if ( dt >= 6000 && c == 3) {
-			if (petOnArm() || try_num >= 2) { //Gives up after three attempts preventing infinite loop
+			if (petOnArm()) {
 				c++;
-			} else {
+			} else if (try_num < 2) {
 				try_num++;
 				adjustArm(pivotPosition, try_num); // Adjust pivot arm during multiple attempts
 												   // Does not change lower arm position
 												   // May waste a lot of time potentially.. (~6s each attempt)
 				c = 1;
 				timeStart = millis() - 1500;
+			} else if (try_num >= 2 && !petOnArm()) { //Gives up after three attempts preventing infinite loop
+				flag = true;
+				unsuccessful = true;
 			}
 		} else if ( c == 4) {
 			setLowerArm(590); // See "REDUN" can set lower arm position here?
@@ -860,30 +864,33 @@ void getFirstPet() {
 			flag = true;
 		}
 	}
-	motor.stop_all(); // ensure motors are not being powered
-	placePetCatapult(pivotPosition);
-	delay(500);
+	
+	if(!unsuccessful) {
+		motor.stop_all(); // ensure motors are not being powered
+		placePetCatapult(pivotPosition);
+		delay(500);
 
-	// move arm out of catapult's way
-	RCServo0.write(70);
-	c = 0;
-	flag = false;
-	timeStart = millis();
-	while (!flag) {
-		lowerArmPID();
-		unsigned int dt = millis() - timeStart;
-		if (dt >= 0 && c == 0) {
-			// this lower arm height is also the height second pet is picked up from
-			setLowerArm(410);
-			c++;
-		} else if ( dt >= 1000 && c == 1) {
-			flag = true;
+		// move arm out of catapult's way
+		RCServo0.write(70);
+		c = 0;
+		flag = false;
+		timeStart = millis();
+		while (!flag) {
+			lowerArmPID();
+			unsigned int dt = millis() - timeStart;
+			if (dt >= 0 && c == 0) {
+				// this lower arm height is also the height second pet is picked up from
+				setLowerArm(410);
+				c++;
+			} else if ( dt >= 1000 && c == 1) {
+				flag = true;
+			}
 		}
+		pauseArms(); // ensure arms are not powered
+		pivotToLine(RIGHT, 2000);
+		delay(500);
+		launch(85);
 	}
-	pauseArms(); // ensure arms are not powered
-	pivotToLine(RIGHT, 2000);
-	delay(500);
-	launch(85);
 
 }
 
