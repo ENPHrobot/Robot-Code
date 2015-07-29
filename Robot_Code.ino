@@ -153,28 +153,11 @@ void setup()
 	ir_diff_gain = IRmenuItems[1].Value;
 	ir_int_gain = IRmenuItems[2].Value;
 
-	// attach servos
-	pinMode(SERVO_0_Pin, OUTPUT);
-	//pinMode(SERVO_1_Pin, OUTPUT);
-	pinMode(SERVO_2_Pin, OUTPUT);
-	RCServo0.attach(SERVO_0_Pin);
-	//RCServo1.attach(SERVO_1_Pin);
-	RCServo2.attach(SERVO_2_Pin);
-
 	// set ports 8 to 15 as OUTPUT
 	portMode(1, OUTPUT);
 	// ensure relays are LOW on start.
 	digitalWrite(LAUNCH_F, LOW);
 
-	// attach external interrupts on encoder pins
-	//enableExternalInterrupt(ENC_L, RISING);
-	//enableExternalInterrupt(ENC_R, RISING);
-	/*attachISR(ENC_L, LE);
-	attachISR(ENC_R, RE);*/
-
-	// if testing overall speed
-	//attachISR(ENC_L, LES);
-	//attachISR(ENC_R, RES);
 	time_L = millis();
 	time_R = millis();
 	lastSpeedUp = 0;
@@ -937,668 +920,663 @@ void getSecondPet() {
 		}
 	}
 
-	<<< <<< < HEAD
+
+	motor.stop_all();
+
 	if (!unsuccessful) {
-		motor.stop_all();
-		== == == =
-		    motor.stop_all();
-
-		if (!unsuccessful) {
-			>>> >>> > 1cbc90f27082019555f8baaaee49440881f25f5c
-
-			pivotArm(pivotPosition, 172, 10);
-			c = 0;
-			flag = false;
-			timeStart = millis();
-			while (!flag) {
-				lowerArmPID();
-				upperArmPID();
-
-				unsigned int dt = millis() - timeStart;
-				if ( dt >= 500 && c == 0 ) {
-					setLowerArm(535);
-					c++;
-				} else if (dt >= 1250 && c == 1) {
-					setUpperArm(650);
-					c++;
-				}
-				else if ( dt >= 1800 && c == 2) {
-					pauseArms();
-					flag = true;
-				}
-			}
-		}
-		//placePetCatapult(pivotPosition);
-	}
-
-	void placeSecondPet() {
-		boolean flag = false;
-		int pivotTo = 118;
-		int c = 1;
-		// TODO: test if pivoting is actually needed
-		turnForward(-2, 110);
-		motor.speed(LEFT_MOTOR, 40);
-		motor.speed(RIGHT_MOTOR, 40);
-
-		setUpperArm(700);
-		uint32_t timeStart = millis();
-		while (!flag) {
-			upperArmPID();
-			lowerArmPID();
-
-			unsigned int dt = millis() - timeStart;
-
-			if ( dt >= 750 && c == 1) {
-				setLowerArm(590);
-				c++;
-			} else if (dt >= 2000 && c == 2) {
-				pivotArm(170, pivotTo, 10);
-				delay(500);
-				setLowerArm(320);
-				c++;
-			} else if ( dt >= 3500 && c == 3) {
-				setUpperArm(520);
-				c++;
-			} else if ( dt >=  4500 && c == 4) {
-				dropPet();
-				c++;
-			} else if ( dt >= 5300 && c == 5) {
-				setLowerArm(590);
-				c++;
-			} else if ( dt >= 6300 && c == 6) {
-				setUpperArm(710);
-				c++;
-			} else if ( dt >= 7700 && c == 7) {
-				flag = true;
-			}
-		}
-		pauseArms();
-	}
-
-	void getThirdPet() {
-		boolean flag = false;
-		int pivotPosition = 26;
-		int c = 0;
-
-		boolean unsuccessful = false;
-		int try_num = 0;
-
-		// RCServo0.write(pivotPosition);
-		pivotArm(120, pivotPosition, 8);
-		uint32_t timeStart = millis();
-
-		// first stage pickup - pick up pet; checks if pet is picked up,
-		// if not, pick up pet again
-		while (!flag) {
-
-			upperArmPID();
-			lowerArmPID();
-			unsigned int dt = millis() - timeStart;
-
-			if ( dt >= 600 && c == 0 ) {
-				setLowerArm(510);
-				c++;
-			} else if ( dt >= 1600 && c == 1 ) {
-				setUpperArm(385);
-				c++;
-			} else if ( dt >= 3600 && c == 2 ) {
-				setUpperArm(720);
-				c++;
-			} else if ( dt >= 5600 && c == 3) {
-				if (petOnArm()) {
-					c++;
-				} else {
-					c = 1;
-					timeStart = millis() - 1500;
-				}
-			} else if ( c == 4) {
-				setLowerArm(590); // See "REDUN" can set lower arm position here?
-				c++;
-			} else if ( dt >= 6600 && c == 5) {
-				flag = true;
-			}
-		}
-
-		// pivot arm to correct location
-		pivotArm(pivotPosition, 123, 10); //TODO: tune
-
-		flag = false;
+		pivotArm(pivotPosition, 172, 10);
 		c = 0;
+		flag = false;
 		timeStart = millis();
-		//move upper/lower arm to correct position for drop;
 		while (!flag) {
-			upperArmPID();
 			lowerArmPID();
+			upperArmPID();
 
 			unsigned int dt = millis() - timeStart;
-			// TODO: just copy place second pet drop loop once that is working.
 			if ( dt >= 500 && c == 0 ) {
-				setLowerArm(350);
+				setLowerArm(535);
 				c++;
-			} else if ( dt >= 1500 && c == 1) {
-				setUpperArm(520);
+			} else if (dt >= 1250 && c == 1) {
+				setUpperArm(650);
 				c++;
-			} else if ( dt >= 2500 && c == 2) {
-				dropPet();
-				delay(200);
-				setUpperArm(700);
-				setLowerArm(590);
-				c++;
-			} else if (dt >= 4000 && c == 3) {
+			}
+			else if ( dt >= 1800 && c == 2) {
+				pauseArms();
 				flag = true;
 			}
 		}
-		pauseArms();
+	}
+	//placePetCatapult(pivotPosition);
+}
+
+void placeSecondPet() {
+	boolean flag = false;
+	int pivotTo = 118;
+	int c = 1;
+	// TODO: test if pivoting is actually needed
+	turnForward(-2, 110);
+	motor.speed(LEFT_MOTOR, 40);
+	motor.speed(RIGHT_MOTOR, 40);
+
+	setUpperArm(700);
+	uint32_t timeStart = millis();
+	while (!flag) {
+		upperArmPID();
+		lowerArmPID();
+
+		unsigned int dt = millis() - timeStart;
+
+		if ( dt >= 750 && c == 1) {
+			setLowerArm(590);
+			c++;
+		} else if (dt >= 2000 && c == 2) {
+			pivotArm(170, pivotTo, 10);
+			delay(500);
+			setLowerArm(320);
+			c++;
+		} else if ( dt >= 3500 && c == 3) {
+			setUpperArm(520);
+			c++;
+		} else if ( dt >=  4500 && c == 4) {
+			dropPet();
+			c++;
+		} else if ( dt >= 5300 && c == 5) {
+			setLowerArm(590);
+			c++;
+		} else if ( dt >= 6300 && c == 6) {
+			setUpperArm(710);
+			c++;
+		} else if ( dt >= 7700 && c == 7) {
+			flag = true;
+		}
+	}
+	pauseArms();
+}
+
+void getThirdPet() {
+	boolean flag = false;
+	int pivotPosition = 26;
+	int c = 0;
+
+	boolean unsuccessful = false;
+	int try_num = 0;
+
+	// RCServo0.write(pivotPosition);
+	pivotArm(120, pivotPosition, 8);
+	uint32_t timeStart = millis();
+
+	// first stage pickup - pick up pet; checks if pet is picked up,
+	// if not, pick up pet again
+	while (!flag) {
+
+		upperArmPID();
+		lowerArmPID();
+		unsigned int dt = millis() - timeStart;
+
+		if ( dt >= 600 && c == 0 ) {
+			setLowerArm(510);
+			c++;
+		} else if ( dt >= 1600 && c == 1 ) {
+			setUpperArm(385);
+			c++;
+		} else if ( dt >= 3600 && c == 2 ) {
+			setUpperArm(720);
+			c++;
+		} else if ( dt >= 5600 && c == 3) {
+			if (petOnArm()) {
+				c++;
+			} else {
+				c = 1;
+				timeStart = millis() - 1500;
+			}
+		} else if ( c == 4) {
+			setLowerArm(590); // See "REDUN" can set lower arm position here?
+			c++;
+		} else if ( dt >= 6600 && c == 5) {
+			flag = true;
+		}
 	}
 
-	void getFourthPet() {
-		boolean flag = false;
-		timedPivot(300); // TODO tune: makes pet pick up easier
-		uint32_t timeStart = millis();
-		int pivotPosition = 110; //TODO: tune -pet will be on left side of robot
-		int c = 0;
+	// pivot arm to correct location
+	pivotArm(pivotPosition, 123, 10); //TODO: tune
 
-		// first stage pickup - pick up pet; checks if pet is picked up,
-		// if not, pick up pet again
-		RCServo0.write(pivotPosition);
-		delay(200);
-		while (!flag) {
-			upperArmPID();
-			lowerArmPID();
+	flag = false;
+	c = 0;
+	timeStart = millis();
+	//move upper/lower arm to correct position for drop;
+	while (!flag) {
+		upperArmPID();
+		lowerArmPID();
 
-			unsigned int dt = millis() - timeStart;
-
-			if ( dt >= 1000 && c == 0 ) {
-				setLowerArm(490); //TODO: tune
-				c++;
-			} else if ( dt >= 2000 && c == 1 ) {
-				setUpperArm(350);
-				c++;
-			} else if ( dt >= 4000 && c == 2 ) {
-				setUpperArm(720);
-				c++;
-			} else if ( dt >= 6000 && c == 3) {
-				if (petOnArm()) {
-					c++;
-				} else {
-					c = 1;
-					timeStart = millis() - 1500;
-				}
-			} else if ( c == 4) {
-				setLowerArm(590);
-				c++;
-			} else if ( dt >= 7500 && c == 5) {
-				flag = true;
-			}
+		unsigned int dt = millis() - timeStart;
+		// TODO: just copy place second pet drop loop once that is working.
+		if ( dt >= 500 && c == 0 ) {
+			setLowerArm(350);
+			c++;
+		} else if ( dt >= 1500 && c == 1) {
+			setUpperArm(520);
+			c++;
+		} else if ( dt >= 2500 && c == 2) {
+			dropPet();
+			delay(200);
+			setUpperArm(700);
+			setLowerArm(590);
+			c++;
+		} else if (dt >= 4000 && c == 3) {
+			flag = true;
 		}
-		placePetCatapult(pivotPosition);
-		flag = false;
-		delay(500);
-		RCServo0.write(80);
-		timeStart = millis();
-		while (!flag) {
-			lowerArmPID();
-			unsigned int dt = millis() - timeStart;
-			if (dt >= 0 && c == 3) {
-				setLowerArm(480);
-				c++;
-			} else if ( dt >= 1000 && c == 4) {
-				flag = true;
-			}
-		}
-		pivot(2); //TODO: tune to lineup catapult
-		delay(500);
-		//launch(130); //TODO: tune to get enough distance
-
 	}
+	pauseArms();
+}
 
-	void getFifthPet() {
-		boolean flag = false;
-		uint32_t timeStart = millis();
-		int pivotPosition = 37; //TODO: tune
-		int c = 0;
+void getFourthPet() {
+	boolean flag = false;
+	timedPivot(300); // TODO tune: makes pet pick up easier
+	uint32_t timeStart = millis();
+	int pivotPosition = 110; //TODO: tune -pet will be on left side of robot
+	int c = 0;
 
-		// first stage pickup - pick up pet; checks if pet is picked up,
-		// if not, pick up pet again
-		RCServo0.write(pivotPosition);
-		delay(200);
-		while (!flag) {
-			upperArmPID();
-			lowerArmPID();
+	// first stage pickup - pick up pet; checks if pet is picked up,
+	// if not, pick up pet again
+	RCServo0.write(pivotPosition);
+	delay(200);
+	while (!flag) {
+		upperArmPID();
+		lowerArmPID();
 
-			unsigned int dt = millis() - timeStart;
-			// TODO: may be able to set lower upper arm at same time as pivot
-			if ( dt >= 1000 && c == 0 ) {
-				setLowerArm(530); //TODO: tune
+		unsigned int dt = millis() - timeStart;
+
+		if ( dt >= 1000 && c == 0 ) {
+			setLowerArm(490); //TODO: tune
+			c++;
+		} else if ( dt >= 2000 && c == 1 ) {
+			setUpperArm(350);
+			c++;
+		} else if ( dt >= 4000 && c == 2 ) {
+			setUpperArm(720);
+			c++;
+		} else if ( dt >= 6000 && c == 3) {
+			if (petOnArm()) {
 				c++;
-			} else if ( dt >= 2000 && c == 1 ) {
-				setUpperArm(650); //TODO: tune
-				c++;
-			} else if ( dt >= 4000 && c == 2 ) {
-				setUpperArm(720);
-				c++;
-			} else if ( dt >= 6000 && c == 3) {
-				if (petOnArm()) {
-					c++;
-				} else {
-					c = 1;
-					timeStart = millis() - 1500;
-				}
-			} else if ( c == 4) {
-				setLowerArm(590);
-				c++;
-			} else if ( dt >= 7500 && c == 5) {
-				flag = true;
+			} else {
+				c = 1;
+				timeStart = millis() - 1500;
 			}
+		} else if ( c == 4) {
+			setLowerArm(590);
+			c++;
+		} else if ( dt >= 7500 && c == 5) {
+			flag = true;
 		}
-		placePetCatapult(pivotPosition);
-		flag = false;
-		c = 0;
-		delay(500);
-
-		// move arm out of catapult's way
-		RCServo0.write(80);
-		timeStart = millis();
-		while (!flag) {
-			lowerArmPID();
-			unsigned int dt = millis() - timeStart;
-			if (dt >= 0 && c == 0) {
-				setLowerArm(480);
-				c++;
-			} else if ( dt >= 1000 && c == 1) {
-				flag = true;
-			}
-		}
-		motor.stop_all();
-		timedPivot(-2400); //TODO: tune pivot towards the left or will hit stand
-		delay(500);
-		launch(150); //TODO: tune to get enough distance
 	}
-
-	void getSixthPet() {
-		boolean flag = false;
-		//timedPivot(400); //TODO pivot first
-		uint32_t timeStart = millis();
-		int pivotPosition = 37; //TODO: tune
-		int c = 0;
-
-		// first stage pickup - pick up pet; checks if pet is picked up,
-		// if not, pick up pet again
-		RCServo0.write(pivotPosition);
-		delay(200);
-		while (!flag) {
-			upperArmPID();
-			lowerArmPID();
-
-			unsigned int dt = millis() - timeStart;
-			// TODO: may be able to set lower upper arm at same time as pivot
-			if ( dt >= 800 && c == 0 ) {
-				setLowerArm(650);
-				setLowerArm(545); //TODO: tune
-				c++;
-			} else if ( dt >= 1300 && c == 1 ) {
-				setUpperArm(360);
-				c++;
-			} else if ( dt >= 2300 && c == 2 ) {
-				setUpperArm(715);
-				c++;
-			} else if ( dt >= 4000 ) {
-				if (petOnArm()) {
-					flag = true;
-					delay(1000);
-				} else {
-					// TODO: change arm pickup position
-					pivotPosition += 10; // sweep to left
-					RCServo0.write(pivotPosition);
-
-					c = 1;
-					timeStart = millis() - 800;
-				}
-			}
+	placePetCatapult(pivotPosition);
+	flag = false;
+	delay(500);
+	RCServo0.write(80);
+	timeStart = millis();
+	while (!flag) {
+		lowerArmPID();
+		unsigned int dt = millis() - timeStart;
+		if (dt >= 0 && c == 3) {
+			setLowerArm(480);
+			c++;
+		} else if ( dt >= 1000 && c == 4) {
+			flag = true;
 		}
-		placePetCatapult(pivotPosition);
-		flag = false;
-		delay(500);
-		RCServo0.write(80);
-		timeStart = millis();
-
-		while (!flag) {
-			lowerArmPID();
-			unsigned int dt = millis() - timeStart;
-			if (dt >= 0 && c == 3) {
-				setLowerArm(480);
-				c++;
-			} else if ( dt >= 1000 && c == 4) {
-				flag = true;
-			}
-		}
-		timedPivot(1800); //TODO: tune pivot towards the left..
-		delay(500);
-		launch(85); //TODO: tune
-
 	}
+	pivot(2); //TODO: tune to lineup catapult
+	delay(500);
+	//launch(130); //TODO: tune to get enough distance
+
+}
+
+void getFifthPet() {
+	boolean flag = false;
+	uint32_t timeStart = millis();
+	int pivotPosition = 37; //TODO: tune
+	int c = 0;
+
+	// first stage pickup - pick up pet; checks if pet is picked up,
+	// if not, pick up pet again
+	RCServo0.write(pivotPosition);
+	delay(200);
+	while (!flag) {
+		upperArmPID();
+		lowerArmPID();
+
+		unsigned int dt = millis() - timeStart;
+		// TODO: may be able to set lower upper arm at same time as pivot
+		if ( dt >= 1000 && c == 0 ) {
+			setLowerArm(530); //TODO: tune
+			c++;
+		} else if ( dt >= 2000 && c == 1 ) {
+			setUpperArm(650); //TODO: tune
+			c++;
+		} else if ( dt >= 4000 && c == 2 ) {
+			setUpperArm(720);
+			c++;
+		} else if ( dt >= 6000 && c == 3) {
+			if (petOnArm()) {
+				c++;
+			} else {
+				c = 1;
+				timeStart = millis() - 1500;
+			}
+		} else if ( c == 4) {
+			setLowerArm(590);
+			c++;
+		} else if ( dt >= 7500 && c == 5) {
+			flag = true;
+		}
+	}
+	placePetCatapult(pivotPosition);
+	flag = false;
+	c = 0;
+	delay(500);
+
+	// move arm out of catapult's way
+	RCServo0.write(80);
+	timeStart = millis();
+	while (!flag) {
+		lowerArmPID();
+		unsigned int dt = millis() - timeStart;
+		if (dt >= 0 && c == 0) {
+			setLowerArm(480);
+			c++;
+		} else if ( dt >= 1000 && c == 1) {
+			flag = true;
+		}
+	}
+	motor.stop_all();
+	timedPivot(-2400); //TODO: tune pivot towards the left or will hit stand
+	delay(500);
+	launch(150); //TODO: tune to get enough distance
+}
+
+void getSixthPet() {
+	boolean flag = false;
+	//timedPivot(400); //TODO pivot first
+	uint32_t timeStart = millis();
+	int pivotPosition = 37; //TODO: tune
+	int c = 0;
+
+	// first stage pickup - pick up pet; checks if pet is picked up,
+	// if not, pick up pet again
+	RCServo0.write(pivotPosition);
+	delay(200);
+	while (!flag) {
+		upperArmPID();
+		lowerArmPID();
+
+		unsigned int dt = millis() - timeStart;
+		// TODO: may be able to set lower upper arm at same time as pivot
+		if ( dt >= 800 && c == 0 ) {
+			setLowerArm(650);
+			setLowerArm(545); //TODO: tune
+			c++;
+		} else if ( dt >= 1300 && c == 1 ) {
+			setUpperArm(360);
+			c++;
+		} else if ( dt >= 2300 && c == 2 ) {
+			setUpperArm(715);
+			c++;
+		} else if ( dt >= 4000 ) {
+			if (petOnArm()) {
+				flag = true;
+				delay(1000);
+			} else {
+				// TODO: change arm pickup position
+				pivotPosition += 10; // sweep to left
+				RCServo0.write(pivotPosition);
+
+				c = 1;
+				timeStart = millis() - 800;
+			}
+		}
+	}
+	placePetCatapult(pivotPosition);
+	flag = false;
+	delay(500);
+	RCServo0.write(80);
+	timeStart = millis();
+
+	while (!flag) {
+		lowerArmPID();
+		unsigned int dt = millis() - timeStart;
+		if (dt >= 0 && c == 3) {
+			setLowerArm(480);
+			c++;
+		} else if ( dt >= 1000 && c == 4) {
+			flag = true;
+		}
+	}
+	timedPivot(1800); //TODO: tune pivot towards the left..
+	delay(500);
+	launch(85); //TODO: tune
+
+}
 
 // Place pet in catapult from pivot arm's position 'pivotFrom'
-	void placePetCatapult(int pivotFrom) {
-		int c = 0;
-		pivotArm(pivotFrom, 168, 10);
-		uint32_t timeStart = millis();
+void placePetCatapult(int pivotFrom) {
+	int c = 0;
+	pivotArm(pivotFrom, 168, 10);
+	uint32_t timeStart = millis();
 
-		while (true) {
-			lowerArmPID();
-			upperArmPID();
+	while (true) {
+		lowerArmPID();
+		upperArmPID();
 
-			unsigned int dt = millis() - timeStart;
-			if ( dt >= 250 && c == 0 ) {
-				setLowerArm(475);
-				c++;
+		unsigned int dt = millis() - timeStart;
+		if ( dt >= 250 && c == 0 ) {
+			setLowerArm(475);
+			c++;
+		}
+		else if ( dt >= 1600 && c == 1) {
+			dropPet();
+			c++;
+		} else if (dt >= 2200 && c == 2) {
+			setLowerArm(590);
+			c++;
+		} else if (dt >= 3200 && c == 3 ) {
+			pauseArms(); // ensure arms stop moving
+			return;
+		}
+	}
+}
+
+// testing arm calibration code
+void armCal() {
+	int a;
+	int s = 90; // temp
+	int c = 0;
+
+	while (!stopbutton()) {
+		// temporary arm calibration code
+		int selection = map(knob(6), 0 , 1023, 0, 3);
+
+		if (selection == 0) {
+			a = map(knob(7), 0 , 1023, 0 , 184);
+		} else if (selection == 1) {
+			a = map(knob(7), 0, 1023, 350, 570); // lower arm
+		} else if ( selection == 2) {
+			a = map(knob(7), 0 , 1023, 300, 710); // higher arm
+		}
+
+		if ( c >= 100) {
+			c = 0;
+			LCD.clear(); LCD.home();
+			if (selection == 0)
+				LCD.print("PIVOT ARM:");
+			else if (selection == 1) {
+				LCD.print("LOWER ARM: "); LCD.print(analogRead(LOWER_POT));
 			}
-			else if ( dt >= 1600 && c == 1) {
-				dropPet();
-				c++;
-			} else if (dt >= 2200 && c == 2) {
-				setLowerArm(590);
-				c++;
-			} else if (dt >= 3200 && c == 3 ) {
-				pauseArms(); // ensure arms stop moving
+			else if (selection == 2) {
+				LCD.print("UPPER ARM:"); LCD.print(analogRead(UPPER_POT));
+			}
+
+			LCD.setCursor(0, 1); LCD.print(a); LCD.print("? S:");
+			if (selection == 0)
+				LCD.print(s);
+			else if (selection == 1)
+				LCD.print(lowerArmV);
+			else if (selection == 2)
+				LCD.print(upperArmV);
+		}
+
+		if (startbutton()) {
+			delay(200);
+			if (selection == 0) {
+				s = a;
+				RCServo0.write(s);
+			} else if (selection == 1) {
+				setLowerArm(a);
+			} else if (selection == 2) {
+				setUpperArm(a);
+			}
+		}
+
+		if (digitalRead(FRONT_SWITCH) == LOW) {
+			dropPet();
+		}
+
+		// move arm
+		upperArmPID();
+		lowerArmPID();
+		c++;
+	}
+}
+
+/* ISRs */
+
+// Encoder ISRs. S == speed
+void encoderProcess() {
+	if (digitalRead(1) == HIGH && !ecL) {
+		encount_L++;
+		ecL = true;
+	} else if (digitalRead(1) == LOW) {
+		ecL = false;
+	}
+	if (digitalRead(2) == HIGH && !ecR) {
+		encount_R++;
+		ecR = true;
+	} else if (digitalRead(2) == LOW) {
+		ecR = false;
+	}
+}
+
+void LE() {
+	encount_L++;
+}
+
+void RE() {
+	encount_R++;
+}
+
+void LES() {
+	encount_L++;
+	int ct = millis() - time_L;
+	// filter out speeds less than 10 ms
+	s_L = ct > 10 ? ct : s_L;
+	time_L = millis();
+}
+
+void RES() {
+	encount_R++;
+	int ct = millis() - time_R;
+	s_R = ct > 10 ? ct : s_R;
+	time_R = millis();
+}
+
+/* Menus */
+void QRDMENU()
+{
+	LCD.clear(); LCD.home();
+	LCD.print("Entering submenu");
+	delay(500);
+
+	while (true)
+	{
+		/* Show MenuItem value and knob value */
+		int menuIndex = knob(6) * (MenuItem::MenuItemCount) >> 10;
+		LCD.clear(); LCD.home();
+		LCD.print(menuItems[menuIndex].Name); LCD.print(" "); LCD.print(menuItems[menuIndex].Value);
+		LCD.setCursor(0, 1);
+		LCD.print("Set to ");
+		if (menuIndex == 0 || menuIndex == 1 || menuIndex == 2) {
+			LCD.print(knob(7) >> 2);
+		} else {
+			LCD.print(knob(7));
+		}
+
+		LCD.print("?");
+
+		delay(100);
+
+		/* Press start button to save the new value */
+		if (startbutton())
+		{
+			delay(100);
+			int val = knob(7); // cache knob value to memory
+			if (menuIndex == 0) {
+				val = val >> 2;
+				LCD.clear(); LCD.home();
+				LCD.print("Speed set to "); LCD.print(val);
+				delay(250);
+			} else if (menuIndex == 1 || menuIndex == 2) {
+				val = val >> 2;
+			}
+
+			menuItems[menuIndex].Value = val;
+			menuItems[menuIndex].Save();
+			delay(250);
+		}
+
+
+		/* Press stop button to exit menu */
+		if (stopbutton())
+		{
+			delay(100);
+			if (stopbutton())
+			{
+				LCD.clear(); LCD.home();
+				LCD.print("Leaving menu");
+				// Set values after exiting menu
+				base_speed = menuItems[0].Value;
+				q_pro_gain = menuItems[1].Value;
+				q_diff_gain = menuItems[2].Value;
+				q_int_gain = menuItems[3].Value;
+				q_threshold = menuItems[4].Value;
+				h_threshold = menuItems[5].Value;
+				delay(500);
 				return;
 			}
 		}
 	}
+}
 
-// testing arm calibration code
-	void armCal() {
-		int a;
-		int s = 90; // temp
-		int c = 0;
+void IRMENU()
+{
+	LCD.clear(); LCD.home();
+	LCD.print("Entering submenu");
+	delay(500);
 
-		while (!stopbutton()) {
-			// temporary arm calibration code
-			int selection = map(knob(6), 0 , 1023, 0, 3);
-
-			if (selection == 0) {
-				a = map(knob(7), 0 , 1023, 0 , 184);
-			} else if (selection == 1) {
-				a = map(knob(7), 0, 1023, 350, 600); // lower arm
-			} else if ( selection == 2) {
-				a = map(knob(7), 0 , 1023, 300, 720); // higher arm
-			}
-
-			if ( c >= 100) {
-				c = 0;
-				LCD.clear(); LCD.home();
-				if (selection == 0)
-					LCD.print("PIVOT ARM:");
-				else if (selection == 1) {
-					LCD.print("LOWER ARM: "); LCD.print(analogRead(LOWER_POT));
-				}
-				else if (selection == 2) {
-					LCD.print("UPPER ARM:"); LCD.print(analogRead(UPPER_POT));
-				}
-
-				LCD.setCursor(0, 1); LCD.print(a); LCD.print("? S:");
-				if (selection == 0)
-					LCD.print(s);
-				else if (selection == 1)
-					LCD.print(lowerArmV);
-				else if (selection == 2)
-					LCD.print(upperArmV);
-			}
-
-			if (startbutton()) {
-				delay(200);
-				if (selection == 0) {
-					s = a;
-					RCServo0.write(s);
-				} else if (selection == 1) {
-					setLowerArm(a);
-				} else if (selection == 2) {
-					setUpperArm(a);
-				}
-			}
-
-			if (digitalRead(FRONT_SWITCH) == LOW) {
-				dropPet();
-			}
-
-			// move arm
-			upperArmPID();
-			lowerArmPID();
-			c++;
-		}
-	}
-
-	/* ISRs */
-
-// Encoder ISRs. S == speed
-	void encoderProcess() {
-		if (digitalRead(1) == HIGH && !ecL) {
-			encount_L++;
-			ecL = true;
-		} else if (digitalRead(1) == LOW) {
-			ecL = false;
-		}
-		if (digitalRead(2) == HIGH && !ecR) {
-			encount_R++;
-			ecR = true;
-		} else if (digitalRead(2) == LOW) {
-			ecR = false;
-		}
-	}
-
-	void LE() {
-		encount_L++;
-	}
-
-	void RE() {
-		encount_R++;
-	}
-
-	void LES() {
-		encount_L++;
-		int ct = millis() - time_L;
-		// filter out speeds less than 10 ms
-		s_L = ct > 10 ? ct : s_L;
-		time_L = millis();
-	}
-
-	void RES() {
-		encount_R++;
-		int ct = millis() - time_R;
-		s_R = ct > 10 ? ct : s_R;
-		time_R = millis();
-	}
-
-	/* Menus */
-	void QRDMENU()
+	while (true)
 	{
+		/* Show IRMenuItem value and knob value */
+		int menuIndex = knob(6) * (IRMenuItem::MenuItemCount) >> 10;
 		LCD.clear(); LCD.home();
-		LCD.print("Entering submenu");
-		delay(500);
+		LCD.print(IRmenuItems[menuIndex].Name); LCD.print(" "); LCD.print(IRmenuItems[menuIndex].Value);
+		LCD.setCursor(0, 1);
+		LCD.print("Set to "); LCD.print(knob(7)); LCD.print("?");
+		delay(100);
 
-		while (true)
+		/* Press start button to save the new value */
+		if (startbutton())
 		{
-			/* Show MenuItem value and knob value */
-			int menuIndex = knob(6) * (MenuItem::MenuItemCount) >> 10;
-			LCD.clear(); LCD.home();
-			LCD.print(menuItems[menuIndex].Name); LCD.print(" "); LCD.print(menuItems[menuIndex].Value);
-			LCD.setCursor(0, 1);
-			LCD.print("Set to ");
-			if (menuIndex == 0 || menuIndex == 1 || menuIndex == 2) {
-				LCD.print(knob(7) >> 2);
-			} else {
-				LCD.print(knob(7));
-			}
-
-			LCD.print("?");
-
 			delay(100);
-
-			/* Press start button to save the new value */
-			if (startbutton())
-			{
-				delay(100);
-				int val = knob(7); // cache knob value to memory
-				if (menuIndex == 0) {
-					val = val >> 2;
-					LCD.clear(); LCD.home();
-					LCD.print("Speed set to "); LCD.print(val);
-					delay(250);
-				} else if (menuIndex == 1 || menuIndex == 2) {
-					val = val >> 2;
-				}
-
-				menuItems[menuIndex].Value = val;
-				menuItems[menuIndex].Save();
-				delay(250);
-			}
-
-
-			/* Press stop button to exit menu */
-			if (stopbutton())
-			{
-				delay(100);
-				if (stopbutton())
-				{
-					LCD.clear(); LCD.home();
-					LCD.print("Leaving menu");
-					// Set values after exiting menu
-					base_speed = menuItems[0].Value;
-					q_pro_gain = menuItems[1].Value;
-					q_diff_gain = menuItems[2].Value;
-					q_int_gain = menuItems[3].Value;
-					q_threshold = menuItems[4].Value;
-					h_threshold = menuItems[5].Value;
-					delay(500);
-					return;
-				}
-			}
+			int val = knob(7); // cache knob value to memory
+			IRmenuItems[menuIndex].Value = val;
+			IRmenuItems[menuIndex].Save();
+			delay(250);
 		}
-	}
 
-	void IRMENU()
-	{
-		LCD.clear(); LCD.home();
-		LCD.print("Entering submenu");
-		delay(500);
-
-		while (true)
+		/* Press stop button to exit menu */
+		if (stopbutton())
 		{
-			/* Show IRMenuItem value and knob value */
-			int menuIndex = knob(6) * (IRMenuItem::MenuItemCount) >> 10;
-			LCD.clear(); LCD.home();
-			LCD.print(IRmenuItems[menuIndex].Name); LCD.print(" "); LCD.print(IRmenuItems[menuIndex].Value);
-			LCD.setCursor(0, 1);
-			LCD.print("Set to "); LCD.print(knob(7)); LCD.print("?");
 			delay(100);
-
-			/* Press start button to save the new value */
-			if (startbutton())
-			{
-				delay(100);
-				int val = knob(7); // cache knob value to memory
-				IRmenuItems[menuIndex].Value = val;
-				IRmenuItems[menuIndex].Save();
-				delay(250);
-			}
-
-			/* Press stop button to exit menu */
 			if (stopbutton())
-			{
-				delay(100);
-				if (stopbutton())
-				{
-					LCD.clear(); LCD.home();
-					LCD.print("Leaving menu");
-					// set values
-					ir_pro_gain = IRmenuItems[0].Value;
-					ir_diff_gain = IRmenuItems[1].Value;
-					ir_int_gain = IRmenuItems[2].Value;
-					delay(500);
-					return;
-				}
-			}
-		}
-	}
-
-	void MainMenu() {
-		LCD.clear(); LCD.home();
-		LCD.print("Entering Main");
-		delay(500);
-
-		while (true)
-		{
-			/* Display submenu or pid mode */
-			int menuIndex = knob(6) * (MainMenuItem::MenuItemCount) >> 10;
-			LCD.clear(); LCD.home();
-			if (menuIndex == 0) {
-				// mode switching handling
-				if (mode == "qrd") {
-					LCD.print("LQ:"); LCD.print(analogRead(QRD_L)); LCD.print(" RQ:"); LCD.print(analogRead(QRD_R));
-					LCD.setCursor(0, 1); LCD.print("HQ:"); LCD.print(analogRead(QRD_LINE));
-				}  else if (mode == "ir") {
-					LCD.print("L:"); LCD.print(analogRead(IR_L)); LCD.print(" R:"); LCD.print(analogRead(IR_R));
-				} else {
-					LCD.print("Error: no mode");
-				}
-				modeIndex = (knob(7) * (sizeof(modes) / sizeof(*modes))) >> 10; // sizeof(a)/sizeof(*a) gives length of array
-				LCD.setCursor(9, 1);
-				LCD.print(modes[modeIndex]); LCD.print("?");
-			} else if (menuIndex == 3) {
-				// pivot test menu option
-				LCD.print(mainMenu[menuIndex].Name);
-				LCD.setCursor(0, 1);
-				//val = (knob(7) >> 3) - 64;
-				val = (knob(7) >> 2 ) - 128;
-				LCD.print(val); LCD.print("?");
-			} else if ( menuIndex == 4) {
-				// travel test menu option
-				LCD.print(mainMenu[menuIndex].Name);
-				LCD.setCursor(0, 1);
-				val = map(knob(7), 0, 1023, 0, 3069);
-				LCD.print(val); LCD.print("?");
-			} else if (menuIndex == 5) {
-				// launch catapult test menu option
-				LCD.print(mainMenu[menuIndex].Name);
-				LCD.setCursor(0, 1);
-				val = knob(7) >> 1;
-				LCD.print(val); LCD.print("?");
-			} else {
-				// generic submenu handling
-				LCD.print(mainMenu[menuIndex].Name);
-				LCD.setCursor(0, 1);
-				LCD.print("Start to Select.");
-			}
-
-			/* Press start button to enter submenu / switch pid modes */
-			if (startbutton())
 			{
 				LCD.clear(); LCD.home();
-				MainMenuItem::Open(menuIndex);
+				LCD.print("Leaving menu");
+				// set values
+				ir_pro_gain = IRmenuItems[0].Value;
+				ir_diff_gain = IRmenuItems[1].Value;
+				ir_int_gain = IRmenuItems[2].Value;
+				delay(500);
+				return;
 			}
-
-			/* Press stop button to exit menu */
-			if (stopbutton())
-			{
-				delay(100);
-				if (stopbutton())
-				{
-					LCD.clear(); LCD.home();
-					LCD.print("Leaving menu");
-					delay(500);
-					// reset variables and counters
-					base_speed = menuItems[0].Value;
-					onTape = false;
-					petCount = 0;
-					count = 0;
-					t = 1;
-					last_error = 0;
-					recent_error = 0;
-					I_error = 0;
-					LCD.clear();
-					return;
-				}
-			}
-			delay(150);
 		}
 	}
+}
+
+void MainMenu() {
+	LCD.clear(); LCD.home();
+	LCD.print("Entering Main");
+	delay(500);
+
+	while (true)
+	{
+		/* Display submenu or pid mode */
+		int menuIndex = knob(6) * (MainMenuItem::MenuItemCount) >> 10;
+		LCD.clear(); LCD.home();
+		if (menuIndex == 0) {
+			// mode switching handling
+			if (mode == "qrd") {
+				LCD.print("LQ:"); LCD.print(analogRead(QRD_L)); LCD.print(" RQ:"); LCD.print(analogRead(QRD_R));
+				LCD.setCursor(0, 1); LCD.print("HQ:"); LCD.print(analogRead(QRD_LINE));
+			}  else if (mode == "ir") {
+				LCD.print("L:"); LCD.print(analogRead(IR_L)); LCD.print(" R:"); LCD.print(analogRead(IR_R));
+			} else {
+				LCD.print("Error: no mode");
+			}
+			modeIndex = (knob(7) * (sizeof(modes) / sizeof(*modes))) >> 10; // sizeof(a)/sizeof(*a) gives length of array
+			LCD.setCursor(9, 1);
+			LCD.print(modes[modeIndex]); LCD.print("?");
+		} else if (menuIndex == 3) {
+			// pivot test menu option
+			LCD.print(mainMenu[menuIndex].Name);
+			LCD.setCursor(0, 1);
+			//val = (knob(7) >> 3) - 64;
+			val = (knob(7) >> 2 ) - 128;
+			LCD.print(val); LCD.print("?");
+		} else if ( menuIndex == 4) {
+			// travel test menu option
+			LCD.print(mainMenu[menuIndex].Name);
+			LCD.setCursor(0, 1);
+			val = map(knob(7), 0, 1023, 0, 3069);
+			LCD.print(val); LCD.print("?");
+		} else if (menuIndex == 5) {
+			// launch catapult test menu option
+			LCD.print(mainMenu[menuIndex].Name);
+			LCD.setCursor(0, 1);
+			val = knob(7) >> 1;
+			LCD.print(val); LCD.print("?");
+		} else {
+			// generic submenu handling
+			LCD.print(mainMenu[menuIndex].Name);
+			LCD.setCursor(0, 1);
+			LCD.print("Start to Select.");
+		}
+
+		/* Press start button to enter submenu / switch pid modes */
+		if (startbutton())
+		{
+			LCD.clear(); LCD.home();
+			MainMenuItem::Open(menuIndex);
+		}
+
+		/* Press stop button to exit menu */
+		if (stopbutton())
+		{
+			delay(100);
+			if (stopbutton())
+			{
+				LCD.clear(); LCD.home();
+				LCD.print("Leaving menu");
+				delay(500);
+				// reset variables and counters
+				base_speed = menuItems[0].Value;
+				onTape = false;
+				petCount = 0;
+				count = 0;
+				t = 1;
+				last_error = 0;
+				recent_error = 0;
+				I_error = 0;
+				LCD.clear();
+				return;
+			}
+		}
+		delay(150);
+	}
+}

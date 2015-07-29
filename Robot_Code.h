@@ -23,7 +23,9 @@ enum {
 
 // Digital Write Ports
 enum {
-	LAUNCH_F = 8
+	LAUNCH_F = 8,
+	HAND_UP = 9,
+	HAND_DOWN = 10
 };
 
 // Motor Ports
@@ -92,8 +94,8 @@ boolean checkBoxedPet();
 boolean checkRafterPet();
 
 /* Instantiate variables */
-int encount_L = 0;
-int encount_R = 0;
+uint16_t encount_L = 0;
+uint16_t encount_R = 0;
 volatile int s_L = 0;
 volatile int s_R = 0;
 volatile int time_L;
@@ -105,7 +107,7 @@ String modes[] = {"qrd", "ir"};
 String mode = modes[modeIndex];
 
 void empty() {};
-int upperArmV = 720;
+int upperArmV = 710;
 int lowerArmV = 560;
 int petCount = 0;
 boolean onTape = false;
