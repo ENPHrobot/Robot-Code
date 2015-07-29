@@ -287,7 +287,7 @@ void tapePID() {
 			// TODO: implement more elegant switching to ir -in timedPivot
 			//getFourthPet();
 			armCal();
-			//timedPivot(300); //TODO: Tune to face IR -or until IR average above
+			pivottoIR(LEFT, 75) //TODO: Tune IR threshold value
 			encount_L = 0;
 			encount_R = 0;
 			switchMode();
@@ -599,6 +599,34 @@ void pivotToLine(int d, int timer) {
 	}
 }
 
+// Pivot in direction until IR_sensor threshold value has been reached for IR_following
+void pivotToIR(int d, int threshold) {
+	if ( d == LEFT) {
+		motor.speed(RIGHT_MOTOR, STABLE_SPEED + 20);  // Pivoting, can also use turn forward?
+		motor.speed(LEFT_MOTOR, -STABLE_SPEED);
+	} else if ( d == RIGHT) {
+		motor.speed(RIGHT_MOTOR, -STABLE_SPEED - 20);
+		motor.speed(LEFT_MOTOR, STABLE_SPEED);
+	}
+
+	while (true) {
+		if ((analogRead(IR_R) >= threshold || analogRead(IR_L) >= threshold)) {
+			// Shoule be unnecessary for IR following
+			// if (d == LEFT) {
+			// 	motor.speed(RIGHT_MOTOR, -STABLE_SPEED);
+			// 	motor.speed(LEFT_MOTOR, STABLE_SPEED);
+			// 	delay(110);
+			// } else if (d == RIGHT) {
+			// 	motor.speed(RIGHT_MOTOR, STABLE_SPEED);
+			// 	motor.speed(LEFT_MOTOR, -STABLE_SPEED);
+			// 	delay(110);
+			// }
+			pauseDrive();
+			return;
+		}
+	}
+}
+
 // Turn robot left (counts < 0) or right (counts > 0) for
 // certain amount of encoder counts forward
 void turnForward(int counts, int s) {
@@ -730,10 +758,8 @@ void rafterProcess() {
 		pauseDrive();
 		// TODO: rafter pet pickup here
 		// getFifthPet();
-		// timedPivot(1000); TODO: tune to face IR
-		while (!stopbutton()) {
-			armCal();
-		}
+		armCal();
+		pivotToIR(LEFT, 300);  // Might hit rafter
 		//processfn = buriedProcess;
 	}
 }
@@ -745,9 +771,7 @@ void buriedProcess() {
 		pauseDrive();
 		// TODO: buried pet pickup here
 		// getSixthPet();
-		while (!stopbutton()) {
-			armCal();
-		}
+		armCal();
 	}
 }
 
@@ -824,6 +848,7 @@ void getFirstPet() {
 			} else {
 				try_num++;
 				adjustArm(pivotPosition, try_num); // Adjust pivot arm during multiple attempts
+												   // Does not change lower arm position
 												   // May waste a lot of time potentially.. (~6s each attempt)
 				c = 1;
 				timeStart = millis() - 1500;

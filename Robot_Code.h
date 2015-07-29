@@ -84,7 +84,6 @@ void getSixthPet();
 void placeSecondPet();
 void placePetCatapult();
 void pivotArm(int from, int to);
-void dropPet();
 boolean checkPet();
 boolean petOnArm();
 boolean checkBoxedPet();
