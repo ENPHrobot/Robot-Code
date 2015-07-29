@@ -545,7 +545,7 @@ void pivot(int counts) {
 // 		motor.speed(LEFT_MOTOR, speed);
 // 	}
 // 	LCD.print("PIVOTING"); // ghetto fix: pivoting works with LCD print???
-// 	uint16_t start = millis();
+// 	uint32_t start = millis();
 // 	while (true) {
 // 		if (millis() - start >= timer) {
 // 			LCD.clear(); LCD.home();
@@ -579,7 +579,7 @@ void pivotToLine(int d, int timer) {
 		motor.speed(RIGHT_MOTOR, -STABLE_SPEED - 20);
 		motor.speed(LEFT_MOTOR, STABLE_SPEED);
 	}
-	uint16_t start = millis();
+	uint32_t start = millis();
 	while (true) {
 		if ((analogRead(QRD_L) >= q_threshold || analogRead(QRD_R) >= q_threshold) && millis() - start >= timer) {
 			if (d == LEFT) {

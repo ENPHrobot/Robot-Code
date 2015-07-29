@@ -98,7 +98,6 @@ volatile int s_R = 0;
 volatile int time_L;
 volatile int time_R;
 int count = 0;
-uint32_t lastTravelTime;
 int modeIndex = 0;
 int val;
 String modes[] = {"qrd", "ir"};
@@ -112,6 +111,7 @@ boolean onTape = false;
 boolean ecL = false;
 boolean ecR = false;
 uint32_t lastSpeedUp;
+uint32_t lastTravelTime;
 void (*pidfn)();
 void (*processfn)() = empty;
 
