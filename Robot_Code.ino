@@ -1,7 +1,7 @@
 #include <avr/EEPROM.h>
-#include <Interrupts.h>
-#include <Servo.h>
-#include <phys253.h>
+//#include <Interrupts.h>
+//#include <Servo.h>
+#include <phys253_TEST.h>
 #include <LiquidCrystal.h>
 #include "Robot_Code.h"
 
@@ -245,7 +245,7 @@ void tapePID() {
 			getFirstPet();
 
 			// decrease base speed for the turn
-			base_speed = 50;
+			base_speed = 70;
 			// q_pro_gain = 20;
 			// q_diff_gain = 5;
 
@@ -275,7 +275,7 @@ void tapePID() {
 			motor.speed(LEFT_MOTOR, 40);
 			motor.speed(RIGHT_MOTOR, 40);
 
-			if (secPet){
+			if (secPet) {
 				placeSecondPet();
 			}
 			delay(800);
@@ -339,15 +339,15 @@ void tapePID() {
 	if ( count == 100 ) {
 		count = 0;
 		LCD.clear(); LCD.home();
-		/*LCD.print("LQ:"); LCD.print(left_sensor);
+		LCD.print("LQ:"); LCD.print(left_sensor);
 		LCD.print(" LM:"); LCD.print(base_speed + net_error);
 		LCD.setCursor(0, 1);
 		LCD.print("RQ:"); LCD.print(right_sensor);
-		LCD.print(" RM:"); LCD.print(base_speed - net_error);*/
-		LCD.print("LE:"); LCD.print(encount_L); LCD.print(" RE:"); LCD.print(encount_R);
-		LCD.setCursor(0, 1); //LCD.print(s_L); LCD.print(" "); LCD.print(s_R); LCD.print(" ");
-		LCD.print("base:"); LCD.print(base_speed); LCD.print(" ");
-		LCD.print((s_L + s_R) / 2);
+		LCD.print(" RM:"); LCD.print(base_speed - net_error);
+		// LCD.print("LE:"); LCD.print(encount_L); LCD.print(" RE:"); LCD.print(encount_R);
+		// LCD.setCursor(0, 1); //LCD.print(s_L); LCD.print(" "); LCD.print(s_R); LCD.print(" ");
+		// LCD.print("base:"); LCD.print(base_speed); LCD.print(" ");
+		// LCD.print((s_L + s_R) / 2);
 	}
 
 	last_error = error;
@@ -453,7 +453,7 @@ void pauseDrive() {
 
 void hardStop() {
 	motor.speed(LEFT_MOTOR, -base_speed);
-	motor.speed(RIGHT_MOTOR, base_speed);
+	motor.speed(RIGHT_MOTOR, -base_speed);
 	delay(50);
 	pauseDrive();
 }
@@ -739,22 +739,6 @@ void timedTravel( uint32_t t, int d) {
 	pauseDrive();
 }
 
-// Changes base speed depending on how fast encoder counts are triggered.
-void speedControl() {
-	// TODO: see if reducing speed up rate is required
-	if (petCount == 2 && millis() - lastSpeedUp > 1200) {
-		//base_speed = constrain(base_speed + 10, 0, 255);
-		base_speed = 180;
-		//lastSpeedUp = millis();
-	} else if (petCount == 3 && millis() - lastSpeedUp > 1650) {
-		base_speed = menuItems[0].Value;
-		/*// reset ISRs and processfn
-		attachISR(ENC_L, LE);
-		attachISR(ENC_R, RE);
-		processfn = empty;*/
-	}
-}
-
 // processfn for first IR segment
 void rafterProcess() {
 	if (checkRafterPet()) {
@@ -809,8 +793,8 @@ void pivotArm( int from, int to, int increment) {
 }
 
 // Adjust pivot arm position in multiple attempts of pet
-void adjustArm(int pivotPosition, int try_num){
-	if (try_num == 1){
+void adjustArm(int pivotPosition, int try_num) {
+	if (try_num == 1) {
 		RCServo0.write(pivotPosition + 5); //TODO: Tune adjust amount
 	} else if (try_num == 2) {
 		RCServo0.write(pivotPosition - 10);
@@ -854,8 +838,8 @@ void getFirstPet() {
 			} else if (try_num < 2) {
 				try_num++;
 				adjustArm(pivotPosition, try_num); // Adjust pivot arm during multiple attempts
-												   // Does not change lower arm position
-												   // May waste a lot of time potentially.. (~6s each attempt)
+				// Does not change lower arm position
+				// May waste a lot of time potentially.. (~6s each attempt)
 				c = 1;
 				timeStart = millis() - 1500;
 			} else if (try_num >= 2 && !petOnArm()) { //Gives up after three attempts preventing infinite loop
@@ -869,8 +853,8 @@ void getFirstPet() {
 			flag = true;
 		}
 	}
-	
-	if(!unsuccessful) {
+
+	if (!unsuccessful) {
 		motor.stop_all(); // ensure motors are not being powered
 		placePetCatapult(pivotPosition);
 		delay(500);
@@ -896,6 +880,8 @@ void getFirstPet() {
 		delay(500);
 		launch(85);
 		pivotToLine(RIGHT, 1000);
+	} else {
+		pivotToLine(LEFT, 0);
 	}
 
 }
@@ -929,10 +915,10 @@ void getSecondPet() {
 				c++;
 			} else if (try_num < 2) {
 				try_num++;
-				adjustArm(pivotPosition, try_num); 
+				adjustArm(pivotPosition, try_num);
 				c = 0;
 				timeStart = millis() - 500;
-			} else if (try_num >= 2 && !petOnArm()) { 
+			} else if (try_num >= 2 && !petOnArm()) {
 				flag = true;
 				unsuccessful = true;
 				secPet = false;
@@ -945,7 +931,7 @@ void getSecondPet() {
 		}
 	}
 
-	if(!unsuccessful){ 
+	if (!unsuccessful) {
 		motor.stop_all();
 
 		pivotArm(pivotPosition, 172, 10);

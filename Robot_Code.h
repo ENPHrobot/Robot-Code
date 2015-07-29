@@ -139,7 +139,7 @@ int ir_pro_gain;
 int ir_diff_gain;
 int ir_int_gain;
 
-Servo RCServo0;
-Servo RCServo2;
+// Servo RCServo0;
+// Servo RCServo2;
 
 #endif
