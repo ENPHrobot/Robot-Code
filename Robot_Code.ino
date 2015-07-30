@@ -241,33 +241,38 @@ void tapePID() {
 			// 	error = 2;
 			// }
 
+
+			// error = -2;
+			error = 0;
+			recent_error = error;
+			last_error = 0;
 			while (!stopbutton()) {
 				LCD.clear(); LCD.home();
-				LCD.print(error); LCD.print(" "); LCD.print(last_error); LCD.print(" "); LCD.print(recent_error);
+				//LCD.print(error); LCD.print(" "); LCD.print(last_error); LCD.print(" "); LCD.print(recent_error);
+				LCD.print(petCount); LCD.print(" ");
 				LCD.setCursor(0, 1); LCD.print(analogRead(QRD_L)); LCD.print(" "); LCD.print(analogRead(QRD_R));
 				delay(200);
 			}
-			error = -2;
-			recent_error = error;
-			last_error = 0;
 		} else if (petCount == 2) {
 			hardStop();
 			getSecondPet();
+			// while (!stopbutton()) {
+			// 	LCD.clear(); LCD.home();
+			// 	LCD.print(analogRead(QRD_L)); LCD.print(" "); LCD.print(analogRead(QRD_R));
+			// 	delay(200);
+			// }
+
+			// pivotOnLine(LEFT, 0, 0);
+
+			last_error = 0;
+			error = 0;
+			recent_error = error;
 			while (!stopbutton()) {
 				LCD.clear(); LCD.home();
-				LCD.print(analogRead(QRD_L)); LCD.print(" "); LCD.print(analogRead(QRD_R));
-				delay(200);
-			}
-			pivotOnLine(LEFT, 0);
-			while (!stopbutton()) {
-				LCD.clear(); LCD.home();
-				LCD.print(error); LCD.print(" "); LCD.print(last_error); LCD.print(" "); LCD.print(recent_error);
+				LCD.print("E:"); LCD.print(error); LCD.print(" LE:"); LCD.print(last_error); LCD.print(" RE:"); LCD.print(recent_error);
 				LCD.setCursor(0, 1); LCD.print(analogRead(QRD_L)); LCD.print(" "); LCD.print(analogRead(QRD_R));
 				delay(200);
 			}
-			// last_error = 0;
-			// error = 0;
-			// recent_error = error;
 		} else if (petCount == 3) {
 			// for pausing motors on the ramp.
 			motor.speed(LEFT_MOTOR, base_speed);
@@ -286,7 +291,7 @@ void tapePID() {
 
 			error = 1;
 			last_error = 0;
-		} else if (petCount == 6) { //TODO: temporarily 6 for 4th pet
+		} else if (petCount == 5) { //TODO: temporarily 5 for 4th pet
 			// TODO: implement more elegant switching to ir -in timedPivot
 			armCal();
 			pivot(3);
@@ -312,7 +317,8 @@ void tapePID() {
 	if (petCount == 2 && millis() - lastSpeedUp > 1200) {
 		base_speed = 170;
 		q_pro_gain = 70;
-		q_diff_gain = menuItems[2].Value;
+		q_diff_gain = 15;
+		// q_diff_gain = menuItems[2].Value;
 	} else if (petCount == 3 && millis() - lastSpeedUp > 1400) {
 		base_speed = menuItems[0].Value;
 		q_pro_gain = menuItems[1].Value;
@@ -340,7 +346,8 @@ void tapePID() {
 	if ( count == 100 ) {
 		count = 0;
 		LCD.clear(); LCD.home();
-		LCD.print("LQ:"); LCD.print(left_sensor);
+		LCD.print(petCount);
+		LCD.print(" LQ:"); LCD.print(left_sensor);
 		LCD.print(" LM:"); LCD.print(base_speed + net_error);
 		LCD.setCursor(0, 1);
 		LCD.print("RQ:"); LCD.print(right_sensor);
@@ -421,7 +428,7 @@ void setLowerArm(int V) {
 void upperArmPID() {
 	int currentV = constrain(analogRead(UPPER_POT), 300, 740);
 	int diff = currentV - upperArmV;
-	if ( diff <= 25 && diff >= -25) {
+	if ( diff <= 20 && diff >= -20) {
 		diff = 0;
 	}
 	// if ( diff  > 0) diff = 255;
@@ -432,12 +439,13 @@ void upperArmPID() {
 }
 
 void lowerArmPID() {
-	int currentV = constrain(analogRead(LOWER_POT), 350, 600);
+	int currentV = constrain(analogRead(LOWER_POT), 330, 610);
 	int diff = currentV - lowerArmV;
 
 	if (diff <= 20 && diff >= -20) {
 		diff = 0;
 	}
+
 	if (diff  > 0) diff = 255;
 	else if (diff < 0) diff = -255;
 
@@ -446,10 +454,10 @@ void lowerArmPID() {
 	motor.speed(LOWER_ARM, diff);
 }
 
-void raiseLowerArm(V){
+void raiseLowerArm(V) {
 	lowerArmV = V;
 	int currentV = constrain(analogRead(LOWER_POT), 350, 600);
-	while(currentV - lowerArmV < 10) {
+	while (currentV - lowerArmV < 10) {
 		currentV = constrain(analogRead(LOWER_POT), 350, 600);
 		motor.speed(LOWER_ARM, -255);
 	}
@@ -614,7 +622,7 @@ void pivotToLine(int d, int timer) {
 	}
 }
 
-void pivotOnLine(int d, int timer) {
+void pivotOnLine(int d, int timer, int delayTime) {
 	if ( d == LEFT) {
 		motor.speed(RIGHT_MOTOR, STABLE_SPEED + 20);
 		motor.speed(LEFT_MOTOR, -STABLE_SPEED);
@@ -634,6 +642,7 @@ void pivotOnLine(int d, int timer) {
 			// 	motor.speed(LEFT_MOTOR, -STABLE_SPEED);
 			// 	delay(110);
 			// }
+			delay(delayTime);
 			pauseDrive();
 			return;
 		}
@@ -883,8 +892,8 @@ void getFirstPet() {
 				flag = true;
 				unsuccessful = true;
 			}
-		} else if ( c == 4) {
-			setLowerArm(590); // See "REDUN" can set lower arm position here?
+		} else if ( c == 4 ) {
+			setLowerArm(600); // See "REDUN" can set lower arm position here?
 			c++;
 		} else if ( dt >= 7000 && c == 5) {
 			flag = true;
@@ -918,16 +927,37 @@ void getFirstPet() {
 		launch(85);
 		pivotToLine(RIGHT, 1000);
 		delay(300);
-		pivotOnLine(LEFT, 0);
+
 	} else {
-		while (!stopbutton()) {
-			LCD.clear(); LCD.home();
-			LCD.print(analogRead(QRD_L)); LCD.print(" "); LCD.print(analogRead(QRD_R));
-			delay(200);
+		// while (!stopbutton()) {
+		// 	LCD.clear(); LCD.home();
+		// 	LCD.print(analogRead(QRD_L)); LCD.print(" "); LCD.print(analogRead(QRD_R));
+		// 	delay(200);
+		// }
+
+		c = 0;
+		flag = false;
+		timeStart = millis();
+		while (!flag) {
+			lowerArmPID();
+			unsigned int dt = millis() - timeStart;
+			if (dt >= 0 && c == 0) {
+				// this lower arm height is also the height second pet is picked up from
+				setLowerArm(410);
+				c++;
+			} else if ( dt >= 1000 && c == 1) {
+				flag = true;
+			}
 		}
-		pivotOnLine(RIGHT, 0);
+
 	}
 
+	if (analogRead(QRD_L) >= q_threshold && analogRead(QRD_R) < q_threshold)
+		pivotOnLine(LEFT, 0, 0);
+	else if (analogRead(QRD_R) >= q_threshold && analogRead(QRD_L) < q_threshold)
+		pivotOnLine(RIGHT, 0, 0);
+	else if (analogRead(QRD_L) < q_threshold && analogRead(QRD_R) < q_threshold)
+		pivotOnLine(LEFT, 0, 0);
 }
 
 void getSecondPet() {
@@ -967,10 +997,10 @@ void getSecondPet() {
 				unsuccessful = true;
 				secPet = false;
 			}
-		} else if ( c == 3) {
-			setLowerArm(590);
+		} else if ( c == 3 ) {
+			setLowerArm(600);
 			c++;
-		} else if ( dt >= 6000 && c == 4) {
+		} else if ( dt >= 6000 && c == 4 ) {
 			flag = true;
 		}
 	}
@@ -997,6 +1027,21 @@ void getSecondPet() {
 			}
 		}
 	}
+	LCD.clear(); LCD.home();
+	delay(1000);
+	if (analogRead(QRD_L) >= q_threshold && analogRead(QRD_R) < q_threshold) {
+		pivotOnLine(LEFT, 0, 15);
+		LCD.print("left on");
+	}
+	else if (analogRead(QRD_R) >= q_threshold && analogRead(QRD_L) < q_threshold) {
+		pivotOnLine(RIGHT, 0, 0);
+		LCD.print("right on");
+	}
+	else if (analogRead(QRD_L) < q_threshold && analogRead(QRD_R) < q_threshold) {
+		pivotOnLine(LEFT, 0, 15);
+		LCD.print("just left");
+	}
+	delay(1000);
 	//placePetCatapult(pivotPosition);
 }
 
@@ -1017,7 +1062,7 @@ void placeSecondPet() {
 
 		unsigned int dt = millis() - timeStart;
 
-		if ( dt >= 750 && c == 1) {
+		if ( dt >= 750 && c == 1 ) {
 			setLowerArm(610);
 			c++;
 		} else if (dt >= 2000 && c == 2) {
