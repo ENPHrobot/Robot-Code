@@ -434,14 +434,26 @@ void upperArmPID() {
 void lowerArmPID() {
 	int currentV = constrain(analogRead(LOWER_POT), 350, 600);
 	int diff = currentV - lowerArmV;
-	if (diff <= 25 && diff >= -25) {
+
+	if (diff <= 20 && diff >= -20) {
 		diff = 0;
 	}
-	// if ( diff  > 0) diff = 255;
-	// else if (diff < 0) diff = -255;
-	diff = 4 * (diff);
-	diff = constrain(diff, -255, 255);
+	if (diff  > 0) diff = 255;
+	else if (diff < 0) diff = -255;
+
+	// diff = 4 * (diff);
+	// diff = constrain(diff, -255, 255);
 	motor.speed(LOWER_ARM, diff);
+}
+
+void raiseLowerArm(V){
+	lowerArmV = V;
+	int currentV = constrain(analogRead(LOWER_POT), 350, 600);
+	while(currentV - lowerArmV < 10) {
+		currentV = constrain(analogRead(LOWER_POT), 350, 600);
+		motor.speed(LOWER_ARM, -255);
+	}
+	motor.stop(LOWER_ARM);
 }
 
 // Stop driving
