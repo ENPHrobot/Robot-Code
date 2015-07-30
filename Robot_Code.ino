@@ -1,6 +1,4 @@
 #include <avr/EEPROM.h>
-//#include <Interrupts.h>
-//#include <Servo.h>
 #include <phys253_TEST.h>
 #include <LiquidCrystal.h>
 #include "Robot_Code.h"
@@ -242,6 +240,7 @@ void tapePID() {
 			// } else if (ql <= q_threshold && qr > q_threshold) {
 			// 	error = 2;
 			// }
+
 			while (!stopbutton()) {
 				LCD.clear(); LCD.home();
 				LCD.print(error); LCD.print(" "); LCD.print(last_error); LCD.print(" "); LCD.print(recent_error);
@@ -259,16 +258,16 @@ void tapePID() {
 				LCD.print(analogRead(QRD_L)); LCD.print(" "); LCD.print(analogRead(QRD_R));
 				delay(200);
 			}
-			pivotToLine(LEFT, 100);
+			pivotOnLine(LEFT, 0);
 			while (!stopbutton()) {
 				LCD.clear(); LCD.home();
 				LCD.print(error); LCD.print(" "); LCD.print(last_error); LCD.print(" "); LCD.print(recent_error);
 				LCD.setCursor(0, 1); LCD.print(analogRead(QRD_L)); LCD.print(" "); LCD.print(analogRead(QRD_R));
 				delay(200);
 			}
-			last_error = 0;
-			error = 0;
-			recent_error = error;
+			// last_error = 0;
+			// error = 0;
+			// recent_error = error;
 		} else if (petCount == 3) {
 			// for pausing motors on the ramp.
 			motor.speed(LEFT_MOTOR, base_speed);
@@ -314,7 +313,7 @@ void tapePID() {
 		base_speed = 170;
 		q_pro_gain = 70;
 		q_diff_gain = menuItems[2].Value;
-	} else if (petCount == 3 && millis() - lastSpeedUp > 1200) {
+	} else if (petCount == 3 && millis() - lastSpeedUp > 1400) {
 		base_speed = menuItems[0].Value;
 		q_pro_gain = menuItems[1].Value;
 	}
@@ -368,8 +367,6 @@ void irPID() {
 	} else if (petCount == 6) {
 		//TODO: SOMETHING COOL WHEN WE FINISH!!!!!!!!!!!!!!!!!
 	}
-
-	// processfn();
 
 	int left_sensor = analogRead(IR_L);
 	int right_sensor = analogRead(IR_R);
@@ -599,6 +596,32 @@ void pivotToLine(int d, int timer) {
 				motor.speed(LEFT_MOTOR, -STABLE_SPEED);
 				delay(110);
 			}
+			pauseDrive();
+			return;
+		}
+	}
+}
+
+void pivotOnLine(int d, int timer) {
+	if ( d == LEFT) {
+		motor.speed(RIGHT_MOTOR, STABLE_SPEED + 20);
+		motor.speed(LEFT_MOTOR, -STABLE_SPEED);
+	} else if ( d == RIGHT) {
+		motor.speed(RIGHT_MOTOR, -STABLE_SPEED - 20);
+		motor.speed(LEFT_MOTOR, STABLE_SPEED);
+	}
+	uint32_t start = millis();
+	while (true) {
+		if ((analogRead(QRD_L) >= q_threshold && analogRead(QRD_R) >= q_threshold) && millis() - start >= timer) {
+			// if (d == LEFT) {
+			// 	motor.speed(RIGHT_MOTOR, -STABLE_SPEED);
+			// 	motor.speed(LEFT_MOTOR, STABLE_SPEED);
+			// 	delay(110);
+			// } else if (d == RIGHT) {
+			// 	motor.speed(RIGHT_MOTOR, STABLE_SPEED);
+			// 	motor.speed(LEFT_MOTOR, -STABLE_SPEED);
+			// 	delay(110);
+			// }
 			pauseDrive();
 			return;
 		}
@@ -882,12 +905,15 @@ void getFirstPet() {
 		delay(500);
 		launch(85);
 		pivotToLine(RIGHT, 1000);
+		delay(300);
+		pivotOnLine(LEFT, 0);
 	} else {
 		while (!stopbutton()) {
 			LCD.clear(); LCD.home();
 			LCD.print(analogRead(QRD_L)); LCD.print(" "); LCD.print(analogRead(QRD_R));
 			delay(200);
 		}
+		pivotOnLine(RIGHT, 0);
 	}
 
 }
