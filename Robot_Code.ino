@@ -164,7 +164,7 @@ void setup()
 
 	// set servo initial positions
 	RCServo2.write(90);
-	RCServo0.write(85);
+	RCServo0.write(78);
 
 	// default PID loop is QRD tape following
 	pidfn = tapePID;
@@ -410,10 +410,10 @@ void upperArmPID() {
 	if ( diff <= 25 && diff >= -25) {
 		diff = 0;
 	}
-	if ( diff  > 0) diff = 255;
-	else if (diff < 0) diff = -255;
-	// diff = 2 * diff;
-	// diff = constrain(diff, -255, 255);
+	// if ( diff  > 0) diff = 255;
+	// else if (diff < 0) diff = -255;
+	diff = 3 * diff;
+	diff = constrain(diff, -255, 255);
 	motor.speed(UPPER_ARM, diff);
 }
 
@@ -423,10 +423,10 @@ void lowerArmPID() {
 	if (diff <= 25 && diff >= -25) {
 		diff = 0;
 	}
-	if ( diff  > 0) diff = 255;
-	else if (diff < 0) diff = -255;
-	// diff = 3 * (diff);
-	// diff = constrain(diff, -255, 255);
+	// if ( diff  > 0) diff = 255;
+	// else if (diff < 0) diff = -255;
+	diff = 3 * (diff);
+	diff = constrain(diff, -255, 255);
 	motor.speed(LOWER_ARM, diff);
 }
 
@@ -878,7 +878,7 @@ void getFirstPet() {
 void getSecondPet() {
 	boolean flag = false;
 	uint32_t timeStart = millis();
-	int pivotPosition = 41;
+	int pivotPosition = 39;
 	int c = 0;
 
 	boolean unsuccessful = false;
@@ -1259,7 +1259,7 @@ void getSixthPet() {
 // Place pet in catapult from pivot arm's position 'pivotFrom'
 void placePetCatapult(int pivotFrom) {
 	int c = 0;
-	pivotArm(pivotFrom, 168, 10);
+	pivotArm(pivotFrom, 157, 10);
 	uint32_t timeStart = millis();
 
 	while (true) {
