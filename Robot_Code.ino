@@ -242,13 +242,30 @@ void tapePID() {
 			// } else if (ql <= q_threshold && qr > q_threshold) {
 			// 	error = 2;
 			// }
+			while (!stopbutton()) {
+				LCD.clear(); LCD.home();
+				LCD.print(error); LCD.print(" "); LCD.print(last_error); LCD.print(" "); LCD.print(recent_error);
+				LCD.setCursor(0, 1); LCD.print(analogRead(QRD_L)); LCD.print(" "); LCD.print(analogRead(QRD_R));
+				delay(200);
+			}
 			error = -2;
 			recent_error = error;
 			last_error = 0;
 		} else if (petCount == 2) {
 			hardStop();
 			getSecondPet();
+			while (!stopbutton()) {
+				LCD.clear(); LCD.home();
+				LCD.print(analogRead(QRD_L)); LCD.print(" "); LCD.print(analogRead(QRD_R));
+				delay(200);
+			}
 			pivotToLine(LEFT, 100);
+			while (!stopbutton()) {
+				LCD.clear(); LCD.home();
+				LCD.print(error); LCD.print(" "); LCD.print(last_error); LCD.print(" "); LCD.print(recent_error);
+				LCD.setCursor(0, 1); LCD.print(analogRead(QRD_L)); LCD.print(" "); LCD.print(analogRead(QRD_R));
+				delay(200);
+			}
 			last_error = 0;
 			error = 0;
 			recent_error = error;
