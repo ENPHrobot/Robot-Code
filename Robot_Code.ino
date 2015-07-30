@@ -247,7 +247,8 @@ void tapePID() {
 				LCD.setCursor(0, 1); LCD.print(analogRead(QRD_L)); LCD.print(" "); LCD.print(analogRead(QRD_R));
 				delay(200);
 			}
-			error = -2;
+			// error = -2;
+			error = 0;
 			recent_error = error;
 			last_error = 0;
 		} else if (petCount == 2) {
@@ -871,7 +872,7 @@ void getFirstPet() {
 				flag = true;
 				unsuccessful = true;
 			}
-		} else if ( c == 4) {
+		} else if ( c == 4 ) {
 			setLowerArm(590); // See "REDUN" can set lower arm position here?
 			c++;
 		} else if ( dt >= 7000 && c == 5) {
@@ -907,13 +908,35 @@ void getFirstPet() {
 		pivotToLine(RIGHT, 1000);
 		delay(300);
 		pivotOnLine(LEFT, 0);
+
 	} else {
 		while (!stopbutton()) {
 			LCD.clear(); LCD.home();
 			LCD.print(analogRead(QRD_L)); LCD.print(" "); LCD.print(analogRead(QRD_R));
 			delay(200);
 		}
-		pivotOnLine(RIGHT, 0);
+
+		c = 0;
+		flag = false;
+		timeStart = millis();
+		while (!flag) {
+			lowerArmPID();
+			unsigned int dt = millis() - timeStart;
+			if (dt >= 0 && c == 0) {
+				// this lower arm height is also the height second pet is picked up from
+				setLowerArm(410);
+				c++;
+			} else if ( dt >= 1000 && c == 1) {
+				flag = true;
+			}
+		}
+
+		if(analogRead(QRD_L) >= q_threshold && analogRead(QRD_R) < q_threshold)
+			pivotOnLine(LEFT, 0);
+		else if(analogRead(QRD_R) >= q_threshold && analogRead(QRD_L) < q_threshold)
+			pivotOnLine(RIGHT, 0);
+		else
+			pivotOnLine(LEFT, 0);
 	}
 
 }
@@ -955,10 +978,10 @@ void getSecondPet() {
 				unsuccessful = true;
 				secPet = false;
 			}
-		} else if ( c == 3) {
-			setLowerArm(590);
+		} else if ( c == 3 ) {
+			setLowerArm(610);
 			c++;
-		} else if ( dt >= 6000 && c == 4) {
+		} else if ( dt >= 6000 && c == 4 ) {
 			flag = true;
 		}
 	}
@@ -1005,7 +1028,7 @@ void placeSecondPet() {
 
 		unsigned int dt = millis() - timeStart;
 
-		if ( dt >= 750 && c == 1) {
+		if ( dt >= 750 && c == 1 ) {
 			setLowerArm(610);
 			c++;
 		} else if (dt >= 2000 && c == 2) {
