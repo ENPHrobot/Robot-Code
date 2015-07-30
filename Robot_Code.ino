@@ -439,7 +439,7 @@ void lowerArmPID() {
 	}
 	// if ( diff  > 0) diff = 255;
 	// else if (diff < 0) diff = -255;
-	diff = 3 * (diff);
+	diff = 4 * (diff);
 	diff = constrain(diff, -255, 255);
 	motor.speed(LOWER_ARM, diff);
 }
@@ -967,7 +967,7 @@ void getSecondPet() {
 	motor.stop_all();
 
 	if (!unsuccessful) {
-		pivotArm(pivotPosition, 172, 10);
+		pivotArm(pivotPosition, 157, 10);
 		c = 0;
 		flag = false;
 		timeStart = millis();
@@ -979,11 +979,7 @@ void getSecondPet() {
 			if ( dt >= 500 && c == 0 ) {
 				setLowerArm(535);
 				c++;
-			} else if (dt >= 1250 && c == 1) {
-				setUpperArm(650);
-				c++;
-			}
-			else if ( dt >= 1800 && c == 2) {
+			} else if ( dt >= 1500 && c == 1) {
 				pauseArms();
 				flag = true;
 			}
@@ -1010,21 +1006,21 @@ void placeSecondPet() {
 		unsigned int dt = millis() - timeStart;
 
 		if ( dt >= 750 && c == 1) {
-			setLowerArm(590);
+			setLowerArm(610);
 			c++;
 		} else if (dt >= 2000 && c == 2) {
-			pivotArm(170, pivotTo, 10);
+			pivotArm(157, pivotTo, 10);
 			delay(500);
-			setLowerArm(320);
+			setLowerArm(280);
 			c++;
 		} else if ( dt >= 3500 && c == 3) {
-			setUpperArm(520);
+			setUpperArm(510);
 			c++;
 		} else if ( dt >=  4500 && c == 4) {
 			dropPet();
 			c++;
 		} else if ( dt >= 5300 && c == 5) {
-			setLowerArm(590);
+			setLowerArm(610);
 			c++;
 		} else if ( dt >= 6300 && c == 6) {
 			setUpperArm(710);
@@ -1045,7 +1041,7 @@ void getThirdPet() {
 	int try_num = 0;
 
 	// RCServo0.write(pivotPosition);
-	pivotArm(120, pivotPosition, 8);
+	pivotArm(118, pivotPosition, 8);
 	uint32_t timeStart = millis();
 
 	// first stage pickup - pick up pet; checks if pet is picked up,
@@ -1073,7 +1069,7 @@ void getThirdPet() {
 				timeStart = millis() - 1500;
 			}
 		} else if ( c == 4) {
-			setLowerArm(590); // See "REDUN" can set lower arm position here?
+			setLowerArm(610); // See "REDUN" can set lower arm position here?
 			c++;
 		} else if ( dt >= 6600 && c == 5) {
 			flag = true;
@@ -1081,7 +1077,7 @@ void getThirdPet() {
 	}
 
 	// pivot arm to correct location
-	pivotArm(pivotPosition, 123, 10); //TODO: tune
+	pivotArm(pivotPosition, 115, 10); //TODO: tune
 
 	flag = false;
 	c = 0;
@@ -1311,14 +1307,14 @@ void placePetCatapult(int pivotFrom) {
 
 		unsigned int dt = millis() - timeStart;
 		if ( dt >= 250 && c == 0 ) {
-			setLowerArm(475);
+			setLowerArm(480);
 			c++;
 		}
 		else if ( dt >= 1600 && c == 1) {
 			dropPet();
 			c++;
 		} else if (dt >= 2200 && c == 2) {
-			setLowerArm(590);
+			setLowerArm(610);
 			c++;
 		} else if (dt >= 3200 && c == 3 ) {
 			pauseArms(); // ensure arms stop moving
@@ -1340,9 +1336,9 @@ void armCal() {
 		if (selection == 0) {
 			a = map(knob(7), 0 , 1023, 0 , 184);
 		} else if (selection == 1) {
-			a = map(knob(7), 0, 1023, 350, 570); // lower arm
+			a = map(knob(7), 0, 1023, 330, 616); // lower arm
 		} else if ( selection == 2) {
-			a = map(knob(7), 0 , 1023, 300, 710); // higher arm
+			a = map(knob(7), 0 , 1023, 300, 730); // higher arm
 		}
 
 		if ( c >= 100) {
