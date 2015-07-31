@@ -90,6 +90,7 @@ void placePetCatapult();
 void pivotArm(int from, int to);
 void adjustArm(int pos, int);
 void dropPet();
+void dropPetMotor();
 boolean checkPet();
 boolean petOnArm();
 boolean checkBoxedPet();
