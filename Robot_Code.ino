@@ -877,6 +877,7 @@ void getFirstPet() {
 	boolean unsuccessful = false;
 	int pivotFrom = 25;
 	int pivotTo = 50;
+	int pivotIncrement = 5;
 	int c = 0;
 	int try_num = 0;
 
@@ -898,14 +899,16 @@ void getFirstPet() {
 		} else if ( dt >= 2000 && c == 1 ) {
 			setUpperArm(465);
 			c++;
-		} else if (dt >= 3200 && c == 2) {
-			RCServo0.write(pivotTo);
+		} else if ( dt >= 3200 && c == 2 ) {
+			pivotArm(pivotFrom,pivotTo,pivotIncrement);
+			// RCServo0.write(pivotTo);
 			c++;
-		} else if (dt >= 3800 && c == 3 ) {
+		} else if ( dt >= 3800 && c == 3 ) {
 			if (petOnArm()) {
 				c++;
 			} else if (try_num < 2) {
-				RCServo0.write(pivotFrom);
+				pivotArm(pivotTo,pivotFrom,pivotIncrement);
+				// RCServo0.write(pivotFrom);
 				c = 2;
 				try_num++;
 				timeStart = millis() - 2000;
@@ -941,10 +944,10 @@ void getFirstPet() {
 			unsigned int dt = millis() - timeStart;
 			if (dt >= 500 && c == 0) {
 				// this lower arm height is also the height second pet is picked up from
-				setLowerArm(500);
+				setLowerArm(570);
 				c++;
 			} else if ( dt >= 1500 && c == 1) {
-				setUpperArm(470);
+				setUpperArm(460);
 				c++;
 			} else if (dt >= 2700 && c == 2) {
 				flag = true;
@@ -967,15 +970,16 @@ void getFirstPet() {
 			unsigned int dt = millis() - timeStart;
 			if (dt >= 500 && c == 0) {
 				// this lower arm height is also the height second pet is picked up from
-				setLowerArm(500);
+				setLowerArm(570);
 				c++;
 			} else if ( dt >= 1500 && c == 1) {
-				setUpperArm(470);
+				setUpperArm(460);
 				c++;
 			} else if (dt >= 2700 && c == 2) {
 				flag = true;
 			}
 		}
+		pauseArms();
 	}
 
 	if (analogRead(QRD_L) >= q_threshold && analogRead(QRD_R) < q_threshold)
@@ -988,16 +992,18 @@ void getFirstPet() {
 
 void getSecondPet() {
 	boolean flag = false;
-	uint32_t timeStart = millis();
-	int pivotPosition = 39;
-	int c = 0;
-
 	boolean unsuccessful = false;
+	uint32_t timeStart = millis();
+	// int pivotPosition = 39;
+	int pivotFrom = 20;
+	int pivotTo = 45;
+	int pivotIncrement = 5;
+	int c = 0;
 	int try_num = 0;
 
 	// first stage pickup - pick up pet; checks if pet is picked up,
 	// if not, pick up pet again
-	RCServo0.write(pivotPosition);
+	RCServo0.write(pivotFrom);
 	delay(500);
 	while (!flag) {
 		upperArmPID();
@@ -1005,12 +1011,15 @@ void getSecondPet() {
 		unsigned int dt = millis() - timeStart;
 
 		if ( dt >= 500 && c == 0 ) {
-			setUpperArm(350);
+			setUpperArm(460);
 			c++;
 		} else if ( dt >= 2500 && c == 1 ) {
 			setUpperArm(720);
 			c++;
-		} else if ( dt >= 4500 && c == 2) {
+		} else if ( dt > = 3200 && c == 2 ) {
+			pivotArm(pivotFrom,pivotTo,pivotIncrement);
+			c++;
+		} else if ( dt >= 4500 && c == 3) {
 			if (petOnArm()) {
 				c++;
 			} else if (try_num < 2) {
@@ -1025,10 +1034,10 @@ void getSecondPet() {
 				unsuccessful = true;
 				secPet = false;
 			}
-		} else if ( c == 3 ) {
+		} else if ( c == 4 ) {
 			setLowerArm(590);
 			c++;
-		} else if ( dt >= 6000 && c == 4 ) {
+		} else if ( dt >= 6000 && c == 5 ) {
 			flag = true;
 		}
 	}
