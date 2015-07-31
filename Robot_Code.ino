@@ -162,12 +162,12 @@ void setup()
 
 	// set servo initial positions
 	RCServo2.write(90);
-	RCServo0.write(78);
+	RCServo0.write(80);
 
 	// default PID loop is QRD tape following
 	pidfn = tapePID;
 
-	LCD.print("RC5"); LCD.setCursor(0, 1);
+	LCD.print("RC6"); LCD.setCursor(0, 1);
 	LCD.print("Press Start.");
 	while (!startbutton()) {
 		lowerArmPID();
@@ -320,10 +320,10 @@ void petProcess() {
 			// }
 
 			// initial tape following conditions
-			// last_error = 0;
-			// recent_error = 0;
-			// t = 1;
-			// to = 0;
+			last_error = 0;
+			recent_error = 0;
+			t = 1;
+			to = 0;
 
 			while (!stopbutton()) {
 				LCD.clear(); LCD.home();
@@ -353,12 +353,14 @@ void petProcess() {
 			// 		error = -4;
 			// }
 
-			// recent_error = 0;
-			// last_error = 0;
+			recent_error = 0;
+			last_error = 0;
+			t = 1;
+			to = 0;
 
 			while (!stopbutton()) {
 				LCD.clear(); LCD.home();
-				//LCD.print("E:"); LCD.print(error); 
+				//LCD.print("E:"); LCD.print(error);
 				LCD.print("LE:"); LCD.print(last_error); LCD.print(" RE:"); LCD.print(recent_error);
 				LCD.setCursor(0, 1); LCD.print(analogRead(QRD_L)); LCD.print(" "); LCD.print(analogRead(QRD_R));
 				delay(200);
@@ -380,19 +382,22 @@ void petProcess() {
 
 			base_speed = 170;
 
-			// error = 1;
-			// last_error = 0;
-		} else if (petCount == 5) { //TODO: temporarily 5 for 4th pet
+			// reset tape following conditions
+			t = 1;
+			to = 0;
+			recent_error = 0;
+			last_error = 1;
+		} else if (petCount == 4)  {
+			base_speed = 70;
+		} else if (petCount == LAST_TAPE_PET) { //TODO: temporarily 5 for 4th pet
 			// TODO: implement more elegant switching to ir -in timedPivot
 			armCal();
-			pivot(3);
 			getFourthPet();
 
-			pivotToIR(LEFT, 75); //TODO: Tune IR threshold value
+			pivotToIR(LEFT, 20); //TODO: Tune IR threshold value
 			encount_L = 0;
 			encount_R = 0;
 			switchMode();
-			petCount = 4;
 		}
 
 		// speed control
@@ -410,10 +415,11 @@ void petProcess() {
 		q_pro_gain = 70;
 		q_diff_gain = 15;
 		// q_diff_gain = menuItems[2].Value;
-	} else if (petCount == 3 && millis() - lastSpeedUp > 1400) {
-		base_speed = menuItems[0].Value;
-		q_pro_gain = menuItems[1].Value;
 	}
+	// else if (petCount == 3 && millis() - lastSpeedUp > 1400) {
+	// 	base_speed = menuItems[0].Value;
+	// 	q_pro_gain = menuItems[1].Value;
+	// }
 }
 
 void switchMode() {
@@ -869,7 +875,7 @@ void getFirstPet() {
 
 	boolean flag = false;
 	uint32_t timeStart = millis();
-	int pivotPosition = 32;
+	int pivotPosition = 40;
 	int c = 0;
 
 	boolean unsuccessful = false;
@@ -887,10 +893,10 @@ void getFirstPet() {
 		unsigned int dt = millis() - timeStart;
 
 		if ( dt >= 1000 && c == 0 ) {
-			setLowerArm(520);
+			setLowerArm(530);
 			c++;
 		} else if ( dt >= 2000 && c == 1 ) {
-			setUpperArm(350);
+			setUpperArm(360);
 			c++;
 		} else if ( dt >= 4000 && c == 2 ) {
 			setUpperArm(720);
@@ -922,6 +928,7 @@ void getFirstPet() {
 	if (!unsuccessful) {
 		placePetCatapult(pivotPosition);
 		delay(500);
+		pivotToLine(RIGHT, 2000);
 		// move arm out of catapult's way
 		RCServo0.write(70);
 		c = 0;
@@ -932,14 +939,14 @@ void getFirstPet() {
 			unsigned int dt = millis() - timeStart;
 			if (dt >= 0 && c == 0) {
 				// this lower arm height is also the height second pet is picked up from
-				setLowerArm(410);
+				setLowerArm(490);
 				c++;
 			} else if ( dt >= 1000 && c == 1) {
 				flag = true;
 			}
 		}
 		pauseArms(); // ensure arms are not powered
-		pivotToLine(RIGHT, 2000);
+
 		delay(500);
 		launch(85);
 		pivotToLine(RIGHT, 1000);
@@ -1186,9 +1193,9 @@ void getThirdPet() {
 
 void getFourthPet() {
 	boolean flag = false;
-	timedPivot(300); // TODO tune: makes pet pick up easier
+	LCD.clear(); LCD.home(); LCD.print("4th pet");
 	uint32_t timeStart = millis();
-	int pivotPosition = 110; //TODO: tune -pet will be on left side of robot
+	int pivotPosition = 80; //TODO: tune -pet will be on left side of robot
 	int c = 0;
 
 	// first stage pickup - pick up pet; checks if pet is picked up,
@@ -1202,45 +1209,50 @@ void getFourthPet() {
 		unsigned int dt = millis() - timeStart;
 
 		if ( dt >= 1000 && c == 0 ) {
-			setLowerArm(490); //TODO: tune
+			setLowerArm(560); //TODO: tune
 			c++;
 		} else if ( dt >= 2000 && c == 1 ) {
-			setUpperArm(350);
+			setUpperArm(435);
 			c++;
 		} else if ( dt >= 4000 && c == 2 ) {
-			setUpperArm(720);
+			RCServo0.write(65);
 			c++;
-		} else if ( dt >= 6000 && c == 3) {
+		} else if ( dt >= 5000 && c == 3) {
 			if (petOnArm()) {
 				c++;
 			} else {
-				c = 1;
-				timeStart = millis() - 1500;
+				c = 2;
+				RCServo0.write(pivotPosition);
+				timeStart = millis() - 3000;
 			}
 		} else if ( c == 4) {
-			setLowerArm(590);
+			setUpperArm(710);
 			c++;
-		} else if ( dt >= 7500 && c == 5) {
+		} else if ( dt >= 7000 && c == 5) {
 			flag = true;
 		}
 	}
-	placePetCatapult(pivotPosition);
+	placePetCatapult(80);
 	flag = false;
 	delay(500);
-	RCServo0.write(80);
+	RCServo0.write(70);
+	c = 0;
+	flag = false;
 	timeStart = millis();
 	while (!flag) {
 		lowerArmPID();
 		unsigned int dt = millis() - timeStart;
-		if (dt >= 0 && c == 3) {
-			setLowerArm(480);
+		if (dt >= 0 && c == 0) {
+			// this lower arm height is also the height second pet is picked up from
+			setLowerArm(450);
 			c++;
-		} else if ( dt >= 1000 && c == 4) {
+		} else if ( dt >= 1200 && c == 1) {
 			flag = true;
 		}
 	}
-	pivot(2); //TODO: tune to lineup catapult
+	pauseArms(); // ensure arms are not powered
 	delay(500);
+	pivot(6);
 	//launch(130); //TODO: tune to get enough distance
 
 }
@@ -1374,7 +1386,7 @@ void getSixthPet() {
 // Place pet in catapult from pivot arm's position 'pivotFrom'
 void placePetCatapult(int pivotFrom) {
 	int c = 0;
-	pivotArm(pivotFrom, 157, 10);
+	pivotArm(pivotFrom, 160, 10);
 	uint32_t timeStart = millis();
 
 	while (true) {
@@ -1383,14 +1395,14 @@ void placePetCatapult(int pivotFrom) {
 
 		unsigned int dt = millis() - timeStart;
 		if ( dt >= 250 && c == 0 ) {
-			setLowerArm(480);
+			setLowerArm(535);
 			c++;
 		}
 		else if ( dt >= 1600 && c == 1) {
 			dropPet();
 			c++;
 		} else if (dt >= 2200 && c == 2) {
-			setLowerArm(580);
+			setLowerArm(610);
 			c++;
 		} else if (dt >= 3200 && c == 3 ) {
 			pauseArms(); // ensure arms stop moving
@@ -1412,9 +1424,9 @@ void armCal() {
 		if (selection == 0) {
 			a = map(knob(7), 0 , 1023, 0 , 184);
 		} else if (selection == 1) {
-			a = map(knob(7), 0, 1023, 330, 590); // lower arm
+			a = map(knob(7), 0, 1023, 350, 600); // lower arm
 		} else if ( selection == 2) {
-			a = map(knob(7), 0 , 1023, 300, 720); // higher arm
+			a = map(knob(7), 0 , 1023, 300, 760); // higher arm
 		}
 
 		if ( c >= 100) {
