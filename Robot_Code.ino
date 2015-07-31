@@ -417,6 +417,22 @@ void petProcess() {
 			encount_L = 0;
 			encount_R = 0;
 			switchMode();
+
+			RCServo0.write(35); //For Fifth Pet Pickup
+								//Adjust Lower/Upper Arm here?
+		} else if (petCount == LAST_TAPE_PET + 1){ //Enters loop when over encoder count or petOnArm
+			armCal(); //temp
+
+			if(petOnArm()){
+				launchFifthPet();
+				pivotToIR(RIGHT, 300); //Pivots to Right to avoid rafter
+			}
+			//getFifthPet();
+			//pivotToIR(LEFT, 300);
+			RCServo0.write(130); // Prevents arm from hitting zipline, may also need to adjust lower/upper arm
+		} else if (petCount == LAST_TAPE_PET + 2){
+			armCal();
+			getSixthPet();
 		}
 
 		// speed control
@@ -536,7 +552,7 @@ boolean checkPet() {
 	} else {
 
 		if (petCount == LAST_TAPE_PET) {
-			if (checkRafterPet()) return true;
+			if (checkRafterPet() || petOnArm()) return true;
 		} else if ( petCount == LAST_TAPE_PET + 1) {
 			if (checkBoxedPet()) return true;
 		} else if (petCount == LAST_TAPE_PET + 2) {
@@ -1382,48 +1398,98 @@ void getFifthPet() {
 	launch(150); //TODO: tune to get enough distance
 }
 
-void getSixthPet() {
-	boolean flag = false;
-	//timedPivot(400); //TODO pivot first
-	uint32_t timeStart = millis();
-	int pivotPosition = 37; //TODO: tune
+void launchFifthPet(){
+	//Adjust Lower/Upper Arm for catapult placing
+	placePetCatapult(35);
+	delay(500);
+	// move arm out of catapult's way
+	RCServo0.write(70);
 	int c = 0;
+	boolean flag = false;
+	uint32_t timeStart = millis();
+	while (!flag) {
+	lowerArmPID();
+	unsigned int dt = millis() - timeStart;
+		if (dt >= 500 && c == 0) {
+			setLowerArm(570);
+			c++;
+		} else if (dt >= 1500 && c == 1) {
+			flag = true;
+		}
+	}
+		pauseArms(); // ensure arms are not powered
 
-	// first stage pickup - pick up pet; checks if pet is picked up,
-	// if not, pick up pet again
-	RCServo0.write(pivotPosition);
+		delay(500);
+		launch(85);
+		pivot(-9); //Pivots to the Left because of Rafter
+		delay(300);
+}
+
+void getSixthPet() {
+
+	while(digitalRead(FRONT_SWITCH) == LOW){ // Power motor to turn to the left until switch is released
+		motor.speed(RIGHT_MOTOR, 80); //TODO: Tune Speed Values
+		motor.speed(LEFT_MOTOR, -40); 
+	}
+
+	//ROBOT should be semi 
+	pauseDrive();
+	while(!stopbutton()){
+		LCD.clear(); LCD.home();
+		LCD.print("I stopped"); 
+		delay(100);
+	} // TEST where it stops
+
+	boolean flag = false;
+	uint32_t timeStart = millis();
+	int pivotFrom = 70; //TODO: tune
+	int pivotTo = 50; //TODO: tune
+	int pivotIncrement = 3;
+	int c = 0;
+	int try_num = 0;
+
+	RCServo0.write(pivotFrom);
 	delay(200);
+
 	while (!flag) {
 		upperArmPID();
 		lowerArmPID();
 
 		unsigned int dt = millis() - timeStart;
 		// TODO: may be able to set lower upper arm at same time as pivot
-		if ( dt >= 800 && c == 0 ) {
-			setLowerArm(650);
-			setLowerArm(545); //TODO: tune
+		if ( dt >= 1000 && c == 0 ) {
+			setLowerArm(500); //TODO: tune
+							  //Change Lower Arm Position according to try_num?
 			c++;
-		} else if ( dt >= 1300 && c == 1 ) {
-			setUpperArm(360);
+		} else if ( dt >= 2000 && c == 1 ) {
+			setUpperArm(420); //TODO: tune
 			c++;
-		} else if ( dt >= 2300 && c == 2 ) {
-			setUpperArm(715);
+		} else if ( dt >= 3200 && c == 2 ) {
+			pivotArm(pivotFrom, pivotTo, pivotIncrement);
 			c++;
-		} else if ( dt >= 4000 ) {
+		} else if ( dt >= 3800 && c == 3 ) { //Checks switch after because foam will trigger switch
+			setUpperArm(720);
+		} else if ( dt >= 5000 && c == 4) {
 			if (petOnArm()) {
 				flag = true;
 				delay(1000);
+				c++;
 			} else {
-				// TODO: change arm pickup position
-				pivotPosition += 10; // sweep to left
-				RCServo0.write(pivotPosition);
-
-				c = 1;
-				timeStart = millis() - 800;
+				pivotArm(pivotTo,pivotFrom,pivotIncrement);
+				c = 2; // Maybe zero if lower arm is to be adjusted
+				timeStart = millis() - 3200; // Change time if arm positions are to be adjusted
+			 								// Can try infinite times actually...(if we have time)
+											// No need to reset arm positions if we cant get the sixth pet
 			}
+		} else if (dt >= 6000 && c == 5){
+			setLowerArm(610);
+			c++;
+		} else if (dt >= 7000 && c == 6){
+			flag = true;
 		}
 	}
-	placePetCatapult(pivotPosition);
+
+	placePetCatapult(pivotFrom); //Or pivotTo, should be alright tho
 	flag = false;
 	delay(500);
 	RCServo0.write(80);
@@ -1436,13 +1502,12 @@ void getSixthPet() {
 			setLowerArm(480);
 			c++;
 		} else if ( dt >= 1000 && c == 4) {
-			flag = true;
+			flag = true;			
 		}
+	pivot(-9); // Pivot to the Left
+	delay(500);		
+	//launch(150); //TODO: tune Launch value
 	}
-	timedPivot(1800); //TODO: tune pivot towards the left..
-	delay(500);
-	launch(85); //TODO: tune
-
 }
 
 // Place pet in catapult from pivot arm's position 'pivotFrom'
