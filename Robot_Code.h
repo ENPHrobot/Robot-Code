@@ -43,7 +43,8 @@ enum {
 	BACKWARDS = 4,
 	LEFT = 5,
 	RIGHT = 6,
-	ENC_RAFTER = 10
+	ENC_RAFTER = 10,
+	LAST_TAPE_PET = 5
 };
 
 #define SERVO_0_Pin (35)

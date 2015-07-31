@@ -258,14 +258,6 @@ void irPID() {
 
 	encoderProcess();
 
-	if (petCount == 4) {
-		rafterProcess();
-	} else if ( petCount == 5) {
-		buriedProcess();
-	} else if (petCount == 6) {
-		//TODO: SOMETHING COOL WHEN WE FINISH!!!!!!!!!!!!!!!!!
-	}
-
 	int left_sensor = analogRead(IR_L);
 	int right_sensor = analogRead(IR_R);
 	int error = right_sensor - left_sensor;
@@ -498,12 +490,24 @@ void launch(int ms) {
 
 // Checks for the horizontal line that signals a pet to pick up.
 boolean checkPet() {
-	int e = analogRead(QRD_LINE);
-	if ( e > h_threshold && onTape == false) {
-		onTape = true;
-		return true;
-	} else if ( e < q_threshold ) {
-		onTape = false;
+	if (petCount < LAST_TAPE_PET) {
+		int e = analogRead(QRD_LINE);
+		if ( e > h_threshold && onTape == false) {
+			onTape = true;
+			return true;
+		} else if ( e < q_threshold ) {
+			onTape = false;
+		}
+
+	} else {
+
+		if (petCount == LAST_TAPE_PET) {
+			if (checkRafterPet()) return true;
+		} else if ( petCount == LAST_TAPE_PET + 1) {
+			if (checkBoxedPet()) return true;
+		} else if (petCount == LAST_TAPE_PET + 2) {
+			//TODO: SOMETHING COOL WHEN WE FINISH!!!!!!!!!!!!!!!!!
+		}
 	}
 	return false;
 }
