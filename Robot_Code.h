@@ -80,6 +80,7 @@ void LE();
 void armCal();
 void getFirstPet();
 void getSecondPet();
+void setArmSecondPet();
 void getThirdPet();
 void getFourthPet();
 void getFifthPet();
@@ -108,7 +109,7 @@ String modes[] = {"qrd", "ir"};
 String mode = modes[modeIndex];
 
 void empty() {};
-int upperArmV = 715;
+int upperArmV = 705;
 int lowerArmV = 570;
 int petCount = 0;
 boolean fullRun = true;

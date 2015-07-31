@@ -340,12 +340,13 @@ void petProcess() {
 					LCD.setCursor(0, 1); LCD.print(analogRead(QRD_L)); LCD.print(" "); LCD.print(analogRead(QRD_R));
 					delay(200);
 				}
+
+				setArmSecondPet();
 			}
+		// Don't need this part of the loop
 		} else if (petCount == 2) {
 
 			if (fullRun){
-				hardStop();
-				getSecondPet();
 
 				// int ql = analogRead(QRD_L);
 				// int qr = analogRead(QRD_R);
@@ -363,18 +364,18 @@ void petProcess() {
 				// 		error = -4;
 				// }
 
-				recent_error = 0;
-				last_error = 0;
-				t = 1;
-				to = 0;
+				// recent_error = 0;
+				// last_error = 0;
+				// t = 1;
+				// to = 0;
 
-				while (!stopbutton()) {
-					LCD.clear(); LCD.home();
-					//LCD.print("E:"); LCD.print(error);
-					LCD.print("LE:"); LCD.print(last_error); LCD.print(" RE:"); LCD.print(recent_error);
-					LCD.setCursor(0, 1); LCD.print(analogRead(QRD_L)); LCD.print(" "); LCD.print(analogRead(QRD_R));
-					delay(200);
-				}
+				// while (!stopbutton()) {
+				// 	LCD.clear(); LCD.home();
+				// 	//LCD.print("E:"); LCD.print(error);
+				// 	LCD.print("LE:"); LCD.print(last_error); LCD.print(" RE:"); LCD.print(recent_error);
+				// 	LCD.setCursor(0, 1); LCD.print(analogRead(QRD_L)); LCD.print(" "); LCD.print(analogRead(QRD_R));
+				// 	delay(200);
+				// }
 			}
 
 		} else if (petCount == 3) {
@@ -387,7 +388,7 @@ void petProcess() {
 				motor.speed(LEFT_MOTOR, 40);
 				motor.speed(RIGHT_MOTOR, 40);
 
-				if (secPet) {
+				if (petOnArm()) {
 					placeSecondPet();
 				}
 				delay(800);
@@ -850,6 +851,21 @@ void buriedProcess() {
 	}
 }
 
+// Tentative drop pet function for the new motor setup
+// Time it takes to bring magnet up and down needs to be tested
+void dropPetMotor() {
+	uint32_t timeStart = millis();
+	while (timeStart <= 1000) {
+		digitalWrite(HAND_UP, HIGH);
+	}
+	digitalWrite(HAND_UP, LOW);
+	delay(200);
+	while (timeStart > 1200 && timeStart <= 2200) {
+		digitalWrite(HAND_DOWN, HIGH);
+	}
+	digitalWrite(HAND_DOWN, LOW);
+}
+
 // Drop the pet helper function
 void dropPet() {
 	LCD.clear(); LCD.home(); LCD.print("DR- DR- DR-");
@@ -929,14 +945,14 @@ void getFirstPet() {
 				// RCServo0.write(pivotFrom);
 				c = 2;
 				try_num++;
-				timeStart = millis() - 2000;
+				timeStart = millis() - 2500;
 			} else if (try_num >= 2 && !petOnArm()) {
 				c = 4;
 				unsuccessful = true;
 				timeStart = millis() - 4000;
 			}
 		} else if ( c == 4) {
-			setUpperArm(720);
+			setUpperArm(710);
 			c++;
 		} else if ( dt >= 5400 && c == 5) {
 			setLowerArm(610); // See "REDUN" can set lower arm position here?
@@ -964,10 +980,10 @@ void getFirstPet() {
 				// this lower arm height is also the height second pet is picked up from
 				setLowerArm(570);
 				c++;
-			} else if ( dt >= 1500 && c == 1) {
-				setUpperArm(460);
-				c++;
-			} else if (dt >= 2700 && c == 2) {
+			// } else if ( dt >= 1500 && c == 1) {
+			// 	setUpperArm(460);
+			// 	c++;
+			} else if (dt >= 1500 && c == 1) {
 				flag = true;
 			}
 		}
@@ -981,23 +997,22 @@ void getFirstPet() {
 	} else {
 		RCServo0.write(70);
 		c = 0;
-		flag = false;
-		timeStart = millis();
-		while (!flag) {
-			lowerArmPID();
-			unsigned int dt = millis() - timeStart;
-			if (dt >= 500 && c == 0) {
-				// this lower arm height is also the height second pet is picked up from
-				setLowerArm(570);
-				c++;
-			} else if ( dt >= 1500 && c == 1) {
-				setUpperArm(460);
-				c++;
-			} else if (dt >= 2700 && c == 2) {
-				flag = true;
-			}
-		}
-		pauseArms();
+		// flag = false;
+		// timeStart = millis();
+		// while (!flag) {
+		// 	lowerArmPID();
+		// 	unsigned int dt = millis() - timeStart;
+		// 	if (dt >= 500 && c == 0) {
+		// 		// this lower arm height is also the height second pet is picked up from
+		// 		setLowerArm(570);
+		// 		c++;
+		// 	} else if ( dt >= 1500 && c == 1) {
+		// 		setUpperArm(460);
+		// 		c++;
+		// 	} else if (dt >= 2700 && c == 2) {
+		// 		flag = true;
+		// 	}
+		// }
 	}
 
 	if (analogRead(QRD_L) >= q_threshold && analogRead(QRD_R) < q_threshold)
@@ -1008,20 +1023,41 @@ void getFirstPet() {
 		pivotOnLine(LEFT, 0, 0);
 }
 
+// Setting arm for second pet pickup
+void setArmSecondPet() {
+	int c = 0;
+	int pivotPosition = 40;
+	boolean flag = false;
+	RCServo0.write(pivotPosition);
+	uint32_t timeStart = millis();
+	while (!flag) {
+		lowerArmPID();
+		upperArmPID();
+		unsigned int dt = millis() - timeStart;
+		if (dt >= 500 && c == 0) {
+			setLowerArm(570);
+			c++;
+		} else if ( dt >= 1500 && c == 1) {
+			setUpperArm(460);
+			c++;
+		} else if (dt >= 2700 && c == 2) {
+			flag = true;
+		}
+	}
+}
+
+// This function is not being used
 void getSecondPet() {
 	boolean flag = false;
 	boolean unsuccessful = false;
 	uint32_t timeStart = millis();
-	// int pivotPosition = 39;
-	int pivotFrom = 20;
-	int pivotTo = 45;
-	int pivotIncrement = 5;
+	int pivotPosition = 39;
 	int c = 0;
 	int try_num = 0;
 
 	// first stage pickup - pick up pet; checks if pet is picked up,
 	// if not, pick up pet again
-	RCServo0.write(pivotFrom);
+	RCServo0.write(pivotPosition);
 	delay(500);
 	while (!flag) {
 		upperArmPID();
@@ -1032,10 +1068,7 @@ void getSecondPet() {
 			setUpperArm(460);
 			c++;
 		} else if ( dt >= 2500 && c == 1 ) {
-			setUpperArm(720);
-			c++;
-		} else if ( dt > = 3200 && c == 2 ) {
-			pivotArm(pivotFrom,pivotTo,pivotIncrement);
+			setUpperArm(710);
 			c++;
 		} else if ( dt >= 4500 && c == 3) {
 			if (petOnArm()) {
@@ -1171,7 +1204,7 @@ void getThirdPet() {
 			setUpperArm(385);
 			c++;
 		} else if ( dt >= 3600 && c == 2 ) {
-			setUpperArm(720);
+			setUpperArm(710);
 			c++;
 		} else if ( dt >= 5600 && c == 3) {
 			if (petOnArm()) {
@@ -1309,7 +1342,7 @@ void getFifthPet() {
 			setUpperArm(650); //TODO: tune
 			c++;
 		} else if ( dt >= 4000 && c == 2 ) {
-			setUpperArm(720);
+			setUpperArm(710);
 			c++;
 		} else if ( dt >= 6000 && c == 3) {
 			if (petOnArm()) {
@@ -1455,7 +1488,7 @@ void armCal() {
 		} else if (selection == 1) {
 			a = map(knob(7), 0, 1023, 350, 615); // lower arm
 		} else if ( selection == 2) {
-			a = map(knob(7), 0 , 1023, 300, 720); // higher arm
+			a = map(knob(7), 0 , 1023, 300, 710); // higher arm
 		}
 
 		if ( c >= 100) {
@@ -1657,10 +1690,9 @@ void IRMENU()
 
 void strategySelection() 
 {
-	LCD.clear(); LCD.home();
-
 	while (!stopbutton())
 	{
+		LCD.clear(); LCD.home();
 		int selection = map(knob(6), 0 , 1023, 0, 2);
 
 		LCD.print("Strategy: ");
@@ -1688,8 +1720,9 @@ void strategySelection()
 				fullRun = false;
 			}
 		}
+		delay(100);
 	}
-
+	delay(100);
 }
 
 void MainMenu() {
