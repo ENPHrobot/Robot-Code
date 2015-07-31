@@ -189,9 +189,8 @@ void loop()
 		motor.speed(LEFT_MOTOR, base_speed);
 		motor.speed(RIGHT_MOTOR, base_speed);
 	}
+	petProcess();
 	pidfn();
-
-
 }
 
 /* Control Loops */
@@ -226,7 +225,6 @@ void tapePID() {
 
 	P_error = q_pro_gain * error;
 	D_error = q_diff_gain * ((float)(error - recent_error) / (float)(t + to)); // time is present within the differential gain
-	I_error += q_int_gain * error;
 	net_error = P_error + D_error;
 
 	// prevent adjusting errors from going over actual speed.
@@ -254,129 +252,6 @@ void tapePID() {
 	last_error = error;
 	count++;
 	t++;
-
-	if (checkPet()) {
-
-		pauseDrive();
-		LCD.clear(); LCD.home();
-		petCount++;
-
-		if (petCount == 1) {
-			getFirstPet();
-
-			// decrease base speed for the turn
-			base_speed = 70;
-			// q_pro_gain = 20;
-			// q_diff_gain = 5;
-
-			// upon exit, apply correcting error so that robot returns to line
-			error = 0;
-			recent_error = error;
-			last_error = 0;
-
-			int ql = analogRead(QRD_L);
-			int qr = analogRead(QRD_R);
-			if (ql > q_threshold && qr > q_threshold) {
-				error = 0;
-			} else if ( ql > q_threshold && qr <= q_threshold) {
-				error = -1;
-			} else if (ql <= q_threshold && qr > q_threshold) {
-				error = 1;
-			} else if (ql <= q_threshold && qr <= q_threshold) {
-				// neither sensor on black. check last error to see which side we are on.
-				if ( last_error > 0)
-					error = 4;
-				else if ( last_error <= 0)
-					error = -4;
-			}
-
-			while (!stopbutton()) {
-				LCD.clear(); LCD.home();
-				//LCD.print(error); LCD.print(" "); LCD.print(last_error); LCD.print(" "); LCD.print(recent_error);
-				LCD.print(petCount); LCD.print(" ");
-				LCD.setCursor(0, 1); LCD.print(analogRead(QRD_L)); LCD.print(" "); LCD.print(analogRead(QRD_R));
-				delay(200);
-			}
-		} else if (petCount == 2) {
-			hardStop();
-			getSecondPet();
-
-			error = 0;
-			recent_error = error;
-			last_error = 0;
-
-			int ql = analogRead(QRD_L);
-			int qr = analogRead(QRD_R);
-			if (ql > q_threshold && qr > q_threshold) {
-				error = 0;
-			} else if ( ql > q_threshold && qr <= q_threshold) {
-				error = -1;
-			} else if (ql <= q_threshold && qr > q_threshold) {
-				error = 1;
-			} else if (ql <= q_threshold && qr <= q_threshold) {
-				// neither sensor on black. check last error to see which side we are on.
-				if ( last_error > 0)
-					error = 4;
-				else if ( last_error <= 0)
-					error = -4;
-			}
-			while (!stopbutton()) {
-				LCD.clear(); LCD.home();
-				LCD.print("E:"); LCD.print(error); LCD.print(" LE:"); LCD.print(last_error); LCD.print(" RE:"); LCD.print(recent_error);
-				LCD.setCursor(0, 1); LCD.print(analogRead(QRD_L)); LCD.print(" "); LCD.print(analogRead(QRD_R));
-				delay(200);
-			}
-
-		} else if (petCount == 3) {
-			// for pausing motors on the ramp.
-			motor.speed(LEFT_MOTOR, base_speed);
-			motor.speed(RIGHT_MOTOR, base_speed);
-			delay(100);
-			motor.speed(LEFT_MOTOR, 40);
-			motor.speed(RIGHT_MOTOR, 40);
-
-			if (secPet) {
-				placeSecondPet();
-			}
-			delay(800);
-			getThirdPet();
-
-			base_speed = 170;
-
-			error = 1;
-			last_error = 0;
-		} else if (petCount == 5) { //TODO: temporarily 5 for 4th pet
-			// TODO: implement more elegant switching to ir -in timedPivot
-			armCal();
-			pivot(3);
-			getFourthPet();
-
-			pivotToIR(LEFT, 75); //TODO: Tune IR threshold value
-			encount_L = 0;
-			encount_R = 0;
-			switchMode();
-			petCount = 4;
-		}
-
-		// speed control
-		if ( petCount == 2 ) {
-			lastSpeedUp = millis();
-		} else if (petCount == 3 ) {
-			lastSpeedUp = millis();
-		}
-
-	}
-
-	// speed control
-	if (petCount == 2 && millis() - lastSpeedUp > 1200) {
-		base_speed = 170;
-		q_pro_gain = 70;
-		q_diff_gain = 15;
-		// q_diff_gain = menuItems[2].Value;
-	} else if (petCount == 3 && millis() - lastSpeedUp > 1400) {
-		base_speed = menuItems[0].Value;
-		q_pro_gain = menuItems[1].Value;
-	}
 }
 
 void irPID() {
@@ -426,6 +301,119 @@ void irPID() {
 }
 
 /* Helper Functions */
+void petProcess() {
+	if (checkPet()) {
+		pauseDrive();
+		petCount++;
+
+		if (petCount == 1) {
+			getFirstPet();
+			// decrease base speed for the turn
+			base_speed = 70;
+
+			// int ql = analogRead(QRD_L);
+			// int qr = analogRead(QRD_R);
+			// if (ql > q_threshold && qr > q_threshold) {
+			// 	error = 0;
+			// } else if ( ql > q_threshold && qr <= q_threshold) {
+			// 	error = -1;
+			// } else if (ql <= q_threshold && qr > q_threshold) {
+			// 	error = 1;
+			// } else if (ql <= q_threshold && qr <= q_threshold) {
+			// 	// neither sensor on black. check last error to see which side we are on.
+			// 	if ( last_error > 0)
+			// 		error = 4;
+			// 	else if ( last_error <= 0)
+			// 		error = -4;
+			// }
+
+			while (!stopbutton()) {
+				LCD.clear(); LCD.home();
+				//LCD.print(error); LCD.print(" "); LCD.print(last_error); LCD.print(" "); LCD.print(recent_error);
+				LCD.print(petCount); LCD.print(" ");
+				LCD.setCursor(0, 1); LCD.print(analogRead(QRD_L)); LCD.print(" "); LCD.print(analogRead(QRD_R));
+				delay(200);
+			}
+		} else if (petCount == 2) {
+			hardStop();
+			getSecondPet();
+			// error = 0;
+			// recent_error = error;
+			// last_error = 0;
+
+			// int ql = analogRead(QRD_L);
+			// int qr = analogRead(QRD_R);
+			// if (ql > q_threshold && qr > q_threshold) {
+			// 	error = 0;
+			// } else if ( ql > q_threshold && qr <= q_threshold) {
+			// 	error = -1;
+			// } else if (ql <= q_threshold && qr > q_threshold) {
+			// 	error = 1;
+			// } else if (ql <= q_threshold && qr <= q_threshold) {
+			// 	// neither sensor on black. check last error to see which side we are on.
+			// 	if ( last_error > 0)
+			// 		error = 4;
+			// 	else if ( last_error <= 0)
+			// 		error = -4;
+			// }
+			while (!stopbutton()) {
+				LCD.clear(); LCD.home();
+				//LCD.print("E:"); LCD.print(error); LCD.print(" LE:"); LCD.print(last_error); LCD.print(" RE:"); LCD.print(recent_error);
+				LCD.setCursor(0, 1); LCD.print(analogRead(QRD_L)); LCD.print(" "); LCD.print(analogRead(QRD_R));
+				delay(200);
+			}
+
+		} else if (petCount == 3) {
+			// for pausing motors on the ramp.
+			motor.speed(LEFT_MOTOR, base_speed);
+			motor.speed(RIGHT_MOTOR, base_speed);
+			delay(100);
+			motor.speed(LEFT_MOTOR, 40);
+			motor.speed(RIGHT_MOTOR, 40);
+
+			if (secPet) {
+				placeSecondPet();
+			}
+			delay(800);
+			getThirdPet();
+
+			base_speed = 170;
+
+			// error = 1;
+			// last_error = 0;
+		} else if (petCount == 5) { //TODO: temporarily 5 for 4th pet
+			// TODO: implement more elegant switching to ir -in timedPivot
+			armCal();
+			pivot(3);
+			getFourthPet();
+
+			pivotToIR(LEFT, 75); //TODO: Tune IR threshold value
+			encount_L = 0;
+			encount_R = 0;
+			switchMode();
+			petCount = 4;
+		}
+
+		// speed control
+		if ( petCount == 2 ) {
+			lastSpeedUp = millis();
+		} else if (petCount == 3 ) {
+			lastSpeedUp = millis();
+		}
+
+	}
+
+	// speed control
+	if (petCount == 2 && millis() - lastSpeedUp > 1200) {
+		base_speed = 170;
+		q_pro_gain = 70;
+		q_diff_gain = 15;
+		// q_diff_gain = menuItems[2].Value;
+	} else if (petCount == 3 && millis() - lastSpeedUp > 1400) {
+		base_speed = menuItems[0].Value;
+		q_pro_gain = menuItems[1].Value;
+	}
+}
 
 void switchMode() {
 	pidfn = irPID;
