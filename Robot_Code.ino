@@ -439,13 +439,13 @@ void setLowerArm(int V) {
 void upperArmPID() {
 	int currentV = constrain(analogRead(UPPER_POT), 300, 740);
 	int diff = currentV - upperArmV;
-	if ( diff <= 20 && diff >= -20) {
+	if ( diff <= 25 && diff >= -25) {
 		diff = 0;
 	}
-	// if ( diff  > 0) diff = 255;
-	// else if (diff < 0) diff = -255;
-	diff = 6 * diff;
-	diff = constrain(diff, -255, 255);
+	if ( diff  > 0) diff = 255;
+	else if (diff < 0) diff = -255;
+	// diff = 6 * diff;
+	// diff = constrain(diff, -255, 255);
 	motor.speed(UPPER_ARM, diff);
 }
 
@@ -874,17 +874,17 @@ void adjustArm(int pivotPosition, int try_num) {
 void getFirstPet() {
 
 	boolean flag = false;
-	uint32_t timeStart = millis();
-	int pivotPosition = 40;
-	int c = 0;
-
 	boolean unsuccessful = false;
+	int pivotFrom = 25;
+	int pivotTo = 50;
+	int c = 0;
 	int try_num = 0;
 
 	// first stage pickup - pick up pet; checks if pet is picked up,
 	// if not, pick up pet again
-	RCServo0.write(pivotPosition);
+	RCServo0.write(pivotFrom);
 	delay(200);
+	uint32_t timeStart = millis();
 	while (!flag) {
 
 		upperArmPID();
@@ -893,32 +893,34 @@ void getFirstPet() {
 		unsigned int dt = millis() - timeStart;
 
 		if ( dt >= 1000 && c == 0 ) {
-			setLowerArm(530);
+			setLowerArm(555);
 			c++;
 		} else if ( dt >= 2000 && c == 1 ) {
-			setUpperArm(360);
+			setUpperArm(465);
 			c++;
-		} else if ( dt >= 4000 && c == 2 ) {
-			setUpperArm(720);
+		} else if (dt >= 3200 && c == 2) {
+			RCServo0.write(pivotTo);
 			c++;
-		} else if ( dt >= 4500 && c == 3) {
+		} else if (dt >= 3800 && c == 3 ) {
 			if (petOnArm()) {
 				c++;
 			} else if (try_num < 2) {
+				RCServo0.write(pivotFrom);
+				c = 2;
 				try_num++;
-				adjustArm(pivotPosition, try_num); // Adjust pivot arm during multiple attempts
-				// Does not change lower arm position
-				// May waste a lot of time potentially.. (~6s each attempt)
-				c = 1;
-				timeStart = millis() - 1500;
-			} else if (try_num >= 2 && !petOnArm()) { //Gives up after three attempts preventing infinite loop
-				flag = true;
+				timeStart = millis() - 2000;
+			} else if (try_num >= 2 && !petOnArm()) {
+				c = 4;
 				unsuccessful = true;
+				timeStart = millis() - 4000;
 			}
-		} else if ( c == 4 ) {
-			setLowerArm(590); // See "REDUN" can set lower arm position here?
+		} else if ( c == 4) {
+			setUpperArm(720);
 			c++;
-		} else if ( dt >= 7000 && c == 5) {
+		} else if ( dt >= 5400 && c == 5) {
+			setLowerArm(610); // See "REDUN" can set lower arm position here?
+			c++;
+		} else if ( dt >= 6800 && c == 6) {
 			flag = true;
 		}
 	}
@@ -926,7 +928,7 @@ void getFirstPet() {
 	motor.stop_all(); // ensure motors are not being powered
 
 	if (!unsuccessful) {
-		placePetCatapult(pivotPosition);
+		placePetCatapult(pivotTo);
 		delay(500);
 		pivotToLine(RIGHT, 2000);
 		// move arm out of catapult's way
@@ -937,11 +939,14 @@ void getFirstPet() {
 		while (!flag) {
 			lowerArmPID();
 			unsigned int dt = millis() - timeStart;
-			if (dt >= 0 && c == 0) {
+			if (dt >= 500 && c == 0) {
 				// this lower arm height is also the height second pet is picked up from
-				setLowerArm(490);
+				setLowerArm(500);
 				c++;
-			} else if ( dt >= 1000 && c == 1) {
+			} else if ( dt >= 1500 && c == 1) {
+				setUpperArm(470);
+				c++;
+			} else if (dt >= 2700 && c == 2) {
 				flag = true;
 			}
 		}
@@ -953,27 +958,24 @@ void getFirstPet() {
 		delay(300);
 
 	} else {
-		// while (!stopbutton()) {
-		// 	LCD.clear(); LCD.home();
-		// 	LCD.print(analogRead(QRD_L)); LCD.print(" "); LCD.print(analogRead(QRD_R));
-		// 	delay(200);
-		// }
-
+		RCServo0.write(70);
 		c = 0;
 		flag = false;
 		timeStart = millis();
 		while (!flag) {
 			lowerArmPID();
 			unsigned int dt = millis() - timeStart;
-			if (dt >= 0 && c == 0) {
+			if (dt >= 500 && c == 0) {
 				// this lower arm height is also the height second pet is picked up from
-				setLowerArm(410);
+				setLowerArm(500);
 				c++;
-			} else if ( dt >= 1000 && c == 1) {
+			} else if ( dt >= 1500 && c == 1) {
+				setUpperArm(470);
+				c++;
+			} else if (dt >= 2700 && c == 2) {
 				flag = true;
 			}
 		}
-
 	}
 
 	if (analogRead(QRD_L) >= q_threshold && analogRead(QRD_R) < q_threshold)
@@ -1424,9 +1426,9 @@ void armCal() {
 		if (selection == 0) {
 			a = map(knob(7), 0 , 1023, 0 , 184);
 		} else if (selection == 1) {
-			a = map(knob(7), 0, 1023, 350, 600); // lower arm
+			a = map(knob(7), 0, 1023, 350, 615); // lower arm
 		} else if ( selection == 2) {
-			a = map(knob(7), 0 , 1023, 300, 760); // higher arm
+			a = map(knob(7), 0 , 1023, 300, 720); // higher arm
 		}
 
 		if ( c >= 100) {
