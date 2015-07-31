@@ -111,6 +111,7 @@ void empty() {};
 int upperArmV = 715;
 int lowerArmV = 570;
 int petCount = 0;
+boolean fullRun = true;
 boolean onTape = false;
 boolean ecL = false;
 boolean ecR = false;
