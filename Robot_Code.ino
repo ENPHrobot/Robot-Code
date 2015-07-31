@@ -190,16 +190,18 @@ void loop()
 		motor.speed(RIGHT_MOTOR, base_speed);
 	}
 	pidfn();
+
+
 }
 
 /* Control Loops */
 void tapePID() {
 
+	encoderProcess();
+
 	int left_sensor = analogRead(QRD_L);
 	int right_sensor = analogRead(QRD_R);
 	int error = 0;
-
-	encoderProcess();
 
 	if (left_sensor > q_threshold && right_sensor > q_threshold)
 		error = 0; // both sensors on black
@@ -212,9 +214,46 @@ void tapePID() {
 		// neither sensor on black. check last error to see which side we are on.
 		if ( last_error > 0)
 			error = 4;
-		else if ( last_error < 0)
+		else if ( last_error <= 0)
 			error = -4;
 	}
+	if ( !(error == last_error))
+	{
+		recent_error = last_error;
+		to = t;
+		t = 1;
+	}
+
+	P_error = q_pro_gain * error;
+	D_error = q_diff_gain * ((float)(error - recent_error) / (float)(t + to)); // time is present within the differential gain
+	I_error += q_int_gain * error;
+	net_error = P_error + D_error;
+
+	// prevent adjusting errors from going over actual speed.
+	net_error = constrain(net_error, -base_speed, base_speed);
+
+	//if net error is positive, right_motor will be weaker, will turn to the right
+	motor.speed(LEFT_MOTOR, base_speed + net_error);
+	motor.speed(RIGHT_MOTOR, base_speed - net_error);
+
+	if ( count == 100 ) {
+		count = 0;
+		LCD.clear(); LCD.home();
+		LCD.print(petCount);
+		LCD.print(" LQ:"); LCD.print(left_sensor);
+		LCD.print(" LM:"); LCD.print(base_speed + net_error);
+		LCD.setCursor(0, 1);
+		LCD.print("RQ:"); LCD.print(right_sensor);
+		LCD.print(" RM:"); LCD.print(base_speed - net_error);
+		// LCD.print("LE:"); LCD.print(encount_L); LCD.print(" RE:"); LCD.print(encount_R);
+		// LCD.setCursor(0, 1); //LCD.print(s_L); LCD.print(" "); LCD.print(s_R); LCD.print(" ");
+		// LCD.print("base:"); LCD.print(base_speed); LCD.print(" ");
+		// LCD.print((s_L + s_R) / 2);
+	}
+
+	last_error = error;
+	count++;
+	t++;
 
 	if (checkPet()) {
 
@@ -231,21 +270,26 @@ void tapePID() {
 			// q_diff_gain = 5;
 
 			// upon exit, apply correcting error so that robot returns to line
-			// int ql = analogRead(QRD_L);
-			// int qr = analogRead(QRD_R);
-			// if (ql > q_threshold && qr > q_threshold) {
-			// 	error = 0;
-			// } else if ( ql > q_threshold && qr <= q_threshold) {
-			// 	error = -2;
-			// } else if (ql <= q_threshold && qr > q_threshold) {
-			// 	error = 2;
-			// }
-
-
-			// error = -2;
 			error = 0;
 			recent_error = error;
 			last_error = 0;
+
+			int ql = analogRead(QRD_L);
+			int qr = analogRead(QRD_R);
+			if (ql > q_threshold && qr > q_threshold) {
+				error = 0;
+			} else if ( ql > q_threshold && qr <= q_threshold) {
+				error = -1;
+			} else if (ql <= q_threshold && qr > q_threshold) {
+				error = 1;
+			} else if (ql <= q_threshold && qr <= q_threshold) {
+				// neither sensor on black. check last error to see which side we are on.
+				if ( last_error > 0)
+					error = 4;
+				else if ( last_error <= 0)
+					error = -4;
+			}
+
 			while (!stopbutton()) {
 				LCD.clear(); LCD.home();
 				//LCD.print(error); LCD.print(" "); LCD.print(last_error); LCD.print(" "); LCD.print(recent_error);
@@ -256,23 +300,33 @@ void tapePID() {
 		} else if (petCount == 2) {
 			hardStop();
 			getSecondPet();
-			// while (!stopbutton()) {
-			// 	LCD.clear(); LCD.home();
-			// 	LCD.print(analogRead(QRD_L)); LCD.print(" "); LCD.print(analogRead(QRD_R));
-			// 	delay(200);
-			// }
 
-			// pivotOnLine(LEFT, 0, 0);
-
-			last_error = 0;
 			error = 0;
 			recent_error = error;
+			last_error = 0;
+
+			int ql = analogRead(QRD_L);
+			int qr = analogRead(QRD_R);
+			if (ql > q_threshold && qr > q_threshold) {
+				error = 0;
+			} else if ( ql > q_threshold && qr <= q_threshold) {
+				error = -1;
+			} else if (ql <= q_threshold && qr > q_threshold) {
+				error = 1;
+			} else if (ql <= q_threshold && qr <= q_threshold) {
+				// neither sensor on black. check last error to see which side we are on.
+				if ( last_error > 0)
+					error = 4;
+				else if ( last_error <= 0)
+					error = -4;
+			}
 			while (!stopbutton()) {
 				LCD.clear(); LCD.home();
 				LCD.print("E:"); LCD.print(error); LCD.print(" LE:"); LCD.print(last_error); LCD.print(" RE:"); LCD.print(recent_error);
 				LCD.setCursor(0, 1); LCD.print(analogRead(QRD_L)); LCD.print(" "); LCD.print(analogRead(QRD_R));
 				delay(200);
 			}
+
 		} else if (petCount == 3) {
 			// for pausing motors on the ramp.
 			motor.speed(LEFT_MOTOR, base_speed);
@@ -323,44 +377,6 @@ void tapePID() {
 		base_speed = menuItems[0].Value;
 		q_pro_gain = menuItems[1].Value;
 	}
-
-	if ( !(error == last_error))
-	{
-		recent_error = last_error;
-		to = t;
-		t = 1;
-	}
-
-	P_error = q_pro_gain * error;
-	D_error = q_diff_gain * ((float)(error - recent_error) / (float)(t + to)); // time is present within the differential gain
-	I_error += q_int_gain * error;
-	net_error = P_error + D_error + I_error;
-
-	// prevent adjusting errors from going over actual speed.
-	net_error = constrain(net_error, -base_speed, base_speed);
-
-	//if net error is positive, right_motor will be weaker, will turn to the right
-	motor.speed(LEFT_MOTOR, base_speed + net_error);
-	motor.speed(RIGHT_MOTOR, base_speed - net_error);
-
-	if ( count == 100 ) {
-		count = 0;
-		LCD.clear(); LCD.home();
-		LCD.print(petCount);
-		LCD.print(" LQ:"); LCD.print(left_sensor);
-		LCD.print(" LM:"); LCD.print(base_speed + net_error);
-		LCD.setCursor(0, 1);
-		LCD.print("RQ:"); LCD.print(right_sensor);
-		LCD.print(" RM:"); LCD.print(base_speed - net_error);
-		// LCD.print("LE:"); LCD.print(encount_L); LCD.print(" RE:"); LCD.print(encount_R);
-		// LCD.setCursor(0, 1); //LCD.print(s_L); LCD.print(" "); LCD.print(s_R); LCD.print(" ");
-		// LCD.print("base:"); LCD.print(base_speed); LCD.print(" ");
-		// LCD.print((s_L + s_R) / 2);
-	}
-
-	last_error = error;
-	count++;
-	t++;
 }
 
 void irPID() {
@@ -433,7 +449,7 @@ void upperArmPID() {
 	}
 	// if ( diff  > 0) diff = 255;
 	// else if (diff < 0) diff = -255;
-	diff = 3 * diff;
+	diff = 6 * diff;
 	diff = constrain(diff, -255, 255);
 	motor.speed(UPPER_ARM, diff);
 }
@@ -441,11 +457,9 @@ void upperArmPID() {
 void lowerArmPID() {
 	int currentV = constrain(analogRead(LOWER_POT), 330, 610);
 	int diff = currentV - lowerArmV;
-
-	if (diff <= 20 && diff >= -20) {
+	if (diff <= 22 && diff >= -22) {
 		diff = 0;
 	}
-
 	if (diff  > 0) diff = 255;
 	else if (diff < 0) diff = -255;
 
@@ -454,7 +468,9 @@ void lowerArmPID() {
 	motor.speed(LOWER_ARM, diff);
 }
 
-void raiseLowerArm(V) {
+// Power lower arm upwards till it goes past threshold.
+// Caution when using this function.
+void raiseLowerArm(int V) {
 	lowerArmV = V;
 	int currentV = constrain(analogRead(LOWER_POT), 350, 600);
 	while (currentV - lowerArmV < 10) {
@@ -893,7 +909,7 @@ void getFirstPet() {
 				unsuccessful = true;
 			}
 		} else if ( c == 4 ) {
-			setLowerArm(600); // See "REDUN" can set lower arm position here?
+			setLowerArm(590); // See "REDUN" can set lower arm position here?
 			c++;
 		} else if ( dt >= 7000 && c == 5) {
 			flag = true;
@@ -993,12 +1009,14 @@ void getSecondPet() {
 				c = 0;
 				timeStart = millis() - 500;
 			} else if (try_num >= 2 && !petOnArm()) {
-				flag = true;
+				c = 3;
+				timeStart = millis() - 4500;
+				// second pet not picked up flag
 				unsuccessful = true;
 				secPet = false;
 			}
 		} else if ( c == 3 ) {
-			setLowerArm(600);
+			setLowerArm(590);
 			c++;
 		} else if ( dt >= 6000 && c == 4 ) {
 			flag = true;
@@ -1077,7 +1095,7 @@ void placeSecondPet() {
 			dropPet();
 			c++;
 		} else if ( dt >= 5300 && c == 5) {
-			setLowerArm(610);
+			setLowerArm(590);
 			c++;
 		} else if ( dt >= 6300 && c == 6) {
 			setUpperArm(710);
@@ -1126,7 +1144,7 @@ void getThirdPet() {
 				timeStart = millis() - 1500;
 			}
 		} else if ( c == 4) {
-			setLowerArm(610); // See "REDUN" can set lower arm position here?
+			setLowerArm(590); // See "REDUN" can set lower arm position here?
 			c++;
 		} else if ( dt >= 6600 && c == 5) {
 			flag = true;
@@ -1371,7 +1389,7 @@ void placePetCatapult(int pivotFrom) {
 			dropPet();
 			c++;
 		} else if (dt >= 2200 && c == 2) {
-			setLowerArm(610);
+			setLowerArm(580);
 			c++;
 		} else if (dt >= 3200 && c == 3 ) {
 			pauseArms(); // ensure arms stop moving
@@ -1393,9 +1411,9 @@ void armCal() {
 		if (selection == 0) {
 			a = map(knob(7), 0 , 1023, 0 , 184);
 		} else if (selection == 1) {
-			a = map(knob(7), 0, 1023, 330, 616); // lower arm
+			a = map(knob(7), 0, 1023, 330, 590); // lower arm
 		} else if ( selection == 2) {
-			a = map(knob(7), 0 , 1023, 300, 730); // higher arm
+			a = map(knob(7), 0 , 1023, 300, 720); // higher arm
 		}
 
 		if ( c >= 100) {
