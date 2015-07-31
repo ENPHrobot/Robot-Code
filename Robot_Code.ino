@@ -104,6 +104,9 @@ public:
 			LCD.print("Returning...");
 			delay(300);
 			break;
+		case 7:
+			strategySelection();
+			break;
 		}
 	}
 };
@@ -132,7 +135,8 @@ MainMenuItem pivotTest   = MainMenuItem("pivotTest");
 MainMenuItem travelTest  = MainMenuItem("travelTest");
 MainMenuItem launchTest  = MainMenuItem("launchTest");
 MainMenuItem armTest  = MainMenuItem("armTest");
-MainMenuItem mainMenu[]  = {Sensors, TapePID, IRPID, pivotTest, travelTest, launchTest, armTest};
+MainMenuItem strategy = MainMenuItem("strategy");
+MainMenuItem mainMenu[]  = {Sensors, TapePID, IRPID, pivotTest, travelTest, launchTest, armTest, strategy};
 
 void setup()
 {
@@ -299,96 +303,110 @@ void petProcess() {
 		petCount++;
 
 		if (petCount == 1) {
-			getFirstPet();
-			// decrease base speed for the turn
-			base_speed = 70;
 
-			// int ql = analogRead(QRD_L);
-			// int qr = analogRead(QRD_R);
-			// if (ql > q_threshold && qr > q_threshold) {
-			// 	error = 0;
-			// } else if ( ql > q_threshold && qr <= q_threshold) {
-			// 	error = -1;
-			// } else if (ql <= q_threshold && qr > q_threshold) {
-			// 	error = 1;
-			// } else if (ql <= q_threshold && qr <= q_threshold) {
-			// 	// neither sensor on black. check last error to see which side we are on.
-			// 	if ( last_error > 0)
-			// 		error = 4;
-			// 	else if ( last_error <= 0)
-			// 		error = -4;
-			// }
+			if(fullRun){ // will just tape follow normally if strategy is last three
+				getFirstPet();
+				
+				// decrease base speed for the turn
+				base_speed = 70;
 
-			// initial tape following conditions
-			last_error = 0;
-			recent_error = 0;
-			t = 1;
-			to = 0;
+				// int ql = analogRead(QRD_L);
+				// int qr = analogRead(QRD_R);
+				// if (ql > q_threshold && qr > q_threshold) {
+				// 	error = 0;
+				// } else if ( ql > q_threshold && qr <= q_threshold) {
+				// 	error = -1;
+				// } else if (ql <= q_threshold && qr > q_threshold) {
+				// 	error = 1;
+				// } else if (ql <= q_threshold && qr <= q_threshold) {
+				// 	// neither sensor on black. check last error to see which side we are on.
+				// 	if ( last_error > 0)
+				// 		error = 4;
+				// 	else if ( last_error <= 0)
+				// 		error = -4;
+				// }
 
-			while (!stopbutton()) {
-				LCD.clear(); LCD.home();
-				//LCD.print(error);
-				LCD.print("LE:"); LCD.print(last_error); LCD.print(" RE:"); LCD.print(recent_error);
-				LCD.print(petCount); LCD.print(" ");
-				LCD.setCursor(0, 1); LCD.print(analogRead(QRD_L)); LCD.print(" "); LCD.print(analogRead(QRD_R));
-				delay(200);
+				// initial tape following conditions
+				last_error = 0;
+				recent_error = 0;
+				t = 1;
+				to = 0;
+
+				while (!stopbutton()) {
+					LCD.clear(); LCD.home();
+					//LCD.print(error);
+					LCD.print("LE:"); LCD.print(last_error); LCD.print(" RE:"); LCD.print(recent_error);
+					LCD.print(petCount); LCD.print(" ");
+					LCD.setCursor(0, 1); LCD.print(analogRead(QRD_L)); LCD.print(" "); LCD.print(analogRead(QRD_R));
+					delay(200);
+				}
 			}
 		} else if (petCount == 2) {
-			hardStop();
-			getSecondPet();
 
-			// int ql = analogRead(QRD_L);
-			// int qr = analogRead(QRD_R);
-			// if (ql > q_threshold && qr > q_threshold) {
-			// 	error = 0;
-			// } else if ( ql > q_threshold && qr <= q_threshold) {
-			// 	error = -1;
-			// } else if (ql <= q_threshold && qr > q_threshold) {
-			// 	error = 1;
-			// } else if (ql <= q_threshold && qr <= q_threshold) {
-			// 	// neither sensor on black. check last error to see which side we are on.
-			// 	if ( last_error > 0)
-			// 		error = 4;
-			// 	else if ( last_error <= 0)
-			// 		error = -4;
-			// }
+			if (fullRun){
+				hardStop();
+				getSecondPet();
 
-			recent_error = 0;
-			last_error = 0;
-			t = 1;
-			to = 0;
+				// int ql = analogRead(QRD_L);
+				// int qr = analogRead(QRD_R);
+				// if (ql > q_threshold && qr > q_threshold) {
+				// 	error = 0;
+				// } else if ( ql > q_threshold && qr <= q_threshold) {
+				// 	error = -1;
+				// } else if (ql <= q_threshold && qr > q_threshold) {
+				// 	error = 1;
+				// } else if (ql <= q_threshold && qr <= q_threshold) {
+				// 	// neither sensor on black. check last error to see which side we are on.
+				// 	if ( last_error > 0)
+				// 		error = 4;
+				// 	else if ( last_error <= 0)
+				// 		error = -4;
+				// }
 
-			while (!stopbutton()) {
-				LCD.clear(); LCD.home();
-				//LCD.print("E:"); LCD.print(error);
-				LCD.print("LE:"); LCD.print(last_error); LCD.print(" RE:"); LCD.print(recent_error);
-				LCD.setCursor(0, 1); LCD.print(analogRead(QRD_L)); LCD.print(" "); LCD.print(analogRead(QRD_R));
-				delay(200);
+				recent_error = 0;
+				last_error = 0;
+				t = 1;
+				to = 0;
+
+				while (!stopbutton()) {
+					LCD.clear(); LCD.home();
+					//LCD.print("E:"); LCD.print(error);
+					LCD.print("LE:"); LCD.print(last_error); LCD.print(" RE:"); LCD.print(recent_error);
+					LCD.setCursor(0, 1); LCD.print(analogRead(QRD_L)); LCD.print(" "); LCD.print(analogRead(QRD_R));
+					delay(200);
+				}
 			}
 
 		} else if (petCount == 3) {
-			// for pausing motors on the ramp.
-			motor.speed(LEFT_MOTOR, base_speed);
-			motor.speed(RIGHT_MOTOR, base_speed);
-			delay(100);
-			motor.speed(LEFT_MOTOR, 40);
-			motor.speed(RIGHT_MOTOR, 40);
 
-			if (secPet) {
-				placeSecondPet();
+			if (fullRun) {
+				// for pausing motors on the ramp.
+				motor.speed(LEFT_MOTOR, base_speed);
+				motor.speed(RIGHT_MOTOR, base_speed);
+				delay(100);
+				motor.speed(LEFT_MOTOR, 40);
+				motor.speed(RIGHT_MOTOR, 40);
+
+				if (secPet) {
+					placeSecondPet();
+				}
+				delay(800);
+				getThirdPet();
+
+				base_speed = 170;
+
+				// reset tape following conditions
+				t = 1;
+				to = 0;
+				recent_error = 0;
+				last_error = 1;
+			} else{
+				base_speed = 170;
 			}
-			delay(800);
-			getThirdPet();
 
-			base_speed = 170;
-
-			// reset tape following conditions
-			t = 1;
-			to = 0;
-			recent_error = 0;
-			last_error = 1;
-		} else if (petCount == 4)  {
+		} else if (petCount == 4)  { //Slows down after detecting top of ramp
 			base_speed = 70;
+
 		} else if (petCount == LAST_TAPE_PET) { //TODO: temporarily 5 for 4th pet
 			// TODO: implement more elegant switching to ir -in timedPivot
 			armCal();
@@ -1635,6 +1653,43 @@ void IRMENU()
 			}
 		}
 	}
+}
+
+void strategySelection() 
+{
+	LCD.clear(); LCD.home();
+
+	while (!stopbutton())
+	{
+		int selection = map(knob(6), 0 , 1023, 0, 2);
+
+		LCD.print("Strategy: ");
+
+		if (fullRun){
+			LCD.print("Full");
+		} else {
+			LCD.print("Top");
+		}
+
+		LCD.setCursor(0,1);
+
+		if (selection == 0){
+			LCD.print("Full???");
+		} else if (selection == 1) {
+			LCD.print("Top???");
+		}
+
+		if (startbutton()){
+			delay(100);
+
+			if (selection == 0){
+				fullRun = true;
+			} else if (selection == 1){
+				fullRun = false;
+			}
+		}
+	}
+
 }
 
 void MainMenu() {
