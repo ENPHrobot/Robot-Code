@@ -319,9 +319,16 @@ void petProcess() {
 			// 		error = -4;
 			// }
 
+			// initial tape following conditions
+			// last_error = 0;
+			// recent_error = 0;
+			// t = 1;
+			// to = 0;
+
 			while (!stopbutton()) {
 				LCD.clear(); LCD.home();
-				//LCD.print(error); LCD.print(" "); LCD.print(last_error); LCD.print(" "); LCD.print(recent_error);
+				//LCD.print(error);
+				LCD.print("LE:"); LCD.print(last_error); LCD.print(" RE:"); LCD.print(recent_error);
 				LCD.print(petCount); LCD.print(" ");
 				LCD.setCursor(0, 1); LCD.print(analogRead(QRD_L)); LCD.print(" "); LCD.print(analogRead(QRD_R));
 				delay(200);
@@ -329,9 +336,6 @@ void petProcess() {
 		} else if (petCount == 2) {
 			hardStop();
 			getSecondPet();
-			// error = 0;
-			// recent_error = error;
-			// last_error = 0;
 
 			// int ql = analogRead(QRD_L);
 			// int qr = analogRead(QRD_R);
@@ -348,9 +352,14 @@ void petProcess() {
 			// 	else if ( last_error <= 0)
 			// 		error = -4;
 			// }
+
+			// recent_error = 0;
+			// last_error = 0;
+
 			while (!stopbutton()) {
 				LCD.clear(); LCD.home();
-				//LCD.print("E:"); LCD.print(error); LCD.print(" LE:"); LCD.print(last_error); LCD.print(" RE:"); LCD.print(recent_error);
+				//LCD.print("E:"); LCD.print(error); 
+				LCD.print("LE:"); LCD.print(last_error); LCD.print(" RE:"); LCD.print(recent_error);
 				LCD.setCursor(0, 1); LCD.print(analogRead(QRD_L)); LCD.print(" "); LCD.print(analogRead(QRD_R));
 				delay(200);
 			}
