@@ -159,6 +159,8 @@ void setup()
 	portMode(1, OUTPUT);
 	// ensure relays are LOW on start.
 	digitalWrite(LAUNCH_F, LOW);
+	digitalWrite(HAND_UP, LOW);
+	digitalWrite(HAND_DOWN, LOW);
 
 	time_L = millis();
 	time_R = millis();
