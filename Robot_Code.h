@@ -44,7 +44,8 @@ enum {
 	LEFT = 5,
 	RIGHT = 6,
 	ENC_RAFTER = 10,
-	LAST_TAPE_PET = 5
+	LAST_TAPE_PET = 5,
+	HAND_DURATION = 2800
 };
 
 #define SERVO_0_Pin (35)
@@ -110,8 +111,8 @@ String modes[] = {"qrd", "ir"};
 String mode = modes[modeIndex];
 
 void empty() {};
-int upperArmV = 415;
-int lowerArmV = 600;
+int upperArmV = 439;
+int lowerArmV = 580;
 int petCount = 0;
 boolean fullRun = true;
 boolean onTape = false;
