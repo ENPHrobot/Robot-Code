@@ -110,8 +110,8 @@ String modes[] = {"qrd", "ir"};
 String mode = modes[modeIndex];
 
 void empty() {};
-int upperArmV = 705;
-int lowerArmV = 570;
+int upperArmV = 415;
+int lowerArmV = 600;
 int petCount = 0;
 boolean fullRun = true;
 boolean onTape = false;

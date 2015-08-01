@@ -166,7 +166,7 @@ void setup()
 
 	// set servo initial positions
 	RCServo2.write(90);
-	RCServo0.write(80);
+	RCServo0.write(85);
 
 	// default PID loop is QRD tape following
 	pidfn = tapePID;
@@ -853,7 +853,7 @@ void buriedProcess() {
 
 // Tentative drop pet function for the new motor setup
 // Time it takes to bring magnet up and down needs to be tested
-void dropPetMotor() {
+void dropPet() {
 	uint32_t timeStart = millis();
 	while (timeStart <= 1000) {
 		digitalWrite(HAND_UP, HIGH);
@@ -867,7 +867,7 @@ void dropPetMotor() {
 }
 
 // Drop the pet helper function
-void dropPet() {
+void dropPetServo() {
 	LCD.clear(); LCD.home(); LCD.print("DR- DR- DR-");
 	LCD.setCursor(0, 1); LCD.print("DROP THE PET!");
 	RCServo2.write(0);
@@ -909,15 +909,14 @@ void getFirstPet() {
 
 	boolean flag = false;
 	boolean unsuccessful = false;
-	int pivotFrom = 25;
-	int pivotTo = 50;
-	int pivotIncrement = 5;
+	int pivotFrom = 40;
+	int pivotTo = 70;
+	int pivotIncrement = 4;
 	int c = 0;
 	int try_num = 0;
 
 	// first stage pickup - pick up pet; checks if pet is picked up,
 	// if not, pick up pet again
-	RCServo0.write(pivotFrom);
 	delay(200);
 	uint32_t timeStart = millis();
 	while (!flag) {
@@ -928,16 +927,16 @@ void getFirstPet() {
 		unsigned int dt = millis() - timeStart;
 
 		if ( dt >= 1000 && c == 0 ) {
-			setLowerArm(555);
+			setUpperArm(490);
 			c++;
-		} else if ( dt >= 2000 && c == 1 ) {
-			setUpperArm(465);
+		} else if ( dt >= 2300 && c == 1 ) {
+			RCServo0.write(pivotFrom);
 			c++;
-		} else if ( dt >= 3200 && c == 2 ) {
+		} else if ( dt >= 3000 && c == 2 ) {
 			pivotArm(pivotFrom,pivotTo,pivotIncrement);
 			// RCServo0.write(pivotTo);
 			c++;
-		} else if ( dt >= 3800 && c == 3 ) {
+		} else if ( dt >= 3600 && c == 3 ) {
 			if (petOnArm()) {
 				c++;
 			} else if (try_num < 2) {
@@ -945,19 +944,19 @@ void getFirstPet() {
 				// RCServo0.write(pivotFrom);
 				c = 2;
 				try_num++;
-				timeStart = millis() - 2500;
+				timeStart = millis() - 3000;
 			} else if (try_num >= 2 && !petOnArm()) {
 				c = 4;
 				unsuccessful = true;
-				timeStart = millis() - 4000;
+				timeStart = millis() - 3800;
 			}
-		} else if ( c == 4) {
-			setUpperArm(710);
+		} else if ( c == 4 ) {
+			setUpperArm(705);
 			c++;
-		} else if ( dt >= 5400 && c == 5) {
+		} else if ( dt >= 5200 && c == 5 ) {
 			setLowerArm(610); // See "REDUN" can set lower arm position here?
 			c++;
-		} else if ( dt >= 6800 && c == 6) {
+		} else if ( dt >= 6600 && c == 6 ) {
 			flag = true;
 		}
 	}
@@ -1019,8 +1018,8 @@ void getFirstPet() {
 		pivotOnLine(LEFT, 0, 0);
 	else if (analogRead(QRD_R) >= q_threshold && analogRead(QRD_L) < q_threshold)
 		pivotOnLine(RIGHT, 0, 0);
-	else if (analogRead(QRD_L) < q_threshold && analogRead(QRD_R) < q_threshold)
-		pivotOnLine(LEFT, 0, 0);
+	// else if (analogRead(QRD_L) < q_threshold && analogRead(QRD_R) < q_threshold)
+	// 	pivotOnLine(LEFT, 0, 0);
 }
 
 // Setting arm for second pet pickup
@@ -1038,7 +1037,7 @@ void setArmSecondPet() {
 			setLowerArm(570);
 			c++;
 		} else if ( dt >= 1500 && c == 1) {
-			setUpperArm(460);
+			setUpperArm(490);
 			c++;
 		} else if (dt >= 2700 && c == 2) {
 			flag = true;
@@ -1065,10 +1064,10 @@ void getSecondPet() {
 		unsigned int dt = millis() - timeStart;
 
 		if ( dt >= 500 && c == 0 ) {
-			setUpperArm(460);
+			setUpperArm(490);
 			c++;
 		} else if ( dt >= 2500 && c == 1 ) {
-			setUpperArm(710);
+			setUpperArm(705);
 			c++;
 		} else if ( dt >= 4500 && c == 3) {
 			if (petOnArm()) {
@@ -1156,19 +1155,19 @@ void placeSecondPet() {
 		} else if (dt >= 2000 && c == 2) {
 			pivotArm(157, pivotTo, 10);
 			delay(500);
-			setLowerArm(280);
+			setLowerArm(350);
 			c++;
 		} else if ( dt >= 3500 && c == 3) {
 			setUpperArm(510);
 			c++;
-		} else if ( dt >=  4500 && c == 4) {
+		} else if ( dt >= 4500 && c == 4) {
 			dropPet();
 			c++;
 		} else if ( dt >= 5300 && c == 5) {
-			setLowerArm(590);
+			setLowerArm(580);
 			c++;
 		} else if ( dt >= 6300 && c == 6) {
-			setUpperArm(710);
+			setUpperArm(690);
 			c++;
 		} else if ( dt >= 7700 && c == 7) {
 			flag = true;
@@ -1179,14 +1178,16 @@ void placeSecondPet() {
 
 void getThirdPet() {
 	boolean flag = false;
-	int pivotPosition = 26;
-	int c = 0;
-
 	boolean unsuccessful = false;
+	// int pivotPosition = 26;
+	int pivotFrom = 20;
+	int pivotTo = 45;
+	int pivotIncrement = 4;
+	int c = 0;
 	int try_num = 0;
 
-	// RCServo0.write(pivotPosition);
-	pivotArm(118, pivotPosition, 8);
+	RCServo0.write(pivotFrom);
+	// pivotArm(118, pivotFrom, 8);
 	uint32_t timeStart = millis();
 
 	// first stage pickup - pick up pet; checks if pet is picked up,
@@ -1198,56 +1199,67 @@ void getThirdPet() {
 		unsigned int dt = millis() - timeStart;
 
 		if ( dt >= 600 && c == 0 ) {
-			setLowerArm(510);
+			setLowerArm(580);
 			c++;
 		} else if ( dt >= 1600 && c == 1 ) {
-			setUpperArm(385);
+			setUpperArm(440);
 			c++;
-		} else if ( dt >= 3600 && c == 2 ) {
-			setUpperArm(710);
+		} else if ( dt >= 2600 && c == 2 ) {
+			pivotArm(pivotFrom,pivotTo,pivotIncrement);
 			c++;
-		} else if ( dt >= 5600 && c == 3) {
+		} else if ( dt >= 4000 && c == 3) {
 			if (petOnArm()) {
 				c++;
-			} else {
-				c = 1;
-				timeStart = millis() - 1500;
+			} else if (try_num < 2) {
+				c = 2;
+				pivotArm(pivotTo,pivotFrom,pivotIncrement);
+				try_num++;
+				timeStart = millis() - 2600;
+			} else if (try_num >= 2 && !petOnArm()) {
+				c = 4;
+				unsuccessful = true;
+				timeStart = millis() - 4000;
 			}
 		} else if ( c == 4) {
+			setUpperArm(705);
+			c++;
+		} else if ( dt >= 5600 && c == 5 ) {
 			setLowerArm(590); // See "REDUN" can set lower arm position here?
 			c++;
-		} else if ( dt >= 6600 && c == 5) {
+		} else if ( dt >= 6600 && c == 6 ) {
 			flag = true;
 		}
 	}
 
-	// pivot arm to correct location
-	pivotArm(pivotPosition, 115, 10); //TODO: tune
+	if (!unsuccessful) {
+		// pivot arm to correct location
+		pivotArm(pivotFrom, 118, 10); //TODO: tune
 
-	flag = false;
-	c = 0;
-	timeStart = millis();
-	//move upper/lower arm to correct position for drop;
-	while (!flag) {
-		upperArmPID();
-		lowerArmPID();
+		flag = false;
+		c = 0;
+		timeStart = millis();
+		//move upper/lower arm to correct position for drop;
+		while (!flag) {
+			upperArmPID();
+			lowerArmPID();
 
-		unsigned int dt = millis() - timeStart;
-		// TODO: just copy place second pet drop loop once that is working.
-		if ( dt >= 500 && c == 0 ) {
-			setLowerArm(350);
-			c++;
-		} else if ( dt >= 1500 && c == 1) {
-			setUpperArm(520);
-			c++;
-		} else if ( dt >= 2500 && c == 2) {
-			dropPet();
-			delay(200);
-			setUpperArm(700);
-			setLowerArm(590);
-			c++;
-		} else if (dt >= 4000 && c == 3) {
-			flag = true;
+			unsigned int dt = millis() - timeStart;
+			// TODO: just copy place second pet drop loop once that is working.
+			if ( dt >= 500 && c == 0 ) {
+				setLowerArm(350);
+				c++;
+			} else if ( dt >= 1500 && c == 1) {
+				setUpperArm(520);
+				c++;
+			} else if ( dt >= 2500 && c == 2) {
+				dropPet();
+				delay(200);
+				setUpperArm(700);
+				setLowerArm(590);
+				c++;
+			} else if (dt >= 4000 && c == 3) {
+				flag = true;
+			}
 		}
 	}
 	pauseArms();
@@ -1288,7 +1300,7 @@ void getFourthPet() {
 				timeStart = millis() - 3000;
 			}
 		} else if ( c == 4) {
-			setUpperArm(710);
+			setUpperArm(705);
 			c++;
 		} else if ( dt >= 7000 && c == 5) {
 			flag = true;
@@ -1342,7 +1354,7 @@ void getFifthPet() {
 			setUpperArm(650); //TODO: tune
 			c++;
 		} else if ( dt >= 4000 && c == 2 ) {
-			setUpperArm(710);
+			setUpperArm(705);
 			c++;
 		} else if ( dt >= 6000 && c == 3) {
 			if (petOnArm()) {
@@ -1488,7 +1500,7 @@ void armCal() {
 		} else if (selection == 1) {
 			a = map(knob(7), 0, 1023, 350, 615); // lower arm
 		} else if ( selection == 2) {
-			a = map(knob(7), 0 , 1023, 300, 710); // higher arm
+			a = map(knob(7), 0 , 1023, 300, 705); // higher arm
 		}
 
 		if ( c >= 100) {
