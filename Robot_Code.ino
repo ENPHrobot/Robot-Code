@@ -887,7 +887,7 @@ void dropPet() {
 	delay(200);
 	timeStart = millis();
 	setUpperArm(720);
-	while (millis() - timeStart <= 1000){
+	while (millis() - timeStart <= 1000) {
 		upperArmPID();
 	}
 	pauseArms();
@@ -896,6 +896,22 @@ void dropPet() {
 		digitalWrite(HAND_DOWN, HIGH);
 	}
 	digitalWrite(HAND_DOWN, LOW);
+}
+
+// Direct control of the hand motor
+void dropPetCtrl(int com) {
+	switch (com) {
+	case RAISE:
+		digitalWrite(HAND_UP, HIGH);
+		break;
+	case LOWER:
+		digitalWrite(HAND_DOWN, HIGH);
+		break;
+	case STOP:
+		digitalWrite(HAND_UP, LOW);
+		digitalWrite(HAND_DOWN, LOW);
+		break;
+	}
 }
 
 // Drop the pet helper function
@@ -958,13 +974,8 @@ void getFirstPet() {
 
 		uint16_t dt = millis() - timeStart;
 
-<<<<<<< HEAD
 		if ( dt >= t1 && c == 0 ) {
 			setUpperArm(490);
-=======
-		if ( dt >= 1000 && c == 0 ) {
-			setUpperArm(455);
->>>>>>> 9b643f473199703fe98a80c551240342c3dbf48c
 			c++;
 		} else if ( dt >= t2 && c == 1 ) {
 			RCServo0.write(pivotFrom);
@@ -973,11 +984,7 @@ void getFirstPet() {
 			pivotArm(pivotFrom, pivotTo, pivotIncrement);
 			// RCServo0.write(pivotTo);
 			c++;
-<<<<<<< HEAD
 		} else if ( dt >= t4 && c == 3 ) {
-=======
-		} else if ( dt >= 3800 && c == 3 ) {
->>>>>>> 9b643f473199703fe98a80c551240342c3dbf48c
 			if (petOnArm()) {
 				c++;
 			} else if (try_num < 2) {
@@ -985,11 +992,7 @@ void getFirstPet() {
 				// RCServo0.write(pivotFrom);
 				c = 2;
 				try_num++;
-<<<<<<< HEAD
-				timeStart = millis() - t3;
-=======
 				timeStart = millis() - 2500;
->>>>>>> 9b643f473199703fe98a80c551240342c3dbf48c
 			} else if (try_num >= 2 && !petOnArm()) {
 				c = 4;
 				unsuccessful = true;

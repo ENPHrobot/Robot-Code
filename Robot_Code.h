@@ -43,14 +43,13 @@ enum {
 	BACKWARDS = 4,
 	LEFT = 5,
 	RIGHT = 6,
+	RAISE = 7,
+	LOWER = 8,
+	STOP = 9,
 	ENC_RAFTER = 10,
 	LAST_TAPE_PET = 5,
 	HAND_DURATION = 2800
 };
-
-#define SERVO_0_Pin (35)
-#define SERVO_1_Pin (31)
-#define SERVO_2_Pin (34)
 
 /* Functions */
 
@@ -145,8 +144,4 @@ int base_speed;
 int ir_pro_gain;
 int ir_diff_gain;
 int ir_int_gain;
-
-// Servo RCServo0;
-// Servo RCServo2;
-
 #endif
