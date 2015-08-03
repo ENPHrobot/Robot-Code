@@ -1002,7 +1002,7 @@ void getFirstPet() {
 
 	} else {
 		RCServo0.write(70);
-		c = 0;
+		// c = 0;
 		// flag = false;
 		// timeStart = millis();
 		// while (!flag) {
@@ -1021,9 +1021,9 @@ void getFirstPet() {
 		// }
 	}
 
-	if (analogRead(QRD_L) >= q_threshold && analogRead(QRD_R) < q_threshold)
+	if (analogRead(QRD_L) > analogRead(QRD_R))
 		pivotOnLine(LEFT, 0, 0);
-	else if (analogRead(QRD_R) >= q_threshold && analogRead(QRD_L) < q_threshold)
+	else if (analogRead(QRD_L) <= analogRead(QRD_R))
 		pivotOnLine(RIGHT, 0, 0);
 	// else if (analogRead(QRD_L) < q_threshold && analogRead(QRD_R) < q_threshold)
 	// 	pivotOnLine(LEFT, 0, 0);
