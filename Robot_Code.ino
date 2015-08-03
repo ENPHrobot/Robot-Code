@@ -936,7 +936,7 @@ void getFirstPet() {
 	int pivotIncrement = 4;
 	int c = 0;
 	int try_num = 0;
-
+	int t1 = 1000, t2 = t1 + 1300, t3 = t2 + 700, t4 = t3 + 600, t5 = t4 + 1600, t6 = t5 + 1400;
 	// first stage pickup - pick up pet; checks if pet is picked up,
 	// if not, pick up pet again
 	delay(200);
@@ -946,19 +946,19 @@ void getFirstPet() {
 		upperArmPID();
 		lowerArmPID();
 
-		unsigned int dt = millis() - timeStart;
+		uint16_t dt = millis() - timeStart;
 
-		if ( dt >= 1000 && c == 0 ) {
+		if ( dt >= t1 && c == 0 ) {
 			setUpperArm(490);
 			c++;
-		} else if ( dt >= 2300 && c == 1 ) {
+		} else if ( dt >= t2 && c == 1 ) {
 			RCServo0.write(pivotFrom);
 			c++;
-		} else if ( dt >= 3000 && c == 2 ) {
+		} else if ( dt >= t3 && c == 2 ) {
 			pivotArm(pivotFrom, pivotTo, pivotIncrement);
 			// RCServo0.write(pivotTo);
 			c++;
-		} else if ( dt >= 3600 && c == 3 ) {
+		} else if ( dt >= t4 && c == 3 ) {
 			if (petOnArm()) {
 				c++;
 			} else if (try_num < 2) {
@@ -966,19 +966,19 @@ void getFirstPet() {
 				// RCServo0.write(pivotFrom);
 				c = 2;
 				try_num++;
-				timeStart = millis() - 3000;
+				timeStart = millis() - t3;
 			} else if (try_num >= 2 && !petOnArm()) {
 				c = 4;
 				unsuccessful = true;
-				timeStart = millis() - 3800;
+				timeStart = millis() - t4;
 			}
 		} else if ( c == 4 ) {
 			setUpperArm(705);
 			c++;
-		} else if ( dt >= 5200 && c == 5 ) {
+		} else if ( dt >= t5 && c == 5 ) {
 			setLowerArm(610); // See "REDUN" can set lower arm position here?
 			c++;
-		} else if ( dt >= 6600 && c == 6 ) {
+		} else if ( dt >= t6 && c == 6 ) {
 			flag = true;
 		}
 	}
@@ -988,23 +988,24 @@ void getFirstPet() {
 	if (!unsuccessful) {
 		placePetCatapult(pivotTo);
 		delay(500);
-		pivotToLine(RIGHT, 2000);
+		pivotToLine(RIGHT, 2200);
 		// move arm out of catapult's way
 		RCServo0.write(70);
 		c = 0;
 		flag = false;
+		t1 = 500; t2 = t1 + 1000;
 		timeStart = millis();
 		while (!flag) {
 			lowerArmPID();
-			unsigned int dt = millis() - timeStart;
-			if (dt >= 500 && c == 0) {
+			uint16_t dt = millis() - timeStart;
+			if (dt >= t1 && c == 0) {
 				// this lower arm height is also the height second pet is picked up from
 				setLowerArm(570);
 				c++;
 				// } else if ( dt >= 1500 && c == 1) {
 				// 	setUpperArm(460);
 				// 	c++;
-			} else if (dt >= 1500 && c == 1) {
+			} else if (dt >= t2 && c == 1) {
 				flag = true;
 			}
 		}
