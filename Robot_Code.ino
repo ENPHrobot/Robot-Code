@@ -312,36 +312,11 @@ void petProcess() {
 				// decrease base speed for the turn
 				base_speed = 70;
 
-				// int ql = analogRead(QRD_L);
-				// int qr = analogRead(QRD_R);
-				// if (ql > q_threshold && qr > q_threshold) {
-				// 	error = 0;
-				// } else if ( ql > q_threshold && qr <= q_threshold) {
-				// 	error = -1;
-				// } else if (ql <= q_threshold && qr > q_threshold) {
-				// 	error = 1;
-				// } else if (ql <= q_threshold && qr <= q_threshold) {
-				// 	// neither sensor on black. check last error to see which side we are on.
-				// 	if ( last_error > 0)
-				// 		error = 4;
-				// 	else if ( last_error <= 0)
-				// 		error = -4;
-				// }
-
 				// initial tape following conditions
 				last_error = 0;
 				recent_error = 0;
 				t = 1;
 				to = 0;
-
-				// while (!stopbutton()) {
-				// 	LCD.clear(); LCD.home();
-				// 	//LCD.print(error);
-				// 	LCD.print("LE:"); LCD.print(last_error); LCD.print(" RE:"); LCD.print(recent_error);
-				// 	LCD.print(petCount); LCD.print(" ");
-				// 	LCD.setCursor(0, 1); LCD.print(analogRead(QRD_L)); LCD.print(" "); LCD.print(analogRead(QRD_R));
-				// 	delay(200);
-				// }
 
 				setArmSecondPet();
 			}
@@ -349,23 +324,6 @@ void petProcess() {
 		} else if (petCount == 2) {
 
 			if (fullRun) {
-
-				// int ql = analogRead(QRD_L);
-				// int qr = analogRead(QRD_R);
-				// if (ql > q_threshold && qr > q_threshold) {
-				// 	error = 0;
-				// } else if ( ql > q_threshold && qr <= q_threshold) {
-				// 	error = -1;
-				// } else if (ql <= q_threshold && qr > q_threshold) {
-				// 	error = 1;
-				// } else if (ql <= q_threshold && qr <= q_threshold) {
-				// 	// neither sensor on black. check last error to see which side we are on.
-				// 	if ( last_error > 0)
-				// 		error = 4;
-				// 	else if ( last_error <= 0)
-				// 		error = -4;
-				// }
-
 				// recent_error = 0;
 				// last_error = 0;
 				// t = 1;
@@ -414,7 +372,7 @@ void petProcess() {
 		} else if (petCount == 4)  { //Slows down after detecting top of ramp
 			base_speed = 70;
 
-		} else if (petCount == LAST_TAPE_PET+2) { //TODO: temporarily 5 for 4th pet
+		} else if (petCount == LAST_TAPE_PET + 2) { //TODO: temporarily 5 for 4th pet
 			// TODO: implement more elegant switching to ir -in timedPivot
 			armCal();
 			getFourthPet();
@@ -878,8 +836,8 @@ void buriedProcess() {
 void dropPet() {
 	LCD.clear(); LCD.home(); LCD.print("DR- DR- DR-");
 	LCD.setCursor(0, 1); LCD.print("DROP THE PET!");
-	uint32_t timeStart = millis();
 	int duration = HAND_DURATION;
+	uint32_t timeStart = millis();
 	while (millis() - timeStart <= duration) {
 		digitalWrite(HAND_UP, HIGH);
 	}
@@ -975,7 +933,7 @@ void getFirstPet() {
 		uint16_t dt = millis() - timeStart;
 
 		if ( dt >= t1 && c == 0 ) {
-			setUpperArm(490);
+			setUpperArm(455);
 			c++;
 		} else if ( dt >= t2 && c == 1 ) {
 			RCServo0.write(pivotFrom);
@@ -1026,7 +984,7 @@ void getFirstPet() {
 			uint16_t dt = millis() - timeStart;
 			if (dt >= t1 && c == 0) {
 				// this lower arm height is also the height second pet is picked up from
-				setLowerArm(570);
+				setLowerArm(555);
 				c++;
 				// } else if ( dt >= 1500 && c == 1) {
 				// 	setUpperArm(460);
@@ -1075,21 +1033,21 @@ void getFirstPet() {
 void setArmSecondPet() {
 	int c = 0;
 	int pivotPosition = 30;
-	boolean flag = false;
+	int t1 = 500, t2 = t1 + 1000, t3 = t2 + 1200;
 	RCServo0.write(pivotPosition);
 	uint32_t timeStart = millis();
-	while (!flag) {
+	while (true) {
 		lowerArmPID();
 		upperArmPID();
 		unsigned int dt = millis() - timeStart;
-		if (dt >= 500 && c == 0) {
+		if (dt >= t1 && c == 0) {
 			setLowerArm(553);
 			c++;
-		} else if ( dt >= 1500 && c == 1) {
+		} else if ( dt >= t2 && c == 1) {
 			setUpperArm(460);
 			c++;
-		} else if (dt >= 2700 && c == 2) {
-			flag = true;
+		} else if (dt >= t3 && c == 2) {
+			return;
 		}
 	}
 }
@@ -1182,45 +1140,47 @@ void getSecondPet() {
 }
 
 void placeSecondPet() {
-	boolean flag = false;
 	int pivotTo = 118;
 	int c = 1;
+	int t1 = 1200, t2 = t1 + 1000, t3 = t2 + 800, t4 = t3 + 2000;
+	int t5 = 1200, t6 = t5 + 1000;
 	// TODO: test if pivoting is actually needed
 	turnForward(-2, 110);
 	motor.speed(LEFT_MOTOR, 40);
 	motor.speed(RIGHT_MOTOR, 40);
+	setLowerArm(610);
 
-	setUpperArm(710);
 	uint32_t timeStart = millis();
-	while (!flag) {
+	while (true) {
 		upperArmPID();
 		lowerArmPID();
 
-		unsigned int dt = millis() - timeStart;
+		uint16_t dt = millis() - timeStart;
 
-		if ( dt >= 750 && c == 1 ) {
-			setLowerArm(610);
+		if ( dt >= t1 && c == 1 ) {
+			setUpperArm(710);
 			c++;
-		} else if (dt >= 2000 && c == 2) {
-			pivotArm(157, pivotTo, 10);
-			delay(500);
+		} else if (dt >= t2 && c == 2) {
+			//pivotArm(30, pivotTo, 10);
+			RCServo0.write(pivotTo);
+			c++;
+		} else if ( dt >= t3 && c == 3) {
 			setLowerArm(350);
-			c++;
-		} else if ( dt >= 3500 && c == 3) {
 			setUpperArm(510);
 			c++;
-		} else if ( dt >= 4500 && c == 4) {
+		} else if ( dt >= t4 && c == 4) {
 			pauseArms();
 			dropPet();
+			timeStart = millis();
 			c++;
-		} else if ( dt >= 5300 && c == 5) {
-			setLowerArm(590);
+		} else if ( c == 5) {
+			setLowerArm(600);
 			c++;
-		} else if ( dt >= 6300 && c == 6) {
-			setUpperArm(690);
+		} else if ( dt >= t5 && c == 6) {
+			setUpperArm(700);
 			c++;
-		} else if ( dt >= 7700 && c == 7) {
-			flag = true;
+		} else if ( dt >= t6 && c == 7) {
+			return;
 		}
 	}
 	pauseArms();
@@ -1577,7 +1537,6 @@ void getSixthPet() {
 // Place pet in catapult from pivot arm's position 'pivotFrom'
 void placePetCatapult(int pivotFrom) {
 	int c = 1;
-
 	pivotArm(pivotFrom, 163, 7);
 	uint32_t timeStart = millis();
 
@@ -1585,7 +1544,7 @@ void placePetCatapult(int pivotFrom) {
 		lowerArmPID();
 		upperArmPID();
 
-		unsigned int dt = millis() - timeStart;
+		uint16_t dt = millis() - timeStart;
 		if ( dt >= 250 && c == 1 ) {
 			setLowerArm(540);
 			digitalWrite(HAND_UP, HIGH);
@@ -1594,10 +1553,10 @@ void placePetCatapult(int pivotFrom) {
 			digitalWrite(HAND_UP, LOW);
 			c++;
 		} else if ( c == 3) {
-			timeStart = millis();
 			setLowerArm(610);
-			digitalWrite(HAND_DOWN, HIGH);
 			c++;
+			digitalWrite(HAND_DOWN, HIGH);
+			timeStart = millis();
 		} else if (dt >= HAND_DURATION && c == 4 ) {
 			digitalWrite(HAND_DOWN, LOW);
 			pauseArms(); // ensure arms stop moving
