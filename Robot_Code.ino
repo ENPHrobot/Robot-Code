@@ -902,29 +902,30 @@ void pivotArm( int from, int to, int increment) {
 }
 
 // Adjust pivot arm position in multiple attempts of pet
-void adjustArm(int pivotPosition, int try_num) {
-	if (try_num == 1) {
-		RCServo0.write(pivotPosition + 5); //TODO: Tune adjust amount
-	} else if (try_num == 2) {
-		RCServo0.write(pivotPosition - 10);
+void adjustArm(int pivotPosition, int tries, int increment) {
+	if (tries == 1) {
+		RCServo0.write(pivotPosition + increment);
+	} else if (tries == 2) {
+		RCServo0.write(pivotPosition - (2 * increment);
 	}
 }
 
 //Function to get first pet
 void getFirstPet() {
 
-	boolean flag = false;
-	boolean unsuccessful = false;
-	int pivotFrom = 45;
-	int pivotTo = 70;
-	int pivotIncrement = 4;
-	int c = 0;
-	int try_num = 0;
-	int t1 = 1000, t2 = t1 + 1300, t3 = t2 + 700, t4 = t3 + 600, t5 = t4 + 1600, t6 = t5 + 1400;
-	// first stage pickup - pick up pet; checks if pet is picked up,
-	// if not, pick up pet again
-	delay(200);
+	boolean flag = false, unsuccessful = false, found = false;
+	// int pivotFrom = 45;
+	// int pivotTo = 70;
+	int pivotPosition = 50;
+	int pivotIncrement = 10;
+	int c = 0, try_num = 0;
+	int t1 = 1000, t2 = t1, t3 = t2 + 800, t4 = t3 + 1500, t5 = t4 + 1300;
+
+	RCServo0.write(pivotPosition);
+	delay(300);
+	setUpperArm(435);
 	uint32_t timeStart = millis();
+
 	while (!flag) {
 
 		upperArmPID();
@@ -933,36 +934,37 @@ void getFirstPet() {
 		uint16_t dt = millis() - timeStart;
 
 		if ( dt >= t1 && c == 0 ) {
-			setUpperArm(455);
+			// check if pet is somewhere near hand
+			if (petOnArm()) {
+				found = true;
+				try_num = 0;
+				pivotIncrement = 5;
+			}
 			c++;
 		} else if ( dt >= t2 && c == 1 ) {
-			RCServo0.write(pivotFrom);
+			setUpperArm(500);
 			c++;
 		} else if ( dt >= t3 && c == 2 ) {
-			pivotArm(pivotFrom, pivotTo, pivotIncrement);
-			// RCServo0.write(pivotTo);
-			c++;
-		} else if ( dt >= t4 && c == 3 ) {
 			if (petOnArm()) {
 				c++;
 			} else if (try_num < 2) {
-				pivotArm(pivotTo, pivotFrom, pivotIncrement);
-				// RCServo0.write(pivotFrom);
-				c = 2;
+				adjustArm(pivotPosition, try_num, pivotIncrement);
 				try_num++;
-				timeStart = millis() - 2500;
+				c = (found == true) ? 1 : 0;
+				setUpperArm(435);
+				timeStart = millis();
 			} else if (try_num >= 2 && !petOnArm()) {
 				c = 4;
 				unsuccessful = true;
 				timeStart = millis() - t4;
 			}
-		} else if ( c == 4 ) {
+		} else if ( c == 3 ) {
 			setUpperArm(720);
 			c++;
-		} else if ( dt >= t5 && c == 5 ) {
+		} else if ( dt >= t4 && c == 4 ) {
 			setLowerArm(610); // See "REDUN" can set lower arm position here?
 			c++;
-		} else if ( dt >= t6 && c == 6 ) {
+		} else if ( dt >= t5 && c == 5 ) {
 			flag = true;
 		}
 	}
@@ -1081,7 +1083,7 @@ void getSecondPet() {
 				c++;
 			} else if (try_num < 2) {
 				try_num++;
-				adjustArm(pivotPosition, try_num);
+				adjustArm(pivotPosition, try_num, 5);
 				c = 0;
 				timeStart = millis() - 500;
 			} else if (try_num >= 2 && !petOnArm()) {
