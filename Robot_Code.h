@@ -120,6 +120,8 @@ boolean onTape = false;
 boolean ecL = false;
 boolean ecR = false;
 boolean secPet = true;
+boolean fourthPet = true;
+boolean fifthPet = true;
 uint32_t lastSpeedUp;
 uint32_t lastTravelTime;
 void (*pidfn)();

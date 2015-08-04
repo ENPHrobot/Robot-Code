@@ -381,15 +381,18 @@ void petProcess() {
 			armCal();
 			getFourthPet();
 
-			pivotToIR(LEFT, 20); //TODO: Tune IR threshold value
 			encount_L = 0;
 			encount_R = 0;
 			switchMode();
 
-			RCServo0.write(35); //For Fifth Pet Pickup
+			//RCServo0.write(35); //For Fifth Pet Pickup
 			//Adjust Lower/Upper Arm here?
 		} else if (petCount == LAST_TAPE_PET + 1) { //Enters loop when over encoder count or petOnArm
 			armCal(); //temp
+
+			if (fourthPet) {
+				// TODO: launch here
+			}
 
 			if (petOnArm()) {
 				launchFifthPet();
@@ -1359,6 +1362,7 @@ void getFourthPet() {
 			} else if (try_num >= 2 && !petOnArm()) {
 				c = 5;
 				unsuccessful = true;
+				fourthPet = false;
 				timeStart = millis() - t4;
 			}
 		} else if ( c == 5) {
@@ -1372,45 +1376,36 @@ void getFourthPet() {
 
 		}
 	}
-	placePetCatapult(pivotPosition);
-	delay(500);
-	RCServo0.write(70);
+
+	if (!unsuccessful) {
+		placePetCatapult(pivotPosition);
+		delay(500);
+	}
+	pivotToIR(RIGHT, 20);
+	RCServo0.write(36);
+
 	c = 0;
 	flag = false;
-	t1 = 0; t2 = t1 + 1200;
+	t1 = 500; t2 = t1 + 1200, t3 = t2 + 1000;
 	timeStart = millis();
 	while (!flag) {
 		lowerArmPID();
+		upperArmPID();
 		uint16_t dt = millis() - timeStart;
+
 		if (dt >= t1 && c == 0) {
 			// this lower arm height is also the height the fifth pet will be picked up from
-			setLowerArm(460);
+			setLowerArm(480);
 			c++;
-		} else if ( dt >= t2 && c == 1) {
+		} else if (dt >= t2 && c == 1) {
+			// this lower arm height is also the height second pet is picked up from
+			setUpperArm(600);
+			c++;
+		} else if ( dt >= t3 && c == 2) {
 			flag = true;
 		}
 	}
 	pauseArms(); // ensure arms are not powered
-	delay(500);
-	pivot(10);
-//launch(130); //TODO: tune to get enough distance
-	delay(500);
-
-	RCServo0.write(36);
-	c = 0;
-	flag = false;
-	timeStart = millis();
-	while (!flag) {
-		upperArmPID();
-		uint16_t dt = millis() - timeStart;
-		if (dt >= t1 && c == 0) {
-			// this lower arm height is also the height second pet is picked up from
-			setUpperArm(600);
-			c++;
-		} else if ( dt >= t2 && c == 1) {
-			flag = true;
-		}
-	}
 
 }
 
@@ -1499,8 +1494,8 @@ void launchFifthPet() {
 	pauseArms(); // ensure arms are not powered
 
 	delay(500);
-	launch(85);
 	pivot(-9); //Pivots to the Left because of Rafter
+	launch(85);
 	delay(300);
 }
 
