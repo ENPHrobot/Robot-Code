@@ -107,6 +107,12 @@ public:
 		case 7:
 			strategySelection();
 			break;
+		case 8:
+			dropPetCtrl(val);
+			LCD.clear(); LCD.home(); LCD.print("Turning...");
+			delay(HAND_DURATION);
+			dropPetCtrl(STOP);
+			break;
 		}
 	}
 };
@@ -136,7 +142,8 @@ MainMenuItem travelTest  = MainMenuItem("travelTest");
 MainMenuItem launchTest  = MainMenuItem("launchTest");
 MainMenuItem armTest  = MainMenuItem("armTest");
 MainMenuItem strategy = MainMenuItem("strategy");
-MainMenuItem mainMenu[]  = {Sensors, TapePID, IRPID, pivotTest, travelTest, launchTest, armTest, strategy};
+MainMenuItem hand = MainMenuItem("hand motor");
+MainMenuItem mainMenu[]  = {Sensors, TapePID, IRPID, pivotTest, travelTest, launchTest, armTest, strategy, hand};
 
 void setup()
 {
@@ -1910,6 +1917,11 @@ void MainMenu() {
 			LCD.setCursor(0, 1);
 			val = knob(7) >> 1;
 			LCD.print(val); LCD.print("?");
+		} else if (menuIndex == 8) {
+			LCD.print("Hand Control");
+			LCD.setCursor(0, 1);
+			val = map(knob(7), 0 , 1023, 7, 9);
+			LCD.print(val == 7 ? "LOWER?" : "RAISE?");
 		} else {
 			// generic submenu handling
 			LCD.print(mainMenu[menuIndex].Name);
