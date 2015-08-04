@@ -951,13 +951,13 @@ void getFirstPet() {
 	// int pivotFrom = 45;
 	// int pivotTo = 70;
 	int pivotPosition = 50;
-	int pivotIncrement = 10;
+	int pivotIncrement = 20;
 	int c = 0, try_num = 0;
 	int t1 = 1000, t2 = t1, t3 = t2 + 800, t4 = t3 + 1500, t5 = t4 + 1300;
 
 	RCServo0.write(pivotPosition);
 	delay(300);
-	setUpperArm(435);
+	setUpperArm(400);
 	uint32_t timeStart = millis();
 
 	while (!flag) {
@@ -972,7 +972,7 @@ void getFirstPet() {
 			if (petOnArm()) {
 				found = true;
 				try_num = 0;
-				pivotIncrement = 5;
+				pivotIncrement = 10;
 			}
 			c++;
 		} else if ( dt >= t2 && c == 1 ) {
@@ -985,7 +985,7 @@ void getFirstPet() {
 				adjustArm(pivotPosition, try_num, pivotIncrement);
 				try_num++;
 				c = (found == true) ? 1 : 0;
-				setUpperArm(435);
+				setUpperArm(400);
 				timeStart = millis();
 			} else if (try_num >= 2 && !petOnArm()) {
 				c = 4;
@@ -993,10 +993,10 @@ void getFirstPet() {
 				timeStart = millis() - t4;
 			}
 		} else if ( c == 3 ) {
-			setUpperArm(720);
+			setUpperArm(700);
 			c++;
 		} else if ( dt >= t4 && c == 4 ) {
-			setLowerArm(610); // See "REDUN" can set lower arm position here?
+			setLowerArm(630); // See "REDUN" can set lower arm position here?
 			c++;
 		} else if ( dt >= t5 && c == 5 ) {
 			flag = true;
@@ -1061,8 +1061,8 @@ void getFirstPet() {
 		pivotOnLine(LEFT, 0, 0);
 	else if (analogRead(QRD_L) <= analogRead(QRD_R))
 		pivotOnLine(RIGHT, 0, 0);
-	// else if (analogRead(QRD_L) < q_threshold && analogRead(QRD_R) < q_threshold)
-	// 	pivotOnLine(LEFT, 0, 0);
+	else if (analogRead(QRD_L) < q_threshold && analogRead(QRD_R) < q_threshold)
+		pivotOnLine(LEFT, 0, 0);
 }
 
 // Setting arm for second pet pickup
@@ -1077,10 +1077,10 @@ void setArmSecondPet() {
 		upperArmPID();
 		unsigned int dt = millis() - timeStart;
 		if (dt >= t1 && c == 0) {
-			setLowerArm(553);
+			setLowerArm(520);
 			c++;
 		} else if ( dt >= t2 && c == 1) {
-			setUpperArm(460);
+			setUpperArm(410);
 			c++;
 		} else if (dt >= t3 && c == 2) {
 			return;
@@ -1194,7 +1194,7 @@ void placeSecondPet() {
 		uint16_t dt = millis() - timeStart;
 
 		if ( dt >= t1 && c == 1 ) {
-			setUpperArm(710);
+			setUpperArm(700);
 			c++;
 		} else if (dt >= t2 && c == 2) {
 			//pivotArm(30, pivotTo, 10);
@@ -1225,7 +1225,7 @@ void placeSecondPet() {
 void getThirdPet() {
 	boolean flag = false, unsuccessful = false, found = false;
 	int pivotPosition = 40;
-	int pivotIncrement = 10;
+	int pivotIncrement = 20;
 	int c = 0;
 	int try_num = 0;
 	int t1 = 500, t2 = t1 + 1000, t3 = t2 + 1000, t4 = t3 + 800, t5 = t4 + 1500, t6 = t5 + 1000;
@@ -1239,16 +1239,16 @@ void getThirdPet() {
 		uint16_t dt = millis() - timeStart;
 
 		if ( dt >= t1 && c == 0 ) {
-			setLowerArm(580);
+			setLowerArm(600);
 			c++;
 		} else if ( dt >= t2 && c == 1 ) {
-			setUpperArm(430);
+			setUpperArm(415);
 			c++;
 		} else if ( dt >= t3 && c == 2 ) {
 			if (petOnArm()) {
 				found = true;
 				try_num = 0;
-				pivotIncrement = 5;
+				pivotIncrement = 10;
 			}
 			c++;
 		} else if (dt >= t3 && c == 3) {
@@ -1261,7 +1261,7 @@ void getThirdPet() {
 				adjustArm(pivotPosition, try_num, pivotIncrement);
 				try_num++;
 				c = (found == true) ? 3 : 2;
-				setUpperArm(430);
+				setUpperArm(415);
 				timeStart = millis() - t2;
 			} else if (try_num >= 2 && !petOnArm()) {
 				c = 5;
@@ -1269,10 +1269,13 @@ void getThirdPet() {
 				timeStart = millis() - t4;
 			}
 		} else if ( c == 5) {
-			setUpperArm(720);
+			if (!unsuccessful)
+				setUpperArm(700);
+			else if (unsuccessful)
+				setUpperArm(600);
 			c++;
 		} else if ( dt >= t5 && c == 6 ) {
-			setLowerArm(610); // See "REDUN" can set lower arm position here?
+			setLowerArm(630); // See "REDUN" can set lower arm position here?
 			c++;
 		} else if ( dt >= t6 && c == 7 ) {
 			flag = true;
@@ -1308,7 +1311,7 @@ void getThirdPet() {
 			} else if (c == 3) {
 				RCServo0.write(80);
 				setUpperArm(500);
-				setLowerArm(610);
+				setLowerArm(630);
 				c++;
 			} else if ( dt >= t4 && c == 4 ) {
 				flag = true;
@@ -1338,7 +1341,7 @@ void getFourthPet() {
 			setLowerArm(560);
 			c++;
 		} else if ( dt >= t2 && c == 1 ) {
-			setUpperArm(450);
+			setUpperArm(400);
 			c++;
 		} else if ( dt >= t3 && c == 2 ) {
 			if (petOnArm()) {
@@ -1366,7 +1369,7 @@ void getFourthPet() {
 				timeStart = millis() - t4;
 			}
 		} else if ( c == 5) {
-			setUpperArm(710);
+			setUpperArm(700);
 			c++;
 		} else if (dt >= t5 && c == 6) {
 			setLowerArm(600);
@@ -1596,14 +1599,14 @@ void placePetCatapult(int pivotFrom) {
 
 		uint16_t dt = millis() - timeStart;
 		if ( dt >= 250 && c == 1 ) {
-			setLowerArm(540);
+			setLowerArm(520);
 			digitalWrite(HAND_UP, HIGH);
 			c++;
 		} else if (dt >= HAND_DURATION && c == 2) {
 			digitalWrite(HAND_UP, LOW);
 			c++;
 		} else if ( c == 3) {
-			setLowerArm(610);
+			setLowerArm(630);
 			c++;
 			digitalWrite(HAND_DOWN, HIGH);
 			timeStart = millis();
