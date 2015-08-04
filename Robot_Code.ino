@@ -1295,67 +1295,84 @@ void getThirdPet() {
 }
 
 void getFourthPet() {
-	boolean flag = false;
+	boolean flag = false, unsuccessful = false, found = false;
 	//LCD.clear(); LCD.home(); LCD.print("4th pet");
-	int pivotPosition = 80; //TODO: tune -pet will be on left side of robot
+	int pivotPosition = 80, pivotIncrement = 10; //TODO: tune -pet will be on left side of robot
 	int c = 0;
-	// first stage pickup - pick up pet; checks if pet is picked up,
-	// if not, pick up pet again
-
+	int try_num = 0;
+	int t1 = 500, t2 = t1 + 1000, t3 = t2 + 1000, t4 = t3 + 800, t5 = t4 + 1000, t6 = t5 + 1000;
 	RCServo0.write(pivotPosition);
+
 	uint32_t timeStart = millis();
-	delay(200);
 	while (!flag) {
 		upperArmPID();
 		lowerArmPID();
 
-		unsigned int dt = millis() - timeStart;
+		uint16_t dt = millis() - timeStart;
 
-		if ( dt >= 1000 && c == 0 ) {
-			setLowerArm(560); //TODO: tune
+		if ( dt >= t1 && c == 0 ) {
+			setLowerArm(560);
 			c++;
-		} else if ( dt >= 2000 && c == 1 ) {
-			setUpperArm(460);
+		} else if ( dt >= t2 && c == 1 ) {
+			setUpperArm(450);
 			c++;
-		} else if ( dt >= 4000 && c == 2 ) {
-			RCServo0.write(65);
+		} else if ( dt >= t3 && c == 2 ) {
+			if (petOnArm()) {
+				found = true;
+				try_num = 0;
+				pivotIncrement = 5;
+			}
 			c++;
-		} else if ( dt >= 5000 && c == 3) {
+		} else if ( dt >= t3 && c == 3) {
+			setUpperArm(500);
+			c++;
+		} else if ( dt >= t4 && c == 4) {
 			if (petOnArm()) {
 				c++;
-			} else {
-				c = 2;
-				RCServo0.write(pivotPosition);
-				timeStart = millis() - 3000;
+			} else if (try_num < 2) {
+				adjustArm(pivotPosition, try_num, pivotIncrement);
+				try_num++;
+				c = (found == true) ? 3 : 2;
+				setUpperArm(440);
+				timeStart = millis() - t2;
+			} else if (try_num >= 2 && !petOnArm()) {
+				c = 5;
+				unsuccessful = true;
+				timeStart = millis() - t4;
 			}
-		} else if ( c == 4) {
-			setUpperArm(705);
+		} else if ( c == 5) {
+			setUpperArm(710);
 			c++;
-		} else if ( dt >= 7000 && c == 5) {
+		} else if (dt >= t5 && c == 6) {
+			setLowerArm(600);
+			c++;
+		} else if ( dt >= t6 && c == 7) {
 			flag = true;
+
 		}
 	}
-	placePetCatapult(80);
+	placePetCatapult(pivotPosition);
 	delay(500);
 	RCServo0.write(70);
 	c = 0;
 	flag = false;
+	t1 = 0; t2 = t1 + 1200;
 	timeStart = millis();
 	while (!flag) {
 		lowerArmPID();
-		unsigned int dt = millis() - timeStart;
-		if (dt >= 0 && c == 0) {
-			// this lower arm height is also the height second pet is picked up from
-			setLowerArm(450);
+		uint16_t dt = millis() - timeStart;
+		if (dt >= t1 && c == 0) {
+			// this lower arm height is also the height the fifth pet will be picked up from
+			setLowerArm(460);
 			c++;
-		} else if ( dt >= 1200 && c == 1) {
+		} else if ( dt >= t2 && c == 1) {
 			flag = true;
 		}
 	}
 	pauseArms(); // ensure arms are not powered
 	delay(500);
-	pivot(6);
-	//launch(130); //TODO: tune to get enough distance
+	pivot(10);
+//launch(130); //TODO: tune to get enough distance
 	delay(500);
 
 	RCServo0.write(36);
@@ -1364,12 +1381,12 @@ void getFourthPet() {
 	timeStart = millis();
 	while (!flag) {
 		upperArmPID();
-		unsigned int dt = millis() - timeStart;
-		if (dt >= 0 && c == 0) {
+		uint16_t dt = millis() - timeStart;
+		if (dt >= t1 && c == 0) {
 			// this lower arm height is also the height second pet is picked up from
 			setUpperArm(600);
 			c++;
-		} else if ( dt >= 1200 && c == 1) {
+		} else if ( dt >= t2 && c == 1) {
 			flag = true;
 		}
 	}
