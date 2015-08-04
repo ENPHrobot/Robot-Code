@@ -161,16 +161,15 @@ void setup()
 	ir_pro_gain = IRmenuItems[0].Value;
 	ir_diff_gain = IRmenuItems[1].Value;
 	ir_int_gain = IRmenuItems[2].Value;
+	fullRun = eeprom_read_word(FULLRUN_EEPROM);
 
 	// set ports 8 to 15 as OUTPUT
 	portMode(1, OUTPUT);
-	// ensure relays are LOW on start.
+	// ensure relays/digital outputs are LOW on start.
 	digitalWrite(LAUNCH_F, LOW);
 	digitalWrite(HAND_UP, LOW);
 	digitalWrite(HAND_DOWN, LOW);
 
-	time_L = millis();
-	time_R = millis();
 	lastSpeedUp = 0;
 
 	// set servo initial positions
@@ -1701,14 +1700,6 @@ void encoderProcess() {
 	}
 }
 
-void LE() {
-	encount_L++;
-}
-
-void RE() {
-	encount_R++;
-}
-
 void LES() {
 	encount_L++;
 	int ct = millis() - time_L;
@@ -1845,19 +1836,14 @@ void strategySelection()
 		int selection = map(knob(6), 0 , 1023, 0, 2);
 
 		LCD.print("Strategy: ");
-
-		if (fullRun) {
-			LCD.print("Full");
-		} else {
-			LCD.print("Top");
-		}
+		LCD.print(fullRun ? "Full" : "Top");
 
 		LCD.setCursor(0, 1);
 
 		if (selection == 0) {
-			LCD.print("Full???");
+			LCD.print("Full?");
 		} else if (selection == 1) {
-			LCD.print("Top???");
+			LCD.print("Top?");
 		}
 
 		if (startbutton()) {
@@ -1865,8 +1851,10 @@ void strategySelection()
 
 			if (selection == 0) {
 				fullRun = true;
+				eeprom_write_word(FULLRUN_EEPROM, true);
 			} else if (selection == 1) {
 				fullRun = false;
+				eeprom_write_word(FULLRUN_EEPROM, false);
 			}
 		}
 		delay(100);

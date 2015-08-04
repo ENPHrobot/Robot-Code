@@ -48,8 +48,10 @@ enum {
 	STOP = 9,
 	ENC_RAFTER = 10,
 	LAST_TAPE_PET = 5,
-	HAND_DURATION = 2800
+	HAND_DURATION = 2800,
 };
+
+uint16_t* FULLRUN_EEPROM = (uint16_t*) 97;
 
 /* Functions */
 
@@ -99,10 +101,10 @@ boolean checkRafterPet();
 /* Instantiate variables */
 uint16_t encount_L = 0;
 uint16_t encount_R = 0;
-volatile int s_L = 0;
-volatile int s_R = 0;
-volatile int time_L;
-volatile int time_R;
+int s_L = 0;
+int s_R = 0;
+int time_L;
+int time_R;
 int count = 0;
 int modeIndex = 0;
 int val;
