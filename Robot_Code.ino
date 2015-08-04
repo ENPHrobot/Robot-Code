@@ -361,8 +361,6 @@ void petProcess() {
 				to = 0;
 				recent_error = 0;
 				last_error = -1;
-
-
 			} else {
 				base_speed = 170;
 			}
@@ -709,8 +707,25 @@ void pivotToIR(int d, int threshold) {
 	}
 }
 
+// Turns robot on one wheel until either IR sensors pass the threshold
+void turnToIR(int d, int threshold) {
+	if (d == LEFT) {
+		motor.stop(LEFT_MOTOR);
+		motor.speed(RIGHT_MOTOR, STABLE_SPEED);
+	} else if (d == RIGHT) {
+		motor.stop(RIGHT_MOTOR);
+		motor.speed(LEFT_MOTOR, STABLE_SPEED);
+	}
+	while (true) {
+		if ((analogRead(IR_R) >= threshold || analogRead(IR_L) >= threshold)) {
+			pauseDrive();
+			return;
+		}
+	}
+}
+
 // Turn robot left (counts < 0) or right (counts > 0) for
-// certain amount of encoder counts forward
+// certain amount of encoder counts forward at speed s
 void turnForward(int counts, int s) {
 	int turnCount = abs(counts);
 	int turnEncountStart_L = encount_L;
