@@ -372,7 +372,7 @@ void petProcess() {
 		} else if (petCount == 4)  { //Slows down after detecting top of ramp
 			base_speed = 70;
 
-		} else if (petCount == LAST_TAPE_PET + 2) { //TODO: temporarily 5 for 4th pet
+		} else if (petCount == LAST_TAPE_PET) { //TODO: temporarily 5 for 4th pet
 			// TODO: implement more elegant switching to ir -in timedPivot
 			armCal();
 			getFourthPet();
@@ -504,7 +504,7 @@ void launch(int ms) {
 
 // Checks for the horizontal line that signals a pet to pick up.
 boolean checkPet() {
-	if (petCount < LAST_TAPE_PET) {
+	if (petCount < LAST_TAPE_PET - 1) {
 		int e = analogRead(QRD_LINE);
 		if ( e > h_threshold && onTape == false) {
 			onTape = true;
@@ -514,8 +514,18 @@ boolean checkPet() {
 		}
 
 	} else {
-
-		if (petCount == LAST_TAPE_PET) {
+		if (petCount == LAST_TAPE_PET - 1) {
+			int e = analogRead(QRD_LINE);
+			// for the fourth pet, the tape will only trigger when left encoder has surpassed
+			// right encoder by 10 so we know that the turn has been made by the robot.
+			if ( e > h_threshold && onTape == false && (encount_L - encount_R) > 10) {
+				onTape = true;
+				return true;
+			} else if ( e < q_threshold ) {
+				onTape = false;
+			}
+		}
+		else if (petCount == LAST_TAPE_PET) {
 			if (checkRafterPet() || petOnArm()) return true;
 		} else if ( petCount == LAST_TAPE_PET + 1) {
 			if (checkBoxedPet()) return true;
@@ -906,7 +916,7 @@ void adjustArm(int pivotPosition, int tries, int increment) {
 	if (tries == 1) {
 		RCServo0.write(pivotPosition + increment);
 	} else if (tries == 2) {
-		RCServo0.write(pivotPosition - (2 * increment);
+		RCServo0.write(pivotPosition - (2 * increment));
 	}
 }
 
@@ -1247,7 +1257,7 @@ void getThirdPet() {
 
 	if (!unsuccessful) {
 		// pivot arm to correct location
-		pivotArm(pivotFrom, 118, 10); //TODO: tune
+		RCServo0.write(118);
 
 		flag = false;
 		c = 0;
