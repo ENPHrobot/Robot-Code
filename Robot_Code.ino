@@ -121,9 +121,9 @@ public:
 			delay(300);
 			turnForward(-13, 90);
 			delay(300);
-			travel(5, BACKWARDS);
+			travel(7, BACKWARDS);
 			delay(300);
-			turnBack(-4, 90);
+			turnBack(-3, 100);
 			delay(300);
 			while (!stopbutton()) {
 			}
@@ -400,17 +400,14 @@ void petProcess() {
 		} else if (petCount == 4)  { //Slows down after detecting top of ramp
 			base_speed = 60;
 
-		} else if (petCount == LAST_TAPE_PET) { //TODO: temporarily 5 for 4th pet
-			// TODO: implement more elegant switching to ir -in timedPivot
-			// armCal();
+		} else if (petCount == LAST_TAPE_PET) {
+
 			getFourthPet();
 
 			encount_L = 0;
 			encount_R = 0;
 			switchMode();
 
-			//RCServo0.write(35); //For Fifth Pet Pickup
-			//Adjust Lower/Upper Arm here?
 		} else if (petCount == LAST_TAPE_PET + 1) { //Enters loop when over encoder count or petOnArm
 
 			fastPivot(7);
@@ -423,8 +420,9 @@ void petProcess() {
 			if (petOnArm()) {
 				launchFifthPet();
 			}
-			fastPivot(-7); //Pivots to Right to avoid rafter
-			RCServo0.write(90); // Prevents arm from hitting zipline, may also need to adjust lower/upper arm
+			fastPivot(-7);
+			// move upper arm down to avoid zipline
+			RCServo0.write(90);
 			delay(250);
 			int c = 0;
 			boolean flag = false;
@@ -433,7 +431,7 @@ void petProcess() {
 				upperArmPID();
 				uint16_t dt = millis() - timeStart;
 				if (c == 0) {
-					setUpperArm(580);
+					setUpperArm(570);
 					c++;
 				} else if (dt >= 1200 && c == 1) {
 					flag = true;
@@ -446,11 +444,11 @@ void petProcess() {
 			delay(300);
 			turnForward(-13, 90);
 			delay(300);
-			travel(5, BACKWARDS);
+			travel(7, BACKWARDS);
 			delay(300);
-			turnBack(-4, 90);
+			turnBack(-3, 100);
 			delay(300);
-			armCal();
+			//armCal();
 			getSixthPet();
 		}
 
@@ -1107,7 +1105,7 @@ void setArmSecondPet() {
 	while (true) {
 		lowerArmPID();
 		upperArmPID();
-		unsigned int dt = millis() - timeStart;
+		uint16_t dt = millis() - timeStart;
 		if (dt >= t1 && c == 0) {
 			setLowerArm(517);
 			c++;
@@ -1523,7 +1521,7 @@ void getSixthPet() {
 
 	RCServo0.write(pivotPosition);
 	delay(200);
-	setLowerArm(550);
+	setLowerArm(540);
 	uint32_t timeStart = millis();
 	while (!flag) {
 		upperArmPID();
@@ -1531,8 +1529,7 @@ void getSixthPet() {
 
 		uint16_t dt = millis() - timeStart;
 		if ( dt >= t1 && c == 0 ) {
-			setUpperArm(500);
-			//Change Lower Arm Position according to try_num?
+			setUpperArm(420);
 			c++;
 		} else if ( dt >= t2 && c == 1 ) {
 			RCServo0.write(pivotPosition - pivotIncrement);
@@ -1542,13 +1539,14 @@ void getSixthPet() {
 			c++;
 		} else if ( dt >= t4 && c == 3) {
 			if (try_num < 2) {
+				try_num++;
 				c = 1;
 				timeStart = millis() - 2000;
 			} else {
 				c++;
 			}
-		} else if ( dt >= t4 && c == 4 ) { //Checks switch after because foam will trigger switch
-			setUpperArm(MAX_UPPER);
+		} else if ( dt >= t4 && c == 4 ) {
+			setUpperArm(570);
 		} else if (dt >= t5 && c == 5) {
 			setLowerArm(MAX_LOWER);
 			c++;
@@ -1557,6 +1555,7 @@ void getSixthPet() {
 		}
 	}
 
+	travel(8, BACKWARDS);
 	placePetCatapult(pivotPosition);
 	flag = false;
 	delay(500);
@@ -1565,7 +1564,7 @@ void getSixthPet() {
 
 	while (!flag) {
 		lowerArmPID();
-		unsigned int dt = millis() - timeStart;
+		uint16_t dt = millis() - timeStart;
 		if (dt >= 0 && c == 3) {
 			setLowerArm(480);
 			c++;
