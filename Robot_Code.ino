@@ -183,7 +183,7 @@ void setup()
 	// default PID loop is QRD tape following
 	pidfn = tapePID;
 
-	LCD.print("RC6"); LCD.setCursor(0, 1);
+	LCD.print("RC7"); LCD.setCursor(0, 1);
 	LCD.print("Press Start.");
 	while (!startbutton()) {
 		lowerArmPID();
@@ -600,49 +600,11 @@ void pivot(int counts) {
 			rflag = true;
 		}
 	}
+	LCD.clear(); LCD.home();
+	LCD.print("E:"); LCD.print(encount_L); LCD.print(" "); LCD.print(encount_R);
+	LCD.setCursor(0, 1); LCD.print(pivotEncountStart_L); LCD.print(" "); LCD.print(pivotEncountStart_R);
 }
 
-// Pivot robot a direction d (LEFT/RIGHT) until both QRDs are over threshold
-// Will not start checking for tape until after timer
-// void pivotToLine(int d, int timer) {
-// 	LCD.clear(); LCD.home();
-// 	int fast =  STABLE_SPEED + 20;
-// 	int speed = fast;
-// 	int slow = STABLE_SPEED - 20;
-// 	if ( d == LEFT) {
-// 		motor.speed(RIGHT_MOTOR, speed);
-// 		motor.speed(LEFT_MOTOR, -speed);
-// 	} else if ( d == RIGHT) {
-// 		motor.speed(RIGHT_MOTOR, -speed);
-// 		motor.speed(LEFT_MOTOR, speed);
-// 	}
-// 	LCD.print("PIVOTING"); // ghetto fix: pivoting works with LCD print???
-// 	uint32_t start = millis();
-// 	while (true) {
-// 		if (millis() - start >= timer) {
-// 			LCD.clear(); LCD.home();
-// 			LCD.print("time up");
-// 			speed = slow;
-// 		}
-
-// 		if ((analogRead(QRD_L) >= q_threshold || analogRead(QRD_R) >= q_threshold) && millis() - start >= timer) {
-// 			LCD.clear(); LCD.home();
-// 			LCD.print("detected");
-// 			speed = 255;
-// 			if (d == LEFT) {
-// 				motor.speed(RIGHT_MOTOR, -speed);
-// 				motor.speed(LEFT_MOTOR, speed);
-// 				delay(100);
-// 			} else if (d == RIGHT) {
-// 				motor.speed(RIGHT_MOTOR, speed);
-// 				motor.speed(LEFT_MOTOR, -speed);
-// 				delay(100);
-// 			}
-// 			pauseDrive();
-// 			return;
-// 		}
-// 	}
-// }
 void pivotToLine(int d, int timer) {
 	if ( d == LEFT) {
 		motor.speed(RIGHT_MOTOR, STABLE_SPEED + 20);
@@ -711,16 +673,6 @@ void pivotToIR(int d, int threshold) {
 	while (true) {
 		reading = analogRead(IR_R);
 		if ( ((reading + lastreading) >> 1) >= threshold || analogRead(IR_L) >= threshold) {
-			// Shoule be unnecessary for IR following
-			// if (d == LEFT) {
-			// 	motor.speed(RIGHT_MOTOR, -STABLE_SPEED);
-			// 	motor.speed(LEFT_MOTOR, STABLE_SPEED);
-			// 	delay(110);
-			// } else if (d == RIGHT) {
-			// 	motor.speed(RIGHT_MOTOR, STABLE_SPEED);
-			// 	motor.speed(LEFT_MOTOR, -STABLE_SPEED);
-			// 	delay(110);
-			// }
 			pauseDrive();
 			return;
 		}
