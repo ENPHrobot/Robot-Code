@@ -48,8 +48,8 @@ enum {
 	STOP = 9,
 	ENC_RAFTER = 15,
 	LAST_TAPE_PET = 5,
-	HAND_DURATION = 3000,
-	MAX_UPPER = 687,
+	HAND_DURATION = 2000,
+	MAX_UPPER = 650,
 	MAX_LOWER = 630
 };
 
@@ -114,14 +114,16 @@ String modes[] = {"qrd", "ir"};
 String mode = modes[modeIndex];
 
 void empty() {};
-int upperArmV = 439;
+int upperArmV = 420;
 int lowerArmV = 600;
 int petCount = 0;
 boolean fullRun = true;
+boolean noSecondPet = true;
 boolean onTape = false;
 boolean ecL = false;
 boolean ecR = false;
 boolean secPet = true;
+boolean thirdPet = true;
 boolean fourthPet = true;
 boolean fifthPet = true;
 uint32_t lastSpeedUp;
