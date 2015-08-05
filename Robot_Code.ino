@@ -992,7 +992,7 @@ void getFirstPet() {
 				timeStart = millis() - t4;
 			}
 		} else if ( c == 3 ) {
-			setUpperArm(700);
+			setUpperArm(MAX_UPPER);
 			c++;
 		} else if ( dt >= t4 && c == 4 ) {
 			setLowerArm(650);
@@ -1192,7 +1192,7 @@ void placeSecondPet() {
 		uint16_t dt = millis() - timeStart;
 
 		if ( dt >= t1 && c == 1 ) {
-			setUpperArm(700);
+			setUpperArm(MAX_UPPER);
 			c++;
 		} else if (dt >= t2 && c == 2) {
 			//pivotArm(30, pivotTo, 10);
@@ -1211,7 +1211,7 @@ void placeSecondPet() {
 			setLowerArm(600);
 			c++;
 		} else if ( dt >= t5 && c == 6) {
-			setUpperArm(700);
+			setUpperArm(MAX_UPPER);
 			c++;
 		} else if ( dt >= t6 && c == 7) {
 			return;
@@ -1268,12 +1268,12 @@ void getThirdPet() {
 			}
 		} else if ( c == 5) {
 			if (!unsuccessful)
-				setUpperArm(700);
+				setUpperArm(MAX_UPPER);
 			else if (unsuccessful)
 				setUpperArm(600);
 			c++;
 		} else if ( dt >= t5 && c == 6 ) {
-			setLowerArm(630); // See "REDUN" can set lower arm position here?
+			setLowerArm(MAX_LOWER); // See "REDUN" can set lower arm position here?
 			c++;
 		} else if ( dt >= t6 && c == 7 ) {
 			flag = true;
@@ -1309,7 +1309,7 @@ void getThirdPet() {
 			} else if (c == 3) {
 				RCServo0.write(80);
 				setUpperArm(500);
-				setLowerArm(630);
+				setLowerArm(MAX_LOWER);
 				c++;
 			} else if ( dt >= t4 && c == 4 ) {
 				flag = true;
@@ -1330,7 +1330,7 @@ void getThirdPet() {
 			if ( dt >= t1 && c == 0 ) {
 				RCServo0.write(80);
 				setUpperArm(500);
-				setLowerArm(630);
+				setLowerArm(MAX_LOWER);
 				c++;
 			} else if ( dt >= t2 && c == 1 ) {
 				flag = true;
@@ -1390,10 +1390,11 @@ void getFourthPet() {
 				timeStart = millis() - t4;
 			}
 		} else if ( c == 5) {
-			setUpperArm(700);
+			setUpperArm(MAX_UPPER);
 			c++;
 		} else if (dt >= t5 && c == 6) {
-			setLowerArm(600);
+			pauseArms();
+			setLowerArm(MAX_LOWER);
 			c++;
 		} else if ( dt >= t6 && c == 7) {
 			flag = true;
@@ -1401,16 +1402,16 @@ void getFourthPet() {
 		}
 	}
 
+	pauseArms();
 	if (!unsuccessful) {
 		placePetCatapult(pivotPosition);
 		delay(500);
 	}
-	// pivotToIR(RIGHT, 90);
-	// pivot(3); // TODO: needs a small forward travel
 	travel(9, FORWARDS);
 	turnForward(5, STABLE_SPEED);
-	RCServo0.write(65);
+	RCServo0.write(50);
 
+	// get fifth pet arm position
 	c = 0;
 	flag = false;
 	t1 = 500; t2 = t1 + 1200, t3 = t2 + 1000;
@@ -1422,97 +1423,50 @@ void getFourthPet() {
 
 		if (dt >= t1 && c == 0) {
 			// this lower arm height is also the height the fifth pet will be picked up from
-			setLowerArm(530);
+			setLowerArm(529);
 			c++;
 		} else if (dt >= t2 && c == 1) {
 			// this lower arm height is also the height second pet is picked up from
-			setUpperArm(578);
+			setUpperArm(579);
 			c++;
 		} else if ( dt >= t3 && c == 2) {
 			flag = true;
 		}
 	}
 	pauseArms(); // ensure arms are not powered
-
-}
-
-void getFifthPet() {
-	boolean flag = false;
-	uint32_t timeStart = millis();
-	int pivotPosition = 37; //TODO: tune
-	int c = 0;
-
-	// first stage pickup - pick up pet; checks if pet is picked up,
-	// if not, pick up pet again
-	RCServo0.write(pivotPosition);
-	delay(200);
-	while (!flag) {
-		upperArmPID();
-		lowerArmPID();
-
-		unsigned int dt = millis() - timeStart;
-		// TODO: may be able to set lower upper arm at same time as pivot
-		if ( dt >= 1000 && c == 0 ) {
-			setLowerArm(530); //TODO: tune
-			c++;
-		} else if ( dt >= 2000 && c == 1 ) {
-			setUpperArm(650); //TODO: tune
-			c++;
-		} else if ( dt >= 4000 && c == 2 ) {
-			setUpperArm(705);
-			c++;
-		} else if ( dt >= 6000 && c == 3) {
-			if (petOnArm()) {
-				c++;
-			} else {
-				c = 1;
-				timeStart = millis() - 1500;
-			}
-		} else if ( c == 4) {
-			setLowerArm(590);
-			c++;
-		} else if ( dt >= 7500 && c == 5) {
-			flag = true;
-		}
-	}
-	placePetCatapult(pivotPosition);
-	flag = false;
-	c = 0;
-	delay(500);
-
-	// move arm out of catapult's way
-	RCServo0.write(80);
-	timeStart = millis();
-	while (!flag) {
-		lowerArmPID();
-		unsigned int dt = millis() - timeStart;
-		if (dt >= 0 && c == 0) {
-			setLowerArm(510);
-			c++;
-		} else if ( dt >= 1000 && c == 1) {
-			flag = true;
-		}
-	}
-	motor.stop_all();
-	timedPivot(-2400); //TODO: tune pivot towards the left or will hit stand
-	delay(500);
-	launch(150); //TODO: tune to get enough distance
 }
 
 void launchFifthPet() {
+	int c = 0;
+	boolean flag = false;
+	uint32_t timeStart = millis();
+	while (!flag) {
+		lowerArmPID();
+		upperArmPID();
+		uint16_t dt = millis() - timeStart;
+		if (c == 0) {
+			setLowerArm(MAX_LOWER);
+			setUpperArm(MAX_UPPER);
+			c++;
+		} else if (dt >= 1500 && c == 1) {
+			flag = true;
+		}
+	}
+
 	//Adjust Lower/Upper Arm for catapult placing
 	placePetCatapult(35);
 	delay(500);
 	// move arm out of catapult's way
 	RCServo0.write(70);
-	int c = 0;
-	boolean flag = false;
-	uint32_t timeStart = millis();
+	c = 0;
+	flag = false;
+	timeStart = millis();
 	while (!flag) {
 		lowerArmPID();
 		unsigned int dt = millis() - timeStart;
 		if (dt >= 500 && c == 0) {
-			setLowerArm(570);
+			setLowerArm(550);
+			setUpperArm(600);
 			c++;
 		} else if (dt >= 1500 && c == 1) {
 			flag = true;
@@ -1521,76 +1475,56 @@ void launchFifthPet() {
 	pauseArms(); // ensure arms are not powered
 
 	delay(500);
-	pivot(-9); //Pivots to the Left because of Rafter
-	launch(85);
+	launch(150);
 	delay(300);
 }
 
 void getSixthPet() {
 
-	while (digitalRead(FRONT_SWITCH) == LOW) { // Power motor to turn to the left until switch is released
-		motor.speed(RIGHT_MOTOR, 80); //TODO: Tune Speed Values
-		motor.speed(LEFT_MOTOR, -40);
-	}
-
-	//ROBOT should be semi
-	pauseDrive();
-	while (!stopbutton()) {
-		LCD.clear(); LCD.home();
-		LCD.print("I stopped");
-		delay(100);
-	} // TEST where it stops
-
 	boolean flag = false;
-	uint32_t timeStart = millis();
-	int pivotFrom = 70; //TODO: tune
-	int pivotTo = 50; //TODO: tune
-	int pivotIncrement = 3;
+	int pivotPosition = 35;
+	int pivotIncrement = 10;
 	int c = 0;
 	int try_num = 0;
+	int t1 = 1000, t2 = t1 + 1000, t3 = t2 + 800, t4 = t3 + 800, t5 = t4 + 1000, t6 = t5 + 1000;
 
-	RCServo0.write(pivotFrom);
+	RCServo0.write(pivotPosition);
 	delay(200);
-
+	setLowerArm(550);
+	uint32_t timeStart = millis();
 	while (!flag) {
 		upperArmPID();
 		lowerArmPID();
 
-		unsigned int dt = millis() - timeStart;
-		// TODO: may be able to set lower upper arm at same time as pivot
-		if ( dt >= 1000 && c == 0 ) {
-			setLowerArm(500); //TODO: tune
+		uint16_t dt = millis() - timeStart;
+		if ( dt >= t1 && c == 0 ) {
+			setUpperArm(500);
 			//Change Lower Arm Position according to try_num?
 			c++;
-		} else if ( dt >= 2000 && c == 1 ) {
-			setUpperArm(420); //TODO: tune
+		} else if ( dt >= t2 && c == 1 ) {
+			RCServo0.write(pivotPosition - pivotIncrement);
 			c++;
-		} else if ( dt >= 3200 && c == 2 ) {
-			pivotArm(pivotFrom, pivotTo, pivotIncrement);
+		} else if ( dt >= t3 && c == 2 ) {
+			RCServo0.write(pivotPosition + pivotIncrement);
 			c++;
-		} else if ( dt >= 3800 && c == 3 ) { //Checks switch after because foam will trigger switch
-			setUpperArm(720);
-		} else if ( dt >= 5000 && c == 4) {
-			if (petOnArm()) {
-				flag = true;
-				delay(1000);
-				c++;
+		} else if ( dt >= t4 && c == 3) {
+			if (try_num < 2) {
+				c = 1;
+				timeStart = millis() - 2000;
 			} else {
-				pivotArm(pivotTo, pivotFrom, pivotIncrement);
-				c = 2; // Maybe zero if lower arm is to be adjusted
-				timeStart = millis() - 3200; // Change time if arm positions are to be adjusted
-				// Can try infinite times actually...(if we have time)
-				// No need to reset arm positions if we cant get the sixth pet
+				c++;
 			}
-		} else if (dt >= 6000 && c == 5) {
-			setLowerArm(610);
+		} else if ( dt >= t4 && c == 4 ) { //Checks switch after because foam will trigger switch
+			setUpperArm(MAX_UPPER);
+		} else if (dt >= t5 && c == 5) {
+			setLowerArm(MAX_LOWER);
 			c++;
-		} else if (dt >= 7000 && c == 6) {
+		} else if (dt >= t6 && c == 6) {
 			flag = true;
 		}
 	}
 
-	placePetCatapult(pivotFrom); //Or pivotTo, should be alright tho
+	placePetCatapult(pivotPosition);
 	flag = false;
 	delay(500);
 	RCServo0.write(80);
@@ -1605,7 +1539,7 @@ void getSixthPet() {
 		} else if ( dt >= 1000 && c == 4) {
 			flag = true;
 		}
-		pivot(-9); // Pivot to the Left
+		pivot(-12); // Pivot to the Left
 		delay(500);
 		//launch(150); //TODO: tune Launch value
 	}
@@ -1614,21 +1548,24 @@ void getSixthPet() {
 // Place pet in catapult from pivot arm's position 'pivotFrom'
 void placePetCatapult(int pivotFrom) {
 	int c = 1;
+	pauseArms();
 	pivotArm(pivotFrom, 163, 6);
+	delay(250);
 	uint32_t timeStart = millis();
-
 	while (true) {
 		lowerArmPID();
 		upperArmPID();
 
-		uint16_t dt = millis() - timeStart;
-		if ( dt >= 250 && c == 1 ) {
-			setLowerArm(540);
+		uint32_t dt = millis() - timeStart;
+		if ( dt >= 0 && c == 1 ) {
+			setLowerArm(538);
+			LCD.clear(); LCD.home();
+			LCD.print("placing pet");
 			digitalWrite(HAND_UP, HIGH);
 			c++;
 		} else if (dt >= HAND_DURATION && c == 2) {
 			setLowerArm(640);
-			setUpperArm(700);
+			setUpperArm(MAX_UPPER);
 			digitalWrite(HAND_UP, LOW);
 			c++;
 		} else if ( c == 3) {
