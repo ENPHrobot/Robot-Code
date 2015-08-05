@@ -396,22 +396,31 @@ void petProcess() {
 			//RCServo0.write(35); //For Fifth Pet Pickup
 			//Adjust Lower/Upper Arm here?
 		} else if (petCount == LAST_TAPE_PET + 1) { //Enters loop when over encoder count or petOnArm
-			armCal(); //temp
 
+			fastPivot(7);
+			delay(500);
 			if (fourthPet) {
-				// TODO: launch here
+				launch(150);
+				delay(500);
 			}
 
 			if (petOnArm()) {
 				launchFifthPet();
-				pivotToIR(RIGHT, 300); //Pivots to Right to avoid rafter
 			}
-			//getFifthPet();
-			//pivotToIR(LEFT, 300);
-			RCServo0.write(130); // Prevents arm from hitting zipline, may also need to adjust lower/upper arm
+			fastPivot(-7); //Pivots to Right to avoid rafter
+			RCServo0.write(90); // Prevents arm from hitting zipline, may also need to adjust lower/upper arm
 		} else if (petCount == LAST_TAPE_PET + 2) {
+
+			travel(2, BACKWARDS);
+			delay(300);
+			turnForward(13, 90);
+			delay(300);
+			travel(5, BACKWARDS);
+			delay(300);
+			turnBack(-4, 90);
+			delay(300);
 			armCal();
-			getSixthPet();
+			//getSixthPet();
 		}
 
 		// speed control
@@ -533,7 +542,7 @@ boolean checkPet() {
 			int e = analogRead(QRD_LINE);
 			// for the fourth pet, the tape will only trigger when left encoder has surpassed
 			// right encoder by 10 so we know that the turn has been made by the robot.
-			if ( e >= h_threshold && onTape == false && (encount_L - encount_R) > 13) {
+			if ( e >= h_threshold && onTape == false && (encount_L - encount_R) > 11) {
 				onTape = true;
 				return true;
 			} else if ( e < q_threshold ) {
@@ -541,7 +550,7 @@ boolean checkPet() {
 			}
 		}
 		else if (petCount == LAST_TAPE_PET) {
-			if (checkRafterPet() || petOnArm()) return true;
+			if (checkRafterPet()) return true;
 		} else if ( petCount == LAST_TAPE_PET + 1) {
 			if (checkBoxedPet()) return true;
 		} else if (petCount == LAST_TAPE_PET + 2) {
