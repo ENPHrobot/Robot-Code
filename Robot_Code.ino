@@ -689,6 +689,33 @@ void pivotToIR(int d, int threshold) {
 	}
 }
 
+void fastPivot(int counts) {
+	// flags to check whether motors have stopped or not
+	boolean lflag = false, rflag = false;
+	// cache starting values
+	int pivotCount = abs(counts);
+	int pivotEncountStart_L = encount_L;
+	int pivotEncountStart_R = encount_R;
+	int speed = 90;
+
+	motor.speed(RIGHT_MOTOR, counts > 0 ? -speed : speed);
+	motor.speed(LEFT_MOTOR, counts > 0 ? speed : -speed );
+	while (lflag == false || rflag == false) {
+		encoderProcess();
+		if (encount_L - pivotEncountStart_L >= pivotCount) {
+			motor.stop(LEFT_MOTOR);
+			lflag = true;
+		}
+		if (encount_R - pivotEncountStart_R >= pivotCount) {
+			motor.stop(RIGHT_MOTOR);
+			rflag = true;
+		}
+	}
+	LCD.clear(); LCD.home();
+	LCD.print("E:"); LCD.print(encount_L); LCD.print(" "); LCD.print(encount_R);
+	LCD.setCursor(0, 1); LCD.print(pivotEncountStart_L); LCD.print(" "); LCD.print(pivotEncountStart_R);
+}
+
 // Turns robot on one wheel until either IR sensors pass the threshold
 void turnToIR(int d, int threshold) {
 	if (d == LEFT) {
@@ -738,28 +765,27 @@ void turnForward(int counts, int s) {
 
 // Turn robot left (counts < 0) or right (counts > 0) for
 // certain amount of encoder counts backward
-void turnBack(int counts) {
-	boolean flag = false;
+void turnBack(int counts, int s) {
 	int turnCount = abs(counts);
 	int turnEncountStart_L = encount_L;
 	int turnEncountStart_R = encount_R;
 
 	if (counts < 0) {
-		motor.speed(RIGHT_MOTOR, -STABLE_SPEED);
+		motor.speed(RIGHT_MOTOR, -s);
 		motor.stop(LEFT_MOTOR);
-		while (flag == false) {
+		while (true) {
 			if (encount_R - turnEncountStart_R >= turnCount) {
 				motor.stop(RIGHT_MOTOR);
-				flag = true;
+				return;
 			}
 		}
 	} else if (counts > 0) {
 		motor.stop(RIGHT_MOTOR);
-		motor.speed(LEFT_MOTOR, -STABLE_SPEED);
-		while (flag == false) {
+		motor.speed(LEFT_MOTOR, -s);
+		while (true) {
 			if (encount_L - turnEncountStart_L >= turnCount) {
 				motor.stop(LEFT_MOTOR);
-				flag = true;
+				return;
 			}
 		}
 	}
