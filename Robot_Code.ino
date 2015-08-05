@@ -116,6 +116,21 @@ public:
 		case 9:
 			qrdRead();
 			break;
+		case 10:
+			travel(2, BACKWARDS);
+			delay(300);
+			turnForward(-13, 90);
+			delay(300);
+			travel(5, BACKWARDS);
+			delay(300);
+			turnBack(-4, 90);
+			delay(300);
+			while (!stopbutton()) {
+			}
+			LCD.clear(); LCD.home();
+			LCD.print("Returning...");
+			delay(500);
+			break;
 		}
 	}
 };
@@ -147,7 +162,8 @@ MainMenuItem armTest  = MainMenuItem("armTest");
 MainMenuItem strategy = MainMenuItem("strategy");
 MainMenuItem hand = MainMenuItem("hand motor");
 MainMenuItem qrdTest = MainMenuItem("QRDs");
-MainMenuItem mainMenu[]  = {Sensors, TapePID, IRPID, pivotTest, travelTest, launchTest, armTest, strategy, hand, qrdTest};
+MainMenuItem parallelPark = MainMenuItem("Driver Test");
+MainMenuItem mainMenu[]  = {Sensors, TapePID, IRPID, pivotTest, travelTest, launchTest, armTest, strategy, hand, qrdTest, parallelPark};
 
 void setup()
 {
@@ -409,18 +425,33 @@ void petProcess() {
 			}
 			fastPivot(-7); //Pivots to Right to avoid rafter
 			RCServo0.write(90); // Prevents arm from hitting zipline, may also need to adjust lower/upper arm
+			delay(250);
+			int c = 0;
+			boolean flag = false;
+			uint32_t timeStart = millis();
+			while (!flag) {
+				upperArmPID();
+				uint16_t dt = millis() - timeStart;
+				if (c == 0) {
+					setUpperArm(580);
+					c++;
+				} else if (dt >= 1200 && c == 1) {
+					flag = true;
+				}
+			}
+
 		} else if (petCount == LAST_TAPE_PET + 2) {
 
 			travel(2, BACKWARDS);
 			delay(300);
-			turnForward(13, 90);
+			turnForward(-13, 90);
 			delay(300);
 			travel(5, BACKWARDS);
 			delay(300);
 			turnBack(-4, 90);
 			delay(300);
 			armCal();
-			//getSixthPet();
+			getSixthPet();
 		}
 
 		// speed control
@@ -769,11 +800,13 @@ void turnBack(int counts, int s) {
 	int turnCount = abs(counts);
 	int turnEncountStart_L = encount_L;
 	int turnEncountStart_R = encount_R;
+	int count = 0;
 
 	if (counts < 0) {
 		motor.speed(RIGHT_MOTOR, -s);
 		motor.stop(LEFT_MOTOR);
 		while (true) {
+			encoderProcess();
 			if (encount_R - turnEncountStart_R >= turnCount) {
 				motor.stop(RIGHT_MOTOR);
 				return;
@@ -783,6 +816,7 @@ void turnBack(int counts, int s) {
 		motor.stop(RIGHT_MOTOR);
 		motor.speed(LEFT_MOTOR, -s);
 		while (true) {
+			encoderProcess();
 			if (encount_L - turnEncountStart_L >= turnCount) {
 				motor.stop(LEFT_MOTOR);
 				return;
@@ -1466,7 +1500,6 @@ void launchFifthPet() {
 		unsigned int dt = millis() - timeStart;
 		if (dt >= 500 && c == 0) {
 			setLowerArm(550);
-			setUpperArm(600);
 			c++;
 		} else if (dt >= 1500 && c == 1) {
 			flag = true;
