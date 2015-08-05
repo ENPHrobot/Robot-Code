@@ -1512,12 +1512,12 @@ void launchFifthPet() {
 
 void getSixthPet() {
 
-	boolean flag = false;
+	boolean flag = false, alreadyTried = false;;
 	int pivotPosition = 35;
 	int pivotIncrement = 10;
 	int c = 0;
 	int try_num = 0;
-	int t1 = 1000, t2 = t1 + 1000, t3 = t2 + 800, t4 = t3 + 800, t5 = t4 + 1000, t6 = t5 + 1000;
+	int t1 = 1000, t2 = t1 + 1000, t3 = t2 + 800, t4 = t3 + 800, t5 = t4 + 1000, t6 = t5 + 1000, t7 = t6 + 1000;
 
 	RCServo0.write(pivotPosition);
 	delay(200);
@@ -1541,16 +1541,26 @@ void getSixthPet() {
 			if (try_num < 2) {
 				try_num++;
 				c = 1;
-				timeStart = millis() - 2000;
+				timeStart = millis() - t2;
 			} else {
 				c++;
 			}
-		} else if ( dt >= t4 && c == 4 ) {
+		} else if (c == 4 ) {
 			setUpperArm(570);
 		} else if (dt >= t5 && c == 5) {
+			if (petOnArm() || alreadyTried) {
+				c++;
+			} else {
+				RCServo0.write(pivotPosition);
+				setUpperArm(420);
+				c = 4;
+				alreadyTried = true;
+				timeStart = millis() - t3;
+			}
+		} else if (dt >= t6 && c == 6) {
 			setLowerArm(MAX_LOWER);
 			c++;
-		} else if (dt >= t6 && c == 6) {
+		} else if (dt >= t7 && c == 7) {
 			flag = true;
 		}
 	}
@@ -1590,7 +1600,7 @@ void placePetCatapult(int pivotFrom) {
 
 		uint32_t dt = millis() - timeStart;
 		if ( dt >= 0 && c == 1 ) {
-			setLowerArm(538);
+			setLowerArm(535);
 			LCD.clear(); LCD.home();
 			LCD.print("placing pet");
 			digitalWrite(HAND_UP, HIGH);
