@@ -46,9 +46,9 @@ enum {
 	LOWER = 7,
 	RAISE = 8,
 	STOP = 9,
-	ENC_RAFTER = 10,
+	ENC_RAFTER = 15,
 	LAST_TAPE_PET = 5,
-	HAND_DURATION = 2800,
+	HAND_DURATION = 3000,
 };
 
 uint16_t* FULLRUN_EEPROM = (uint16_t*) 97;
