@@ -125,7 +125,7 @@ public:
 			delay(300);
 			turnForward(-15, 90);
 			delay(300);
-			travel(4, BACKWARDS);
+			travel(5, BACKWARDS);
 			delay(300);
 			turnBack(-4, 150);
 			//timedTurnBack(-700, 135);
@@ -196,6 +196,8 @@ void setup()
 	digitalWrite(HAND_DOWN, LOW);
 
 	lastSpeedUp = 0;
+	time_L = millis();
+	time_R = millis();
 
 	// set servo initial positions
 	RCServo2.write(90);
@@ -354,7 +356,7 @@ void petProcess() {
 				getFirstPet();
 
 				// decrease base speed for the turn
-				base_speed = 70;
+				base_speed = 65;
 
 				// initial tape following conditions
 				last_error = -1;
@@ -401,7 +403,7 @@ void petProcess() {
 				if (petOnArm()) {
 					placeSecondPet();
 				}
-				delay(800);
+				delay(300);
 				getThirdPet();
 
 				base_speed = 170;
@@ -418,9 +420,10 @@ void petProcess() {
 			encount_R = 0;
 
 		} else if (petCount == 4)  { //Slows down after detecting top of ramp
-			base_speed = 60;
-			q_pro_gain = 100;
-			q_diff_gain = 0;
+			lastSpeedUp = millis();
+			// q_pro_gain = 70;
+			// q_threshold = 330;
+			// q_diff_gain = 15;
 
 		} else if (petCount == LAST_TAPE_PET) {
 
@@ -468,7 +471,11 @@ void petProcess() {
 			delay(300);
 			turnForward(-15, 90);
 			delay(300);
-			travel(4, BACKWARDS);
+			if (isRedBoard) {
+				travel(5, BACKWARDS);
+			} else {
+				travel(4, BACKWARDS);
+			}
 			delay(300);
 			turnBack(-4, 150);
 			//timedTurnBack(-700, 135);
@@ -487,8 +494,6 @@ void petProcess() {
 		// speed control
 		if ( petCount == 2 ) {
 			lastSpeedUp = millis();
-		} else if (petCount == 3 ) {
-			lastSpeedUp = millis();
 		}
 
 	}
@@ -498,6 +503,8 @@ void petProcess() {
 		base_speed = 170;
 		q_pro_gain = 70;
 		q_diff_gain = 15;
+	} else if (petCount == 4 && millis() - lastSpeedUp > 150) {
+		base_speed = 60;
 	}
 }
 
@@ -1039,10 +1046,10 @@ void adjustArm(int pivotPosition, int tries, int increment) {
 void getFirstPet() {
 
 	boolean flag = false, unsuccessful = false, found = false;
-	int pivotPosition = 50;
+	int pivotPosition = 45; // was 50
 	int pivotIncrement = 15;
 	int c = 0, try_num = 0;
-	int t1 = 1000, t2 = t1, t3 = t2 + 800, t4 = t3 + 1000, t5 = t4 + 1000;
+	int t1 = 800, t2 = t1, t3 = t2 + 800, t4 = t3 + 700, t5 = t4 + 900;
 
 	RCServo0.write(pivotPosition);
 	delay(200);
@@ -1085,7 +1092,7 @@ void getFirstPet() {
 			setUpperArm(MAX_UPPER);
 			c++;
 		} else if ( dt >= t4 && c == 4 ) {
-			setLowerArm(650);
+			setLowerArm(MAX_LOWER);
 			c++;
 		} else if ( dt >= t5 && c == 5 ) {
 			flag = true;
@@ -1296,9 +1303,9 @@ void getThirdPet() {
 	boolean flag = false, unsuccessful = false, found = false;
 	int pivotPosition = 36;
 	int pivotIncrement = 13;
-	int c = 0;
+	int c = 1;
 	int try_num = 0;
-	int t1 = 500, t2 = t1 + 1000, t3 = t2 + 1000, t4 = t3 + 800, t5 = t4 + 1500, t6 = t5 + 1000;
+	int t1 = -1000, t2 = t1 + 1000, t3 = t2 + 1000, t4 = t3 + 800, t5 = t4 + 1500, t6 = t5 + 1000;
 	pivotArm(70, pivotPosition, 5);
 
 	uint32_t timeStart = millis();
@@ -1309,6 +1316,7 @@ void getThirdPet() {
 		uint16_t dt = millis() - timeStart;
 
 		if ( dt >= t1 && c == 0 ) {
+			// won't go in here
 			setLowerArm(550);
 			c++;
 		} else if ( dt >= t2 && c == 1 ) {
@@ -1575,7 +1583,7 @@ void getSixthPet() {
 
 		uint16_t dt = millis() - timeStart;
 		if ( dt >= t1 && c == 0 ) {
-			setUpperArm(390);
+			setUpperArm(400);
 			c++;
 		} else if ( dt >= t2 && c == 1 ) {
 			// RCServo0.write(pivotPosition - pivotIncrement);
@@ -1602,7 +1610,7 @@ void getSixthPet() {
 				c++;
 			}
 		} else if (c == 5) {
-			setUpperArm(595);
+			setUpperArm(640);
 			c++;
 		} else if (dt >= t6 && c == 6) {
 			if (petOnArm() || alreadyTried) {
@@ -1622,14 +1630,51 @@ void getSixthPet() {
 			flag = true;
 		}
 	}
-
-	turnForward(-15, 100);
+	fastTravel(2, BACKWARDS, 130);
+	turnForward(-2, 130);
+	fastTravel(3, FORWARDS, 130);
+	delay(200);
+	// flag = false;
+	// c = 0;
+	// timeStart = millis();
+	// while (!flag) {
+	// 	upperArmPID();
+	// 	uint16_t dt = millis() - timeStart;
+	// 	if (dt >= 0 && c == 0) {
+	// 		setUpperArm(560);
+	// 		c++;
+	// 	} else if ( dt >= 1000 && c == 1) {
+	// 		flag = true;
+	// 	}
+	// }
+	turnForward(-9, 140);
 	motor.stop_all();
+
+	// flag = false;
+	// c = 0;
+	// timeStart = millis();
+
+	// while (!flag) {
+	// 	upperArmPID();
+	// 	uint16_t dt = millis() - timeStart;
+	// 	if (dt >= 0 && c == 0) {
+	// 		setUpperArm(MAX_UPPER);
+	// 		c++;
+	// 	} else if ( dt >= 1000 && c == 1) {
+	// 		flag = true;
+	// 	}
+	// }
+
+	fastTravel(4, FORWARDS, 130);
+	delay(100);
+	turnForward(-14, 140);
+	motor.stop_all();
+
 	if (petOnArm()) {
 		placePetCatapult(pivotPosition);
 		flag = false;
 		c = 0;
-		delay(500);
+		delay(300);
 		RCServo0.write(70);
 		timeStart = millis();
 
@@ -1644,13 +1689,47 @@ void getSixthPet() {
 			}
 		}
 		delay(200);
-		launch(120);
+		launch(150);
 		motor.stop_all();
 	}
 }
 
 // Place pet in catapult from pivot arm's position 'pivotFrom'
 void placePetCatapult(int pivotFrom) {
+	int c = 1;
+	pauseArms();
+	pivotArm(pivotFrom, 163, 8);
+	delay(250);
+	uint32_t timeStart = millis();
+	while (true) {
+		lowerArmPID();
+		upperArmPID();
+
+		uint32_t dt = millis() - timeStart;
+		if ( dt >= 0 && c == 1 ) {
+			setLowerArm(520);
+			LCD.clear(); LCD.home();
+			LCD.print("placing pet");
+			digitalWrite(HAND_UP, HIGH);
+			c++;
+		} else if (dt >= HAND_DURATION && c == 2) {
+			setLowerArm(640);
+			setUpperArm(MAX_UPPER);
+			digitalWrite(HAND_UP, LOW);
+			c++;
+		} else if ( c == 3) {
+			c++;
+			digitalWrite(HAND_DOWN, HIGH);
+			timeStart = millis();
+		} else if (dt >= HAND_DURATION && c == 4 ) {
+			digitalWrite(HAND_DOWN, LOW);
+			pauseArms(); // ensure arms stop moving
+			return;
+		}
+	}
+}
+
+void placeSixthPetCatapult(int pivotFrom) {
 	int c = 1;
 	pauseArms();
 	pivotArm(pivotFrom, 163, 8);
@@ -1780,12 +1859,14 @@ void reset() {
 void encoderProcess() {
 	if (digitalRead(1) == HIGH && !ecL) {
 		encount_L++;
+		time_L = millis();
 		ecL = true;
 	} else if (digitalRead(1) == LOW) {
 		ecL = false;
 	}
 	if (digitalRead(2) == HIGH && !ecR) {
 		encount_R++;
+		time_R = millis();
 		ecR = true;
 	} else if (digitalRead(2) == LOW) {
 		ecR = false;
