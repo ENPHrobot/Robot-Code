@@ -115,8 +115,10 @@ String mode = modes[modeIndex];
 
 void empty() {};
 int upperArmV = 420;
+//int upperArmV = 500; // temp
 int lowerArmV = 600;
 int petCount = 0;
+boolean isRedBoard = false;
 boolean fullRun = true;
 boolean noSecondPet = true;
 boolean onTape = false;

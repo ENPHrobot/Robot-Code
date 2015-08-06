@@ -78,8 +78,7 @@ public:
 			IRMENU();
 			break;
 		case 3:
-			// turnForward(val, 80);
-			getSixthPet();
+			turnForward(val, 130);
 			break;
 		case 4:
 			//travel(val, FORWARDS);
@@ -126,18 +125,16 @@ public:
 			delay(300);
 			turnForward(-15, 90);
 			delay(300);
-			travel(5, BACKWARDS);
+			travel(4, BACKWARDS);
 			delay(300);
-			// turnBack(-4, 135);
-			timedTurnBack(-500, 130);
+			turnBack(-4, 150);
+			//timedTurnBack(-700, 135);
 			delay(300);
 			// travel(6, BACKWARDS);
-			timedTravel(250, BACKWARDS);
-			while (!stopbutton()) {
-			}
-			LCD.clear(); LCD.home();
-			LCD.print("Returning...");
-			delay(500);
+			fastTravel(4, BACKWARDS, 140);
+			//timedTravel(250, BACKWARDS);
+			//armCal();
+			getSixthPet();
 			break;
 		}
 	}
@@ -207,12 +204,25 @@ void setup()
 	// default PID loop is QRD tape following
 	pidfn = tapePID;
 
-	LCD.print("RC7"); LCD.setCursor(0, 1);
-	LCD.print("Press Start.");
+	int counter = 0;
+
 	while (!startbutton()) {
 		lowerArmPID();
 		upperArmPID();
+		if (counter == 100) {
+			counter = 0;
+			int knobvalue = knob(7) / 512;
+			LCD.clear(); LCD.home();
+			LCD.print("RC7 Press Start."); LCD.setCursor(0, 1);
+			if ( knobvalue == 0) LCD.print("WHITEBOARD");
+			else LCD.print("REDBOARD");
+		}
+		counter++;
 	};
+	LCD.clear(); LCD.home();
+	isRedBoard = knob(7) / 512 == 0 ? false : true;
+	LCD.print( isRedBoard ? "REDBOARD SET" : "WHITEBOARD SET");
+	delay(400);
 	motor.stop_all();
 	LCD.clear();
 	MainMenu();
@@ -383,6 +393,8 @@ void petProcess() {
 				motor.speed(LEFT_MOTOR, base_speed);
 				motor.speed(RIGHT_MOTOR, base_speed);
 				delay(100);
+
+				turnForward(-3, 130);
 				motor.speed(LEFT_MOTOR, 40);
 				motor.speed(RIGHT_MOTOR, 40);
 
@@ -395,11 +407,7 @@ void petProcess() {
 				base_speed = 170;
 
 				// reset tape following conditions
-				if (thirdPet) {
-					last_error = -1;
-				} else {
-					last_error = 1;
-				}
+				last_error = 1;
 				t = 1;
 				to = 0;
 				recent_error = 0;
@@ -411,6 +419,8 @@ void petProcess() {
 
 		} else if (petCount == 4)  { //Slows down after detecting top of ramp
 			base_speed = 60;
+			q_pro_gain = 100;
+			q_diff_gain = 0;
 
 		} else if (petCount == LAST_TAPE_PET) {
 
@@ -424,29 +434,11 @@ void petProcess() {
 
 		} else if (petCount == LAST_TAPE_PET + 1) { //Enters loop when over encoder count or petOnArm
 
-			if (!petOnArm()) {
-				int c = 0;
-				boolean flag = false;
-				uint32_t timeStart = millis();
-				setUpperArm(630);
-				while (!flag) {
-					upperArmPID();
-					uint16_t dt = millis() - timeStart;
-					if ( dt >= 500 && c == 0) {
-						setUpperArm(562);
-						c++;
-					} else if (dt >= 1000 && c == 1) {
-						flag = true;
-					}
-				}
-				pauseArms();
-			}
-
 			fastPivot(7);
 			delay(400);
 			if (fourthPet) {
-				launch(110);
-				delay(400);
+				launch(125);
+				delay(200);
 			}
 
 			if (petOnArm()) {
@@ -478,11 +470,12 @@ void petProcess() {
 			delay(300);
 			travel(4, BACKWARDS);
 			delay(300);
-			// turnBack(-4, 135);
-			timedTurnBack(-700, 135);
+			turnBack(-4, 150);
+			//timedTurnBack(-700, 135);
 			delay(300);
 			// travel(6, BACKWARDS);
-			timedTravel(600, BACKWARDS);
+			fastTravel(4, BACKWARDS, 140);
+			//timedTravel(250, BACKWARDS);
 			//armCal();
 			getSixthPet();
 		} else if (petCount >= LAST_TAPE_PET + 3) {
@@ -505,12 +498,7 @@ void petProcess() {
 		base_speed = 170;
 		q_pro_gain = 70;
 		q_diff_gain = 15;
-		// q_diff_gain = menuItems[2].Value;
 	}
-	// else if (petCount == 3 && millis() - lastSpeedUp > 1400) {
-	// 	base_speed = menuItems[0].Value;
-	// 	q_pro_gain = menuItems[1].Value;
-	// }
 }
 
 void switchMode() {
@@ -596,7 +584,7 @@ void launch(int ms) {
 
 // Checks for the horizontal line that signals a pet to pick up.
 boolean checkPet() {
-	if (petCount < LAST_TAPE_PET - 1) {
+	if (petCount < LAST_TAPE_PET - 2) {
 		int e = analogRead(QRD_LINE);
 		if ( e >= h_threshold && onTape == false) {
 			onTape = true;
@@ -605,12 +593,22 @@ boolean checkPet() {
 			onTape = false;
 		}
 
-	} else {
-		if (petCount == LAST_TAPE_PET - 1) {
+	}
+	else {
+		if (petCount == LAST_TAPE_PET - 2) {
+			int e = analogRead(QRD_LINE);
+			if ( e >= h_threshold && onTape == false && encount_R >= 6) {
+				onTape = true;
+				return true;
+			} else if ( e < q_threshold ) {
+				onTape = false;
+			}
+		}
+		else if (petCount == LAST_TAPE_PET - 1) {
 			int e = analogRead(QRD_LINE);
 			// for the fourth pet, the tape will only trigger when left encoder has surpassed
 			// right encoder by 10 so we know that the turn has been made by the robot.
-			if ( e >= h_threshold && onTape == false && (encount_L - encount_R) > 12) {
+			if ( e >= h_threshold && onTape == false && (encount_L - encount_R) > 11) {
 				onTape = true;
 				return true;
 			} else if ( e < q_threshold ) {
@@ -829,6 +827,9 @@ void turnForward(int counts, int s) {
 			}
 		}
 	}
+	LCD.clear(); LCD.home();
+	LCD.print("E:"); LCD.print(encount_L); LCD.print(" "); LCD.print(encount_R);
+	LCD.setCursor(0, 1); LCD.print(turnEncountStart_L); LCD.print(" "); LCD.print(turnEncountStart_R);
 }
 
 // Turn robot left (counts < 0) or right (counts > 0) for
@@ -860,6 +861,9 @@ void turnBack(int counts, int s) {
 			}
 		}
 	}
+	LCD.clear(); LCD.home();
+	LCD.print("E:"); LCD.print(encount_L); LCD.print(" "); LCD.print(encount_R);
+	LCD.setCursor(0, 1); LCD.print(turnEncountStart_L); LCD.print(" "); LCD.print(turnEncountStart_R);
 }
 
 void timedTurnBack( int t, int s) {
@@ -1114,7 +1118,7 @@ void getFirstPet() {
 		pauseArms(); // ensure arms are not powered
 
 		delay(150);
-		launch(85);
+		launch(80);
 		pivotToLine(RIGHT, 1000);
 		delay(150);
 
@@ -1122,7 +1126,7 @@ void getFirstPet() {
 		RCServo0.write(70);
 	}
 
-	setArmSecondPet();
+	// setArmSecondPet();
 
 	// if (analogRead(QRD_L) >= q_threshold && analogRead(QRD_R) < q_threshold)
 	// 	pivotOnLine(LEFT, 0, 0);
@@ -1130,6 +1134,7 @@ void getFirstPet() {
 	// 	pivotOnLine(RIGHT, 0, 0);
 	// else if (analogRead(QRD_L) < q_threshold && analogRead(QRD_R) < q_threshold)
 	// 	pivotOnLine(LEFT, 0, 0);
+	pauseArms();
 }
 
 // Setting arm for second pet pickup
@@ -1248,9 +1253,7 @@ void placeSecondPet() {
 	int c = 1;
 	int t1 = 1200, t2 = t1 + 1000, t3 = t2 + 800, t4 = t3 + 2000;
 	int t5 = 1200, t6 = t5 + 1000;
-	turnForward(-2, 110);
-	motor.speed(LEFT_MOTOR, 40);
-	motor.speed(RIGHT_MOTOR, 40);
+
 	setLowerArm(610);
 
 	uint32_t timeStart = millis();
@@ -1291,14 +1294,14 @@ void placeSecondPet() {
 
 void getThirdPet() {
 	boolean flag = false, unsuccessful = false, found = false;
-	int pivotPosition = 43;
+	int pivotPosition = 36;
 	int pivotIncrement = 13;
 	int c = 0;
 	int try_num = 0;
 	int t1 = 500, t2 = t1 + 1000, t3 = t2 + 1000, t4 = t3 + 800, t5 = t4 + 1500, t6 = t5 + 1000;
-	RCServo0.write(pivotPosition);
-	uint32_t timeStart = millis();
+	pivotArm(70, pivotPosition, 5);
 
+	uint32_t timeStart = millis();
 	while (!flag) {
 
 		upperArmPID();
@@ -1306,10 +1309,14 @@ void getThirdPet() {
 		uint16_t dt = millis() - timeStart;
 
 		if ( dt >= t1 && c == 0 ) {
-			setLowerArm(555);
+			setLowerArm(550);
 			c++;
 		} else if ( dt >= t2 && c == 1 ) {
-			setUpperArm(380);
+			if (isRedBoard) {
+				setUpperArm(350);
+			} else {
+				setUpperArm(377);
+			}
 			c++;
 		} else if ( dt >= t3 && c == 2 ) {
 			if (petOnArm()) {
@@ -1427,7 +1434,7 @@ void getFourthPet() {
 		uint16_t dt = millis() - timeStart;
 
 		if ( dt >= t1 && c == 0 ) {
-			setLowerArm(505);
+			setLowerArm(530);
 			c++;
 		} else if ( dt >= t2 && c == 1 ) {
 			setUpperArm(390);
@@ -1450,7 +1457,7 @@ void getFourthPet() {
 				try_num++;
 				c = (found == true) ? 3 : 2;
 				if (try_num == 0) {
-					setLowerArm(490);
+					setLowerArm(510);
 				}
 				setUpperArm(390);
 				timeStart = millis() - t2;
@@ -1545,7 +1552,7 @@ void launchFifthPet() {
 	pauseArms(); // ensure arms are not powered
 
 	delay(200);
-	launch(110);
+	launch(125);
 	delay(100);
 }
 
@@ -1554,7 +1561,6 @@ void getSixthPet() {
 	boolean flag = false, alreadyTried = false;
 	int pivotPosition = 39;
 	int pivotIncrement = 10;
-	int upperArmSearchHeight = 380;
 	int c = 0;
 	int try_num = 0;
 	int t1 = 1000, t2 = t1 + 1000, t3 = t2 + 1500, t4 = t3 + 1500, t5 = t4 + 1000, t6 = t5 + 1000, t7 = t6 + 1000, t8 = t7 + 1000;
@@ -1569,18 +1575,20 @@ void getSixthPet() {
 
 		uint16_t dt = millis() - timeStart;
 		if ( dt >= t1 && c == 0 ) {
-			setUpperArm(360);
+			setUpperArm(390);
 			c++;
 		} else if ( dt >= t2 && c == 1 ) {
 			// RCServo0.write(pivotPosition - pivotIncrement);
-			timedTravel(500, BACKWARDS);
+			// timedTravel(500, FORWARDS);
+			fastTravel(4, FORWARDS, 130);
 			c++;
 		} else if ( dt >= t3 && c == 2 ) {
 			// RCServo0.write(pivotPosition + pivotIncrement);
-			timedTravel(500, FORWARDS);
+			// timedTravel(500, BACKWARDS);
+			fastTravel(4, BACKWARDS, 130);
 			c++;
 		} else if ( dt >= t4 && c == 3) {
-			setUpperArm(550);
+			setUpperArm(560);
 			c++;
 		} else if ( dt >= t5 && c == 4) {
 			if (petOnArm()) {
@@ -1600,6 +1608,7 @@ void getSixthPet() {
 			if (petOnArm() || alreadyTried) {
 				c++;
 			} else {
+				fastTravel(2, FORWARDS, 120);
 				RCServo0.write(pivotPosition);
 				setUpperArm(390);
 				c = 4;
