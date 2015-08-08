@@ -425,9 +425,6 @@ void petProcess() {
 
 		} else if (petCount == 4)  { //Slows down after detecting top of ramp
 			lastSpeedUp = millis();
-			// q_pro_gain = 70;
-			// q_threshold = 330;
-			// q_diff_gain = 15;
 
 		} else if (petCount == LAST_TAPE_PET) {
 
@@ -441,17 +438,16 @@ void petProcess() {
 
 		} else if (petCount == LAST_TAPE_PET + 1) { //Enters loop when over encoder count or petOnArm
 
-			fastPivot(7);
+			fastPivot(6, 140);
 			delay(400);
 			if (fourthPet) {
-				launch(125);
+				launch(140);
 				delay(200);
 			}
 
 			if (petOnArm()) {
 				launchFifthPet();
 			}
-			fastPivot(-5);
 			// move upper arm down to avoid zipline
 			RCServo0.write(90);
 			delay(250);
@@ -462,11 +458,17 @@ void petProcess() {
 				upperArmPID();
 				uint16_t dt = millis() - timeStart;
 				if (c == 0) {
-					setUpperArm(563);
+					setUpperArm(550);
 					c++;
 				} else if (dt >= 1000 && c == 1) {
 					flag = true;
 				}
+			}
+			delay(200);
+			if (isRedBoard) {
+				fastPivot(-6, 100);
+			} else {
+				fastPivot(-5, 110);
 			}
 
 		} else if (petCount == LAST_TAPE_PET + 2) {
@@ -478,7 +480,7 @@ void petProcess() {
 			if (isRedBoard) {
 				travel(5, BACKWARDS);
 			} else {
-				travel(4, BACKWARDS);
+				travel(5, BACKWARDS);
 			}
 			delay(300);
 			turnBack(-4, 150);
@@ -508,7 +510,7 @@ void petProcess() {
 		q_pro_gain = 70;
 		q_diff_gain = 15;
 	} else if (petCount == 4 && millis() - lastSpeedUp > 150) {
-		base_speed = 60;
+		base_speed = 65;
 	}
 }
 
@@ -692,7 +694,7 @@ void pivot(int counts) {
 }
 
 void pivotToLine(int d, int timer) {
-	int s = 70;
+	int s = 68;
 	if ( d == LEFT) {
 		motor.speed(RIGHT_MOTOR, s + 20);
 		motor.speed(LEFT_MOTOR, -s);
@@ -768,14 +770,14 @@ void pivotToIR(int d, int threshold) {
 	}
 }
 
-void fastPivot(int counts) {
+void fastPivot(int counts, int s) {
 	// flags to check whether motors have stopped or not
 	boolean lflag = false, rflag = false;
 	// cache starting values
 	int pivotCount = abs(counts);
 	int pivotEncountStart_L = encount_L;
 	int pivotEncountStart_R = encount_R;
-	int speed = 90;
+	int speed = s;
 
 	motor.speed(RIGHT_MOTOR, counts > 0 ? -speed : speed);
 	motor.speed(LEFT_MOTOR, counts > 0 ? speed : -speed );
@@ -1110,7 +1112,11 @@ void getFirstPet() {
 	if (!unsuccessful) {
 		placePetCatapult(pivotPosition);
 		delay(250);
-		pivotToLine(RIGHT, 1700);
+		if (isRedBoard) {
+			pivotToLine(RIGHT, 1700);
+		} else {
+			pivotToLine(RIGHT, 1800);
+		}
 		// move arm out of catapult's way
 		RCServo0.write(70);
 		c = 0;
@@ -1135,7 +1141,7 @@ void getFirstPet() {
 		pauseArms(); // ensure arms are not powered
 
 		delay(150);
-		launch(85);
+		launch(75);
 		pivotToLine(RIGHT, 1000);
 		delay(150);
 
@@ -1315,7 +1321,7 @@ void getThirdPet() {
 	int pivotIncrement = 13;
 	int c = 1;
 	int try_num = 0;
-	int t1 = -1000, t2 = t1 + 1000, t3 = t2 + 1000, t4 = t3 + 800, t5 = t4 + 1500, t6 = t5 + 1000;
+	int t1 = -1000, t2 = t1 + 1000, t3 = t2 + 1000, t4 = t3 + 800, t5 = t4 + 800, t6 = t5 + 1000;
 	pivotArm(70, pivotPosition, 5);
 
 	uint32_t timeStart = millis();
@@ -1514,10 +1520,15 @@ void getFourthPet() {
 		delay(200);
 	}
 	// travel(9, FORWARDS);
-	fastTravel(7, FORWARDS, 100);
+	if (isRedBoard) {
+		fastTravel(8, FORWARDS, 100); // with ir
+	} else {
+		fastTravel(9, FORWARDS, 100); // with ir
+	}
+	// fastTravel(8, FORWARDS, 100); // no ir
 	delay(300);
-	turnForward(6, 100);
-	RCServo0.write(50);
+	turnForward(5, 100);
+	RCServo0.write(40);
 
 	// get fifth pet arm position
 	c = 0;
@@ -1536,7 +1547,7 @@ void getFourthPet() {
 		} else if (dt >= t2 && c == 1) {
 			// this lower arm height is also the height second pet is picked up from
 			if (isRedBoard) {
-				setUpperArm(570);
+				setUpperArm(574);
 			} else {
 				setUpperArm(575);
 			}
@@ -1586,7 +1597,7 @@ void launchFifthPet() {
 	pauseArms(); // ensure arms are not powered
 
 	delay(200);
-	launch(125);
+	launch(140);
 	delay(100);
 }
 
@@ -1594,14 +1605,17 @@ void getSixthPet() {
 
 	boolean flag = false, alreadyTried = false;
 	int pivotPosition = 39;
-	int pivotIncrement = 9;
+	int pivotIncrement = 7;
 	int c = 0;
 	int try_num = 0;
-	int t1 = 1000, t2 = t1 + 1000, t3 = t2 + 1500, t4 = t3 + 1500, t5 = t4 + 1000, t6 = t5 + 1000, t7 = t6 + 1000, t8 = t7 + 1000;
+	int lowerHeight = 580;
+	int upperHeight = 420;
+	int direction = LEFT;
+	//int t1 = 1000, t2 = t1 + 1000, t3 = t2 + 1500, t4 = t3 + 1500, t5 = t4 + 1000, t6 = t5 + 1000, t7 = t6 + 1000, t8 = t7 + 1000;
+	int t1 = 0, t2 = t1 + 700, t3 = t2 + 500, t4 = t3 + 400, t5 = t4 + 400, t6 = t5 + 1000, t7 = t6 + 1000, t8 = t7 + 1000;
 
 	RCServo0.write(pivotPosition);
 	delay(200);
-	setLowerArm(510);
 	uint32_t timeStart = millis();
 	while (!flag) {
 		upperArmPID();
@@ -1609,27 +1623,35 @@ void getSixthPet() {
 
 		uint16_t dt = millis() - timeStart;
 		if ( dt >= t1 && c == 0 ) {
-			setUpperArm(400);
+			setLowerArm(580);
+			setUpperArm(423);
 			c++;
 		} else if ( dt >= t2 && c == 1 ) {
-			// RCServo0.write(pivotPosition - pivotIncrement);
-			timedTravel(500, FORWARDS);
-			// fastTravel(4, FORWARDS, 130);
+			setLowerArm(420);
 			c++;
 		} else if ( dt >= t3 && c == 2 ) {
-			// RCServo0.write(pivotPosition + pivotIncrement);
-			timedTravel(500, BACKWARDS);
-			// fastTravel(4, BACKWARDS, 130);
+			setLowerArm(580);
 			c++;
 		} else if ( dt >= t4 && c == 3) {
-			setUpperArm(560);
+			setUpperArm(500);
 			c++;
 		} else if ( dt >= t5 && c == 4) {
 			if (petOnArm()) {
 				c++;
 			} else if (try_num < 2) {
-				try_num++;
-				adjustArm(pivotPosition, try_num, pivotIncrement);
+				if (pivotPosition >= 48) {
+					direction = RIGHT;
+					try_num++;
+				} else if (pivotPosition < 30) {
+					direction = LEFT;
+					try_num++;
+				}
+				if ( direction == LEFT) {
+					pivotPosition += pivotIncrement;
+				} else if (direction == RIGHT) {
+					pivotPosition -= pivotIncrement;
+				}
+				RCServo0.write(pivotPosition);
 				c = 0;
 				timeStart = millis();
 			} else {
@@ -1642,7 +1664,7 @@ void getSixthPet() {
 			if (petOnArm() || alreadyTried) {
 				c++;
 			} else {
-				fastTravel(2, FORWARDS, 120);
+				// fastTravel(2, FORWARDS, 120);
 				RCServo0.write(pivotPosition);
 				setUpperArm(390);
 				c = 4;
@@ -1657,7 +1679,8 @@ void getSixthPet() {
 			flag = true;
 		}
 	}
-	fastTravel(3, BACKWARDS, 130);
+
+	fastTravel(4, BACKWARDS, 130);
 	if (petOnArm()) {
 		placeSixthPetCatapult(pivotPosition);
 		delay(200);
@@ -1672,7 +1695,7 @@ void getSixthPet() {
 			uint16_t dt = millis() - timeStart;
 			if (dt >= 0 && c == 0) {
 				setLowerArm(480);
-				setUpperArm(500);
+				setUpperArm(520);
 				c++;
 				RCServo0.write(75);
 			} else if ( dt >= 1000 && c == 1) {
@@ -1682,16 +1705,18 @@ void getSixthPet() {
 				flag = true;
 			}
 		}
+		pauseArms();
+		delay(200);
 		fastTravel(3, FORWARDS, 130);
 		delay(200);
-		turnForward(-11, 140);
+		turnForward(-12, 130);
 		delay(200);
-		turnBack(2, 130);
+		// turnBack(2, 130);
 		motor.stop_all();
 
 		flag = false;
 		c = 0;
-		delay(300);
+		delay(200);
 		RCServo0.write(70);
 		timeStart = millis();
 
@@ -1706,7 +1731,7 @@ void getSixthPet() {
 			}
 		}
 		delay(200);
-		launch(130);
+		launch(140);
 		motor.stop_all();
 	}
 
