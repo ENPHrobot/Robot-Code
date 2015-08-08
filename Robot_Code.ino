@@ -132,12 +132,8 @@ public:
 			}
 			delay(300);
 			turnBack(-4, 150);
-			//timedTurnBack(-700, 135);
 			delay(300);
-			// travel(6, BACKWARDS);
 			fastTravel(4, BACKWARDS, 140);
-			//timedTravel(250, BACKWARDS);
-			//armCal();
 			getSixthPet();
 			break;
 		}
@@ -225,6 +221,7 @@ void setup()
 		}
 		counter++;
 	};
+	// choose depending if going on red board or white board
 	LCD.clear(); LCD.home();
 	isRedBoard = knob(7) / 512 == 0 ? false : true;
 	LCD.print( isRedBoard ? "REDBOARD SET" : "WHITEBOARD SET");
@@ -325,7 +322,6 @@ void irPID() {
 	net_error = static_cast<int32_t>(P_error + D_error + I_error) >> 4;
 	Serial.print(average); Serial.print(" ");
 	Serial.println(net_error);
-	//Serial.print(D_error); Serial.print(" ");
 
 	// Limit max error
 	net_error = constrain(net_error, -base_speed, base_speed);
@@ -369,29 +365,6 @@ void petProcess() {
 				to = 0;
 
 			}
-			// Don't need this part of the loop
-		} else if (petCount == 2) {
-
-			if (fullRun) {
-
-				//need to lift
-				if (petOnArm) {
-
-				}
-				// recent_error = 0;
-				// last_error = 0;
-				// t = 1;
-				// to = 0;
-
-				// while (!stopbutton()) {
-				// 	LCD.clear(); LCD.home();
-				// 	//LCD.print("E:"); LCD.print(error);
-				// 	LCD.print("LE:"); LCD.print(last_error); LCD.print(" RE:"); LCD.print(recent_error);
-				// 	LCD.setCursor(0, 1); LCD.print(analogRead(QRD_L)); LCD.print(" "); LCD.print(analogRead(QRD_R));
-				// 	delay(200);
-				// }
-			}
-
 		} else if (petCount == 3) {
 
 			if (fullRun) {
@@ -429,8 +402,6 @@ void petProcess() {
 		} else if (petCount == LAST_TAPE_PET) {
 
 			getFourthPet();
-
-			// travel(ENC_RAFTER, FORWARDS);
 
 			encount_L = 0;
 			encount_R = 0;
@@ -472,7 +443,7 @@ void petProcess() {
 			}
 
 		} else if (petCount == LAST_TAPE_PET + 2) {
-
+			// sixth pet parallel parking motion
 			travel(2, BACKWARDS);
 			delay(300);
 			turnForward(-15, 90);
@@ -484,12 +455,8 @@ void petProcess() {
 			}
 			delay(300);
 			turnBack(-4, 150);
-			//timedTurnBack(-700, 135);
 			delay(300);
-			// travel(6, BACKWARDS);
 			fastTravel(4, BACKWARDS, 140);
-			//timedTravel(250, BACKWARDS);
-			//armCal();
 			getSixthPet();
 		} else if (petCount >= LAST_TAPE_PET + 3) {
 			while (!stopbutton()) {
@@ -527,7 +494,7 @@ void setLowerArm(int V) {
 	lowerArmV = V + 15;
 }
 
-// Keep arm vertically in place. Should be run along with PID.
+// Keep arm vertically in place. Run in a while loop to PID the arm segments.
 void upperArmPID() {
 	int currentV = constrain(analogRead(UPPER_POT), 300, 740);
 	int diff = currentV - upperArmV;
@@ -536,11 +503,8 @@ void upperArmPID() {
 	}
 	if ( diff  > 0) diff = 255;
 	else if (diff < 0) diff = -255;
-	// diff = 6 * diff;
-	// diff = constrain(diff, -255, 255);
 	motor.speed(UPPER_ARM, diff);
 }
-
 void lowerArmPID() {
 	int currentV = constrain(analogRead(LOWER_POT), 330, 645);
 	int diff = currentV - lowerArmV;
@@ -549,22 +513,7 @@ void lowerArmPID() {
 	}
 	if (diff  > 0) diff = 255;
 	else if (diff < 0) diff = -255;
-
-	// diff = 4 * (diff);
-	// diff = constrain(diff, -255, 255);
 	motor.speed(LOWER_ARM, diff);
-}
-
-// Power lower arm upwards till it goes past threshold.
-// Caution when using this function.
-void raiseLowerArm(int V) {
-	lowerArmV = V;
-	int currentV = constrain(analogRead(LOWER_POT), 350, 600);
-	while (currentV - lowerArmV < 10) {
-		currentV = constrain(analogRead(LOWER_POT), 350, 600);
-		motor.speed(LOWER_ARM, -255);
-	}
-	motor.stop(LOWER_ARM);
 }
 
 // Stop driving
@@ -608,6 +557,7 @@ boolean checkPet() {
 
 	}
 	else {
+		// only start checking for end of ramp after six encoder counts have occurred since third pet tape
 		if (petCount == LAST_TAPE_PET - 2) {
 			int e = analogRead(QRD_LINE);
 			if ( e >= h_threshold && onTape == false && encount_R >= 6) {
@@ -693,6 +643,7 @@ void pivot(int counts) {
 	LCD.setCursor(0, 1); LCD.print(pivotEncountStart_L); LCD.print(" "); LCD.print(pivotEncountStart_R);
 }
 
+// Pivot robot in direction d until tape is detected after timer has passed
 void pivotToLine(int d, int timer) {
 	int s = 68;
 	if ( d == LEFT) {
@@ -721,6 +672,7 @@ void pivotToLine(int d, int timer) {
 	}
 }
 
+// A pivotToLine without hard stopping.
 void pivotOnLine(int d, int timer, int delayTime) {
 	if ( d == LEFT) {
 		motor.speed(RIGHT_MOTOR, STABLE_SPEED + 20);
@@ -732,15 +684,6 @@ void pivotOnLine(int d, int timer, int delayTime) {
 	uint32_t start = millis();
 	while (true) {
 		if ((analogRead(QRD_L) >= q_threshold && analogRead(QRD_R) >= q_threshold) && millis() - start >= timer) {
-			// if (d == LEFT) {
-			// 	motor.speed(RIGHT_MOTOR, -STABLE_SPEED);
-			// 	motor.speed(LEFT_MOTOR, STABLE_SPEED);
-			// 	delay(110);
-			// } else if (d == RIGHT) {
-			// 	motor.speed(RIGHT_MOTOR, STABLE_SPEED);
-			// 	motor.speed(LEFT_MOTOR, -STABLE_SPEED);
-			// 	delay(110);
-			// }
 			delay(delayTime);
 			pauseDrive();
 			return;
@@ -749,6 +692,7 @@ void pivotOnLine(int d, int timer, int delayTime) {
 }
 
 // Pivot in direction until IR_sensor threshold value has been reached for IR_following
+// Not Used.
 void pivotToIR(int d, int threshold) {
 	int reading = analogRead(IR_R);
 	int lastreading = reading;
@@ -770,6 +714,7 @@ void pivotToIR(int d, int threshold) {
 	}
 }
 
+// Pivot robot at a speed s for a number of encoder counts
 void fastPivot(int counts, int s) {
 	// flags to check whether motors have stopped or not
 	boolean lflag = false, rflag = false;
@@ -798,6 +743,7 @@ void fastPivot(int counts, int s) {
 }
 
 // Turns robot on one wheel until either IR sensors pass the threshold
+// Not Used.
 void turnToIR(int d, int threshold) {
 	if (d == LEFT) {
 		motor.stop(LEFT_MOTOR);
@@ -884,35 +830,6 @@ void turnBack(int counts, int s) {
 	LCD.setCursor(0, 1); LCD.print(turnEncountStart_L); LCD.print(" "); LCD.print(turnEncountStart_R);
 }
 
-void timedTurnBack( int t, int s) {
-	int timing = abs(t);
-	if (t < 0) {
-		motor.speed(RIGHT_MOTOR, -s);
-		delay(timing);
-		motor.stop(LEFT_MOTOR);
-	} else if (t > 0) {
-		motor.speed(LEFT_MOTOR, -s);
-		delay(timing);
-		motor.stop(RIGHT_MOTOR);
-	}
-}
-
-// Pivot in a direction d for a time t.
-void timedPivot(int32_t t) {
-	int32_t at = abs(t);
-	if ( t < 0) {
-		motor.speed(RIGHT_MOTOR, STABLE_SPEED + 20);
-		motor.speed(LEFT_MOTOR, -STABLE_SPEED);
-	} else if (t > 0) {
-		motor.speed(RIGHT_MOTOR, -STABLE_SPEED - 20);
-		motor.speed(LEFT_MOTOR, STABLE_SPEED);
-	} else {
-		pauseDrive();
-	}
-	delay(at);
-	pauseDrive();
-}
-
 // Travel in a direction d for a number of counts.
 void travel(int counts, int d) {
 
@@ -923,7 +840,6 @@ void travel(int counts, int d) {
 	time_R = millis();
 	time_L = millis();
 
-	// TODO: one motor may need a power offset to travel straight
 	motor.speed(RIGHT_MOTOR, d == FORWARDS ? STABLE_SPEED : -STABLE_SPEED);
 	motor.speed(LEFT_MOTOR, d == FORWARDS ? STABLE_SPEED : -STABLE_SPEED);
 	while (lflag == false || rflag == false) {
@@ -942,6 +858,7 @@ void travel(int counts, int d) {
 	LCD.setCursor(0, 1); LCD.print(travelEncountStart_L); LCD.print(" "); LCD.print(travelEncountStart_R);
 }
 
+// Travel in direction d for a number of counts at speed s
 void fastTravel(int counts, int d, int s) {
 
 	boolean lflag = false, rflag = false;
@@ -950,7 +867,6 @@ void fastTravel(int counts, int d, int s) {
 	uint32_t timeout = millis();
 	uint16_t expiry = 600 * counts;
 
-	// TODO: one motor may need a power offset to travel straight
 	motor.speed(RIGHT_MOTOR, d == FORWARDS ? s : -s);
 	motor.speed(LEFT_MOTOR, d == FORWARDS ? s : -s);
 	while ((lflag == false || rflag == false) && millis() - timeout < expiry) {
@@ -980,8 +896,7 @@ void timedTravel( uint32_t t, int d) {
 	pauseDrive();
 }
 
-// Tentative drop pet function for the new motor setup
-// Time it takes to bring magnet up and down needs to be tested
+// A drop pet function. Moves upper arm to maximum after moving magnet up to ensure pet falls.
 void dropPet() {
 	LCD.clear(); LCD.home(); LCD.print("DR- DR- DR-");
 	LCD.setCursor(0, 1); LCD.print("DROP THE PET!");
@@ -1184,93 +1099,6 @@ void setArmSecondPet() {
 	pauseArms();
 }
 
-// This function is not being used
-void getSecondPet() {
-	boolean flag = false;
-	boolean unsuccessful = false;
-	uint32_t timeStart = millis();
-	int pivotPosition = 39;
-	int c = 0;
-	int try_num = 0;
-
-	// first stage pickup - pick up pet; checks if pet is picked up,
-	// if not, pick up pet again
-	RCServo0.write(pivotPosition);
-	delay(500);
-	while (!flag) {
-		upperArmPID();
-		lowerArmPID();
-		unsigned int dt = millis() - timeStart;
-
-		if ( dt >= 500 && c == 0 ) {
-			setUpperArm(490);
-			c++;
-		} else if ( dt >= 2500 && c == 1 ) {
-			setUpperArm(705);
-			c++;
-		} else if ( dt >= 4500 && c == 3) {
-			if (petOnArm()) {
-				c++;
-			} else if (try_num < 2) {
-				try_num++;
-				adjustArm(pivotPosition, try_num, 5);
-				c = 0;
-				timeStart = millis() - 500;
-			} else if (try_num >= 2 && !petOnArm()) {
-				c = 3;
-				timeStart = millis() - 4500;
-				// second pet not picked up flag
-				unsuccessful = true;
-				secPet = false;
-			}
-		} else if ( c == 4 ) {
-			setLowerArm(590);
-			c++;
-		} else if ( dt >= 6000 && c == 5 ) {
-			flag = true;
-		}
-	}
-
-
-	motor.stop_all();
-
-	if (!unsuccessful) {
-		pivotArm(pivotPosition, 157, 10);
-		c = 0;
-		flag = false;
-		timeStart = millis();
-		while (!flag) {
-			lowerArmPID();
-			upperArmPID();
-
-			unsigned int dt = millis() - timeStart;
-			if ( dt >= 500 && c == 0 ) {
-				setLowerArm(535);
-				c++;
-			} else if ( dt >= 1500 && c == 1) {
-				pauseArms();
-				flag = true;
-			}
-		}
-	}
-	LCD.clear(); LCD.home();
-	delay(1000);
-	if (analogRead(QRD_L) >= q_threshold && analogRead(QRD_R) < q_threshold) {
-		pivotOnLine(LEFT, 0, 15);
-		LCD.print("left on");
-	}
-	else if (analogRead(QRD_R) >= q_threshold && analogRead(QRD_L) < q_threshold) {
-		pivotOnLine(RIGHT, 0, 0);
-		LCD.print("right on");
-	}
-	else if (analogRead(QRD_L) < q_threshold && analogRead(QRD_R) < q_threshold) {
-		pivotOnLine(LEFT, 0, 15);
-		LCD.print("just left");
-	}
-	delay(1000);
-	//placePetCatapult(pivotPosition);
-}
-
 void placeSecondPet() {
 	int pivotTo = 116;
 	int c = 1;
@@ -1290,7 +1118,6 @@ void placeSecondPet() {
 			setUpperArm(MAX_UPPER);
 			c++;
 		} else if (dt >= t2 && c == 2) {
-			//pivotArm(30, pivotTo, 10);
 			RCServo0.write(pivotTo);
 			c++;
 		} else if ( dt >= t3 && c == 3) {
@@ -1483,7 +1310,6 @@ void getFourthPet() {
 			if (petOnArm()) {
 				c++;
 			} else if (try_num < 2) {
-				//adjustArm(pivotPosition, try_num, pivotIncrement);
 				try_num++;
 				c = (found == true) ? 3 : 2;
 				if (try_num == 0) {
@@ -1519,13 +1345,11 @@ void getFourthPet() {
 		placePetCatapult(pivotPosition);
 		delay(200);
 	}
-	// travel(9, FORWARDS);
 	if (isRedBoard) {
 		fastTravel(8, FORWARDS, 100); // with ir
 	} else {
 		fastTravel(9, FORWARDS, 100); // with ir
 	}
-	// fastTravel(8, FORWARDS, 100); // no ir
 	delay(300);
 	turnForward(5, 100);
 	RCServo0.write(40);
@@ -1576,7 +1400,7 @@ void launchFifthPet() {
 		}
 	}
 
-	//Adjust Lower/Upper Arm for catapult placing
+	// adjust lower/upper arm for catapult placing
 	placePetCatapult(35);
 	delay(200);
 	// move arm out of catapult's way
@@ -1611,7 +1435,6 @@ void getSixthPet() {
 	int lowerHeight = 580;
 	int upperHeight = 420;
 	int direction = LEFT;
-	//int t1 = 1000, t2 = t1 + 1000, t3 = t2 + 1500, t4 = t3 + 1500, t5 = t4 + 1000, t6 = t5 + 1000, t7 = t6 + 1000, t8 = t7 + 1000;
 	int t1 = 0, t2 = t1 + 700, t3 = t2 + 500, t4 = t3 + 400, t5 = t4 + 400, t6 = t5 + 1000, t7 = t6 + 1000, t8 = t7 + 1000;
 
 	RCServo0.write(pivotPosition);
@@ -1664,7 +1487,6 @@ void getSixthPet() {
 			if (petOnArm() || alreadyTried) {
 				c++;
 			} else {
-				// fastTravel(2, FORWARDS, 120);
 				RCServo0.write(pivotPosition);
 				setUpperArm(390);
 				c = 4;
@@ -1711,7 +1533,6 @@ void getSixthPet() {
 		delay(200);
 		turnForward(-12, 130);
 		delay(200);
-		// turnBack(2, 130);
 		motor.stop_all();
 
 		flag = false;
@@ -1772,6 +1593,7 @@ void placePetCatapult(int pivotFrom) {
 	}
 }
 
+// A separate placePetCatapult for the sixth pet.
 void placeSixthPetCatapult(int pivotFrom) {
 	int c = 1;
 	pauseArms();
@@ -1805,6 +1627,7 @@ void placeSixthPetCatapult(int pivotFrom) {
 	}
 }
 
+// Testing mode for measuring QRD values in menu.
 void qrdRead() {
 	while (!stopbutton()) {
 		LCD.clear(); LCD.home();
@@ -1818,10 +1641,10 @@ void qrdRead() {
 	delay(500);
 }
 
-// testing arm calibration code
+// Arm calibration test code.
 void armCal() {
 	int a;
-	int s = 90; // temp
+	int s = 90;
 	int c = 0;
 
 	while (!stopbutton()) {
@@ -1886,18 +1709,9 @@ void armCal() {
 	}
 }
 
-void reset() {
-	if (stopbutton()) {
-		LCD.clear(); LCD.home();
-		LCD.print("Reset");
-		delay(150);
-		MainMenu();
-	}
-}
-
 /* ISRs */
 
-// Encoder ISRs. S == speed
+// Encoder ISRs.
 void encoderProcess() {
 	if (digitalRead(1) == HIGH && !ecL) {
 		encount_L++;
@@ -1913,21 +1727,6 @@ void encoderProcess() {
 	} else if (digitalRead(2) == LOW) {
 		ecR = false;
 	}
-}
-
-void LES() {
-	encount_L++;
-	int ct = millis() - time_L;
-	// filter out speeds less than 10 ms
-	s_L = ct > 10 ? ct : s_L;
-	time_L = millis();
-}
-
-void RES() {
-	encount_R++;
-	int ct = millis() - time_R;
-	s_R = ct > 10 ? ct : s_R;
-	time_R = millis();
 }
 
 /* Menus */
